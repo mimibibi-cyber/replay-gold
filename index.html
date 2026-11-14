@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="TV Replay Pro" />
-  <title>TradingView & FXReplay Backtester (XAUUSD / BTCUSD)</title>
+  <title>TradingView & FXReplay Engine (Synced Multi-TF)</title>
   <style>
     :root {
       --bg: #131722;
@@ -29,16 +29,16 @@
       display: flex; flex-direction: column; height: 100dvh; overflow: hidden;
     }
 
-    /* Top Header (TradingView Style) */
+    /* Top Bar */
     .tv-header {
-      display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px;
+      display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 5px;
       padding: 5px 8px; background: var(--panel); border-bottom: 1px solid var(--border);
       padding-top: max(5px, env(safe-area-inset-top));
     }
     .group { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
     .btn, select, input[type="date"], input[type="number"] {
       background: var(--panel2); color: var(--text); border: 1px solid var(--border);
-      padding: 4px 7px; border-radius: 4px; font-size: 11px; font-weight: 600;
+      padding: 4px 6px; border-radius: 4px; font-size: 11px; font-weight: 600;
     }
     .btn { cursor: pointer; border: none; }
     .btn:hover { background: #363a45; }
@@ -48,7 +48,7 @@
     .btn-blue { background: var(--blue); color: #fff; }
     .btn-orange { background: #f97316; color: #fff; }
 
-    /* Account & Live Sync Strip */
+    /* Subbar */
     .tv-subbar {
       display: flex; justify-content: space-between; align-items: center;
       padding: 4px 8px; background: var(--bg); border-bottom: 1px solid var(--border);
@@ -57,7 +57,7 @@
     .tv-subbar::-webkit-scrollbar { display: none; }
     .stat { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
 
-    /* Workspace: Left Drawing Toolbar + Chart */
+    /* Workspace */
     .workspace {
       position: relative; flex: 1; display: flex; min-height: 240px; overflow: hidden;
     }
@@ -80,16 +80,15 @@
     }
     canvas { display: block; width: 100%; height: 100%; }
 
-    /* Floating Hint / Status Badge */
     .chart-badge {
       position: absolute; top: 6px; left: 8px; pointer-events: none;
-      background: rgba(30, 34, 45, 0.85); padding: 3px 7px; border-radius: 4px;
-      font-size: 10px; color: var(--muted); border: 1px solid var(--border);
+      background: rgba(30, 34, 45, 0.88); padding: 3px 7px; border-radius: 4px;
+      font-size: 10px; color: var(--text); border: 1px solid var(--border);
     }
     .auto-fit-btn {
-      position: absolute; bottom: 24px; right: 64px;
+      position: absolute; bottom: 24px; right: 66px;
       background: var(--panel2); color: var(--text); border: 1px solid var(--border);
-      padding: 3px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; opacity: 0.85;
+      padding: 3px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; opacity: 0.9;
     }
 
     /* Replay Bar */
@@ -118,7 +117,7 @@
 
     /* Bottom Sheet */
     .bottom-sheet {
-      height: 125px; background: var(--bg); border-top: 1px solid var(--border);
+      height: 120px; background: var(--bg); border-top: 1px solid var(--border);
       display: flex; flex-direction: column; padding-bottom: env(safe-area-inset-bottom);
     }
     .tabs { display: flex; background: var(--panel); }
@@ -136,7 +135,7 @@
 </head>
 <body>
 
-  <!-- Top Header -->
+  <!-- Top Controls -->
   <div class="tv-header">
     <div class="group">
       <select id="symbolSelect">
@@ -145,30 +144,35 @@
       </select>
 
       <div class="group" id="tfGroup">
-        <button class="btn active" data-tf="1m" data-min="1">1m</button>
-        <button class="btn" data-tf="5m" data-min="5">5m</button>
-        <button class="btn" data-tf="15m" data-min="15">15m</button>
-        <button class="btn" data-tf="1h" data-min="60">1H</button>
-        <button class="btn" data-tf="4h" data-min="240">4H</button>
-        <button class="btn" data-tf="1d" data-min="1440">1D</button>
+        <button class="btn active" data-min="1">1m</button>
+        <button class="btn" data-min="5">5m</button>
+        <button class="btn" data-min="15">15m</button>
+        <button class="btn" data-min="60">1H</button>
+        <button class="btn" data-min="240">4H</button>
+        <button class="btn" data-min="1440">1D</button>
       </div>
     </div>
 
     <div class="group">
-      <input type="date" id="startDateInput" title="เลือกวันที่เริ่มเทส" />
-      <button class="btn btn-green" id="syncLiveBtn" title="ดึงกราฟจริงล่าสุด">🌐 Live Data</button>
+      <input type="date" id="startDateInput" title="เลือกวันที่เริ่มต้นย้อนหลังได้ไม่จำกัด" />
+      <button class="btn btn-green" id="syncLiveBtn" title="ดึงราคาล่าสุดจากตลาด">🌐 Sync</button>
       <label class="btn" style="background:#363a45;" title="นำเข้าไฟล์ CSV จาก MT4/MT5">
         📂 CSV <input type="file" id="csvInput" accept=".csv,.txt" hidden />
       </label>
     </div>
   </div>
 
-  <!-- Subbar: Balance, Equity, WinRate -->
+  <!-- Subbar: Initial Capital & Custom Price Anchor -->
   <div class="tv-subbar">
     <div class="stat">
       <span style="color:var(--muted);">ทุน ($):</span>
-      <input type="number" id="initBalInput" value="10000" style="width:68px; padding:2px 4px;" />
-      <button class="btn btn-blue" id="applyBalBtn" style="padding:2px 6px;">Set</button>
+      <input type="number" id="initBalInput" value="10000" style="width:62px; padding:2px 4px;" />
+      <button class="btn btn-blue" id="applyBalBtn" style="padding:2px 5px;">Set</button>
+    </div>
+    <div class="stat">
+      <span style="color:var(--muted);">เรทราคาเริ่ม:</span>
+      <input type="number" id="anchorPriceInput" value="3802.50" step="0.1" style="width:68px; padding:2px 4px;" />
+      <button class="btn" id="applyPriceBtn" style="padding:2px 5px; background:#363a45;">ปรับเรท</button>
     </div>
     <div class="stat">
       <span style="color:var(--muted);">Bal:</span>
@@ -184,42 +188,42 @@
     </div>
   </div>
 
-  <!-- Main Workspace: TradingView Left Drawing Toolbar + Interactive Chart -->
+  <!-- Main Workspace -->
   <div class="workspace">
     <div class="left-toolbar" id="toolGroup">
-      <button class="tool-btn active" data-tool="cursor" title="Cursor / เลื่อนกราฟ / ลากเส้น">👆</button>
+      <button class="tool-btn active" data-tool="cursor" title="Cursor / ลากกราฟ / ลากเส้น RR & SL/TP">👆</button>
       <button class="tool-btn" data-tool="crosshair" title="Crosshair เล็งราคา">➕</button>
-      <button class="tool-btn" data-tool="cut" title="Bar Replay ตัดกราฟเริ่มตรงนี้">✂️</button>
+      <button class="tool-btn" data-tool="cut" title="Bar Replay ตัดกราฟเริ่มตรงจุดที่จิ้ม">✂️</button>
       <button class="tool-btn" data-tool="trend" title="Trendline เส้นเฉียง">📈</button>
       <button class="tool-btn" data-tool="ray" title="Extended Line เส้นตรงยาว">📏</button>
       <button class="tool-btn" data-tool="hline" title="Horizontal Line เส้นแนวนอน">➖</button>
       <button class="tool-btn" data-tool="vline" title="Vertical Line เส้นแนวตั้ง">│</button>
       <button class="tool-btn" data-tool="box" title="Rectangle กล่องสี่เหลี่ยม">⬜</button>
       <button class="tool-btn" data-tool="fib" title="Fib Retracement">📐</button>
-      <button class="tool-btn" data-tool="long" title="Long Position (RR)">🟩</button>
-      <button class="tool-btn" data-tool="short" title="Short Position (RR)">🟥</button>
+      <button class="tool-btn" data-tool="long" title="Long Position (ลากปรับ RR ได้)">🟩</button>
+      <button class="tool-btn" data-tool="short" title="Short Position (ลากปรับ RR ได้)">🟥</button>
       <button class="tool-btn" id="undoDrawBtn" title="Undo ย้อนกลับ">↩️</button>
       <button class="tool-btn" id="clearDrawBtn" title="ลบเส้นทั้งหมด" style="color:var(--red);">🗑</button>
     </div>
 
     <div class="chart-wrap" id="chartWrap">
       <canvas id="chartCanvas"></canvas>
-      <div class="chart-badge" id="ohlcBadge">กำลังโหลดกราฟ...</div>
+      <div class="chart-badge" id="ohlcBadge">กำลังเตรียมข้อมูล...</div>
       <button class="auto-fit-btn" id="autoFitBtn">Auto Fit</button>
     </div>
   </div>
 
   <!-- Replay Controls -->
   <div class="replay-bar">
-    <button class="btn btn-green" id="playBtn" style="width:64px;">▶ Play</button>
+    <button class="btn btn-green" id="playBtn" style="width:62px;">▶ Play</button>
     <button class="btn btn-blue" id="stepBtn">⏭ +1</button>
-    <input type="range" id="progressSlider" min="10" max="500" value="40" />
-    <span id="barTimeText" style="font-size:10px; color:var(--muted); min-width:82px; text-align:right;">--</span>
+    <input type="range" id="progressSlider" min="10" max="1000" value="50" />
+    <span id="barTimeText" style="font-size:10px; color:var(--muted); min-width:86px; text-align:right;">--</span>
     <select id="speedSelect">
       <option value="800">0.5x</option>
       <option value="250" selected>1x</option>
       <option value="100">3x</option>
-      <option value="35">10x</option>
+      <option value="30">10x</option>
     </select>
   </div>
 
@@ -268,26 +272,31 @@
   const ctx = canvas.getContext('2d');
   const wrap = document.getElementById('chartWrap');
 
-  // สเปกคู่เทรด (อัปเดตฐานราคา XAUUSD ให้ตรงกับเรทปัจจุบัน ~3802)
   const SYMBOLS = {
-    XAUUSD: { binancePair: 'PAXGUSDT', fallbackPrice: 3802.50, contractSize: 100, decimals: 2, spread: 0.25, defaultSL: 6.0, defaultTP: 12.0, volBase: 2.2 },
-    BTCUSD: { binancePair: 'BTCUSDT', fallbackPrice: 92500.0, contractSize: 1, decimals: 1, spread: 15.0, defaultSL: 350.0, defaultTP: 700.0, volBase: 110.0 }
+    XAUUSD: { binancePair: 'PAXGUSDT', defaultPrice: 3802.50, contractSize: 100, decimals: 2, spread: 0.25, defaultSL: 6.0, defaultTP: 12.0, vol1m: 1.3 },
+    BTCUSD: { binancePair: 'BTCUSDT', defaultPrice: 92500.0, contractSize: 1, decimals: 1, spread: 15.0, defaultSL: 350.0, defaultTP: 700.0, vol1m: 65.0 }
   };
 
   let currentSymbol = 'XAUUSD';
-  let currentTF = '1m';
-  let timeframeMin = 1;
-  let startDateMs = Date.now() - 2 * 24 * 3600 * 1000;
+  let timeframeMin = 1; // 1, 5, 15, 60, 240, 1440
+  let startDateMs = Date.now() - 3 * 24 * 3600 * 1000;
 
-  let candles = [];
-  let currentIndex = 50;
+  // =========================================================================
+  // SINGLE SOURCE OF TRUTH: เก็บข้อมูลฐานระดับ 1 นาที (base1mCandles) ชุดเดียว
+  // ทุก Timeframe (1m, 5m, 15m, 1H, 4H, 1D) จะถูกคำนวณรวมแท่งจากฐานข้อมูลนี้
+  // ทำให้ราคา High / Low / Open / Close ตรงกัน 100% ในทุก Timeframe!
+  // =========================================================================
+  let base1mCandles = [];
+  let current1mIndex = 120; // ตำแหน่งเวลาปัจจุบันในหน่วยนาที (Master Clock)
+  let candles = [];         // แท่งเทียนของ Timeframe ที่กำลังแสดงอยู่
+  let currentIndex = 0;
 
-  // TradingView Viewport State (Zoom & Pan ทั้งแกน X และแกน Y)
-  let visibleBars = 55;        // จำนวนแท่งที่แสดง (Zoom X)
-  let rightOffsetBars = 8;     // ระยะเว้นว่างด้านขวา (Pan X)
-  let yScaleZoom = 1.0;        // ตัวคูณยืด/หดความสูงแท่งเทียน (Zoom Y จากการลากแกนราคา)
-  let yPanOffset = 0.0;        // เลื่อนกราฟขึ้น-ลงอิสระ (Pan Y)
-  let autoScaleY = true;       // โหมด Auto Fit แกนราคา
+  // Viewport State (TradingView Standard)
+  let visibleBars = 55;
+  let rightOffsetBars = 8;
+  let yScaleZoom = 1.0;
+  let yPanOffset = 0.0;
+  let autoScaleY = true;
 
   let isPlaying = false;
   let playTimer = null;
@@ -303,77 +312,73 @@
   let activeTab = 'active';
 
   let selectedTool = 'cursor';
-  let drawings = [];
+  let drawings = []; // {id, tool, t1, t2, p1, p2, midP} — เก็บเป็น Timestamp จริง เปลี่ยน TF แล้วเส้นยังอยู่ที่เดิม!
   let activeDrawing = null;
-  let crosshairPos = null; // {x, y}
+  let selectedDrawingIdx = -1;
+  let draggingHandle = null; // {drawIdx, handle: 'tp'|'sl'|'entry'|'resizeRight'}
+  let crosshairPos = null;
 
   let chartBounds = { min: 3780, max: 3820, chartW: 300, chartH: 250, axisW: 62, stepX: 6, startSlotIdx: 0 };
 
   const dateInput = document.getElementById('startDateInput');
   dateInput.value = new Date(startDateMs).toISOString().split('T')[0];
 
-  // 1. ดึงข้อมูลกราฟจริงจาก Binance API (PAXGUSDT = ทองคำ Spot 1:1 / BTCUSDT = บิตคอยน์)
-  async function loadMarketData(useStartDate = false) {
-    stopPlay();
-    const spec = SYMBOLS[currentSymbol];
-    const badge = document.getElementById('ohlcBadge');
-    badge.textContent = `กำลังดึงข้อมูลจริง ${currentSymbol} (${currentTF})...`;
-
-    try {
-      let url = `https://api.binance.com/api/v3/klines?symbol=${spec.binancePair}&interval=${currentTF}&limit=800`;
-      if (useStartDate) {
-        url += `&startTime=${startDateMs}`;
-      }
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('API Error');
-      const raw = await res.json();
-
-      if (Array.isArray(raw) && raw.length > 20) {
-        candles = calcEMA(raw.map(k => ({
-          time: k[0],
-          open: parseFloat(k[1]),
-          high: parseFloat(k[2]),
-          low: parseFloat(k[3]),
-          close: parseFloat(k[4]),
-          emaF: null,
-          emaS: null
-        })), 9, 21);
-
-        // หากเลือกวันที่เริ่มต้น ให้เริ่มเล่นจากแท่งที่ 30 ของช่วงเวลานั้น
-        currentIndex = useStartDate ? Math.min(30, candles.length - 1) : Math.min(80, candles.length - 1);
-        setupSliderAndReset();
-        badge.textContent = `🟢 Live Sync: ${currentSymbol} (${currentTF}) | ลากแกนราคาขวาเพื่อยืด/หด`;
-        return;
-      }
-    } catch (err) {
-      console.warn('Fallback to simulated data:', err);
-    }
-
-    // Fallback กรณีไม่มีเน็ต หรือ API บล็อก
-    candles = generateFallbackData(currentSymbol, timeframeMin, startDateMs, 800);
-    currentIndex = Math.min(50, candles.length - 1);
-    setupSliderAndReset();
-    badge.textContent = `🟡 Offline Mode: ${currentSymbol} (~${spec.fallbackPrice}) | นำเข้า CSV ได้`;
-  }
-
-  function generateFallbackData(symbolKey, tfMin, fromMs, count = 800) {
+  // สร้างชุดข้อมูล 1 นาทีต่อเนื่อง 15,000 แท่ง (~10 วันเต็ม ครอบคลุมตั้งแต่ 1m ถึง 1D)
+  function generateMaster1mData(symbolKey, fromMs, anchorPrice, count = 15000) {
     const spec = SYMBOLS[symbolKey];
     const arr = [];
-    let time = fromMs;
-    let price = spec.fallbackPrice;
-    const vol = spec.volBase * Math.sqrt(tfMin);
+    // ปรับเวลาเริ่มต้นให้ลงตัวกับนาทีที่ 00:00
+    let time = Math.floor(fromMs / 60000) * 60000;
+    let price = anchorPrice;
+    const vol = spec.vol1m;
 
     for (let i = 0; i < count; i++) {
-      const chg = (Math.random() - 0.492) * vol * 1.8;
+      const chg = (Math.random() - 0.495) * vol * 1.6;
       const open = price;
       const close = Math.max(1, open + chg);
-      const high = Math.max(open, close) + Math.random() * vol * 0.65;
-      const low = Math.max(1, Math.min(open, close) - Math.random() * vol * 0.65);
-      arr.push({ time, open, high, low, close, emaF: null, emaS: null });
+      const high = Math.max(open, close) + Math.random() * vol * 0.6;
+      const low = Math.max(1, Math.min(open, close) - Math.random() * vol * 0.6);
+      arr.push({ time, open, high, low, close });
       price = close;
-      time += tfMin * 60000;
+      time += 60000;
     }
-    return calcEMA(arr, 9, 21);
+    return arr;
+  }
+
+  // รวมแท่งเทียน 1m เป็น Timeframe ที่เลือก (1m, 5m, 15m, 1H, 4H, 1D) แบบเดียวกับ TradingView
+  function rebuildTimeframeCandles() {
+    if (!base1mCandles.length) return;
+    const tfMs = timeframeMin * 60000;
+    const activeSlice = base1mCandles.slice(0, current1mIndex + 1);
+
+    if (timeframeMin === 1) {
+      candles = calcEMA(activeSlice.map(c => ({ ...c })), 9, 21);
+    } else {
+      const grouped = [];
+      let bucket = null;
+      let bucketStart = -1;
+
+      for (const c of activeSlice) {
+        const bStart = Math.floor(c.time / tfMs) * tfMs;
+        if (bStart !== bucketStart) {
+          if (bucket) grouped.push(bucket);
+          bucketStart = bStart;
+          bucket = { time: bStart, open: c.open, high: c.high, low: c.low, close: c.close };
+        } else {
+          bucket.high = Math.max(bucket.high, c.high);
+          bucket.low = Math.min(bucket.low, c.low);
+          bucket.close = c.close;
+        }
+      }
+      if (bucket) grouped.push(bucket);
+      candles = calcEMA(grouped, 9, 21);
+    }
+
+    currentIndex = Math.max(0, candles.length - 1);
+    const slider = document.getElementById('progressSlider');
+    slider.min = 10;
+    slider.max = Math.max(20, base1mCandles.length - 1);
+    slider.value = current1mIndex;
   }
 
   function calcEMA(data, fast, slow) {
@@ -388,11 +393,45 @@
     return data;
   }
 
-  function setupSliderAndReset() {
-    const slider = document.getElementById('progressSlider');
-    slider.min = 5;
-    slider.max = Math.max(10, candles.length - 1);
-    slider.value = currentIndex;
+  async function initSymbolData(syncLive = false) {
+    stopPlay();
+    const spec = SYMBOLS[currentSymbol];
+    let anchor = parseFloat(document.getElementById('anchorPriceInput').value) || spec.defaultPrice;
+    const badge = document.getElementById('ohlcBadge');
+
+    if (syncLive) {
+      badge.textContent = `กำลังซิงค์ราคาจริง ${currentSymbol}...`;
+      try {
+        const url = `https://api.binance.com/api/v3/klines?symbol=${spec.binancePair}&interval=1m&limit=1000`;
+        const res = await fetch(url);
+        const raw = await res.json();
+        if (Array.isArray(raw) && raw.length > 50) {
+          base1mCandles = raw.map(k => ({
+            time: k[0],
+            open: parseFloat(k[1]),
+            high: parseFloat(k[2]),
+            low: parseFloat(k[3]),
+            close: parseFloat(k[4])
+          }));
+          anchor = base1mCandles[base1mCandles.length - 1].close;
+          document.getElementById('anchorPriceInput').value = anchor.toFixed(spec.decimals);
+          current1mIndex = Math.min(200, base1mCandles.length - 1);
+          resetSessionState();
+          badge.textContent = `🟢 Synced Live ${currentSymbol} (1m–1D ตรงกันทุก TF)`;
+          return;
+        }
+      } catch (e) {
+        console.warn('Live fetch failed, using anchored master data');
+      }
+    }
+
+    base1mCandles = generateMaster1mData(currentSymbol, startDateMs, anchor, 15000);
+    current1mIndex = 1440; // เริ่มต้นที่ครบ 1 วันแรก เพื่อให้ดูกราฟ 1H, 4H, 1D ได้ทันที!
+    resetSessionState();
+    badge.textContent = `📊 ${currentSymbol} | ทุก TF ซิงค์จากฐาน 1m เดียวกันเป๊ะ`;
+  }
+
+  function resetSessionState() {
     balance = initialBalance;
     orders = [];
     history = [];
@@ -400,11 +439,12 @@
     yScaleZoom = 1.0;
     yPanOffset = 0.0;
     rightOffsetBars = 8;
+    rebuildTimeframeCandles();
     render();
     updateUI();
   }
 
-  // Coordinate System
+  // Coordinate Helpers (Timestamp-based เพื่อให้เปลี่ยน TF แล้วเส้นวาดและกล่อง RR อยู่ตำแหน่งเดิม)
   function priceToY(p) {
     const r = Math.max(0.0001, chartBounds.max - chartBounds.min);
     return chartBounds.chartH * (1 - (p - chartBounds.min) / r);
@@ -417,6 +457,20 @@
   }
   function xToIdx(x) {
     return Math.round(chartBounds.startSlotIdx + (x - chartBounds.stepX / 2) / chartBounds.stepX);
+  }
+  function timeToX(ts) {
+    if (!candles.length) return 0;
+    const tfMs = timeframeMin * 60000;
+    const firstTime = candles[0].time;
+    const floatIdx = (ts - firstTime) / tfMs;
+    return (floatIdx - chartBounds.startSlotIdx) * chartBounds.stepX + chartBounds.stepX / 2;
+  }
+  function xToTime(x) {
+    if (!candles.length) return Date.now();
+    const tfMs = timeframeMin * 60000;
+    const firstTime = candles[0].time;
+    const floatIdx = chartBounds.startSlotIdx + (x - chartBounds.stepX / 2) / chartBounds.stepX;
+    return firstTime + floatIdx * tfMs;
   }
 
   function formatDateTime(ms) {
@@ -440,12 +494,10 @@
     const chartW = W - axisW;
     const chartH = H - timeAxisH;
 
-    // คำนวณช่วง Index ที่แสดงผลตามการ Pan/Zoom
     const endSlotIdx = currentIndex + Math.round(rightOffsetBars);
     const startSlotIdx = endSlotIdx - Math.round(visibleBars);
     const stepX = chartW / Math.max(5, visibleBars);
 
-    // หา Min/Max ของราคาเฉพาะแท่งที่มองเห็น
     let minP = Infinity, maxP = -Infinity;
     const visStart = Math.max(0, startSlotIdx);
     const visEnd = Math.min(currentIndex, endSlotIdx);
@@ -462,7 +514,7 @@
         maxP = Math.max(maxP, o.entry, o.sl ?? o.entry, o.tp ?? o.entry);
       });
     }
-    if (!isFinite(minP)) { minP = spec.fallbackPrice * 0.995; maxP = spec.fallbackPrice * 1.005; }
+    if (!isFinite(minP)) { minP = spec.defaultPrice * 0.995; maxP = spec.defaultPrice * 1.005; }
 
     const midP = (maxP + minP) / 2 + yPanOffset;
     const halfSpan = ((maxP - minP) * 0.58) / yScaleZoom;
@@ -471,11 +523,11 @@
 
     chartBounds = { min: minP, max: maxP, chartW, chartH, axisW, stepX, startSlotIdx };
 
-    // 1. Background
+    // Background
     ctx.fillStyle = '#131722';
     ctx.fillRect(0, 0, W, H);
 
-    // 2. Grid Lines & Price Axis (Right)
+    // Grid & Y-Axis
     ctx.font = '10px monospace';
     ctx.textAlign = 'left';
     for (let i = 0; i <= 6; i++) {
@@ -488,18 +540,17 @@
       ctx.fillText(yToPrice(y).toFixed(spec.decimals), chartW + 5, y + 3);
     }
 
-    // เส้นแบ่งแกนราคาและแกนเวลา
     ctx.strokeStyle = '#363a45';
     ctx.beginPath();
     ctx.moveTo(chartW, 0); ctx.lineTo(chartW, H);
     ctx.moveTo(0, chartH); ctx.lineTo(W, chartH);
     ctx.stroke();
 
-    // 3. Drawings (อยู่ใต้แท่งเทียนเหมือน TradingView)
+    // Drawings (รวมกล่อง Long / Short RR ที่ลากปรับขอบได้)
     const allShapes = activeDrawing ? [...drawings, activeDrawing] : drawings;
-    allShapes.forEach(d => drawShape(d, chartW, chartH, spec));
+    allShapes.forEach((d, idx) => drawShape(d, idx === selectedDrawingIdx, chartW, chartH, spec));
 
-    // 4. Candlesticks & EMA (Clip ให้อยู่ในพื้นที่กราฟ)
+    // Candlesticks & EMA
     ctx.save();
     ctx.beginPath(); ctx.rect(0, 0, chartW, chartH); ctx.clip();
 
@@ -521,11 +572,11 @@
       if (c.emaF) fastPts.push({ x, y: priceToY(c.emaF) });
       if (c.emaS) slowPts.push({ x, y: priceToY(c.emaS) });
 
-      // แสดงเวลาด้านล่างทุกๆ 12 แท่ง
-      if (i % 12 === 0) {
+      if (i % 10 === 0) {
         ctx.fillStyle = '#787b86';
         ctx.font = '9px sans-serif';
-        ctx.fillText(formatDateTime(c.time).split(' ')[1], x - 12, chartH + 13);
+        const lbl = timeframeMin >= 1440 ? formatDateTime(c.time).split(' ')[0] : formatDateTime(c.time).split(' ')[1];
+        ctx.fillText(lbl, x - 12, chartH + 13);
       }
     }
 
@@ -533,7 +584,7 @@
     drawLinePath(slowPts, '#f59e0b');
     ctx.restore();
 
-    // 5. Current Price Line & Axis Badge
+    // Current Price Line & Tag
     const last = candles[currentIndex];
     if (last) {
       document.getElementById('barTimeText').textContent = formatDateTime(last.time);
@@ -550,7 +601,7 @@
       }
     }
 
-    // 6. Interactive Order Lines (Entry / SL / TP)
+    // Active / Pending Order Lines
     orders.forEach(o => {
       const isBuy = o.type.includes('BUY');
       drawOrderTag(o.entry, `${o.type} ${o.lot.toFixed(2)}`, isBuy ? '#2962ff' : '#9c27b0', !o.triggered, true);
@@ -564,7 +615,7 @@
       }
     });
 
-    // 7. Crosshair (TradingView Style)
+    // Crosshair
     if (crosshairPos && crosshairPos.x < chartW && crosshairPos.y < chartH) {
       ctx.setLineDash([4, 4]);
       ctx.strokeStyle = 'rgba(209, 212, 220, 0.5)';
@@ -575,14 +626,12 @@
       ctx.stroke();
       ctx.setLineDash([]);
 
-      // ป้ายราคาตรงแกนขวา
       const hoverPrice = yToPrice(crosshairPos.y);
       ctx.fillStyle = '#363a45';
       ctx.fillRect(chartW + 1, crosshairPos.y - 8, axisW - 2, 16);
       ctx.fillStyle = '#fff'; ctx.font = '10px monospace';
       ctx.fillText(hoverPrice.toFixed(spec.decimals), chartW + 4, crosshairPos.y + 3.5);
 
-      // ป้ายเวลาตรงแกนล่าง
       const hoverIdx = Math.max(0, Math.min(currentIndex, xToIdx(crosshairPos.x)));
       if (candles[hoverIdx]) {
         const tStr = formatDateTime(candles[hoverIdx].time);
@@ -594,8 +643,8 @@
     }
   }
 
-  function drawShape(d, chartW, chartH, spec) {
-    const x1 = idxToX(d.i1), x2 = idxToX(d.i2);
+  function drawShape(d, isSelected, chartW, chartH, spec) {
+    const x1 = timeToX(d.t1), x2 = timeToX(d.t2);
     const y1 = priceToY(d.p1), y2 = priceToY(d.p2);
 
     ctx.save();
@@ -643,23 +692,61 @@
         ctx.fillText(`${lvl} (${p.toFixed(spec.decimals)})`, left + 3, y - 2);
       });
     } else if (d.tool === 'long' || d.tool === 'short') {
+      // TradingView Long / Short RR Tool พร้อมปุ่มจุดจับ (Handles) ลากปรับ TP / SL / Entry / ความกว้างได้
       const yEntry = priceToY(d.midP);
-      const left = Math.min(x1, x2), w = Math.max(50, Math.abs(x2 - x1));
-      ctx.fillStyle = 'rgba(8, 153, 129, 0.26)';
-      ctx.fillRect(left, Math.min(yEntry, y2), w, Math.abs(y2 - yEntry));
-      ctx.strokeStyle = '#089981'; ctx.strokeRect(left, Math.min(yEntry, y2), w, Math.abs(y2 - yEntry));
+      const ySL = priceToY(d.p1);
+      const yTP = priceToY(d.p2);
+      const left = Math.min(x1, x2);
+      const right = Math.max(x1, x2, left + 65);
+      const w = right - left;
 
-      ctx.fillStyle = 'rgba(242, 54, 69, 0.26)';
-      ctx.fillRect(left, Math.min(yEntry, y1), w, Math.abs(y1 - yEntry));
-      ctx.strokeStyle = '#f23645'; ctx.strokeRect(left, Math.min(yEntry, y1), w, Math.abs(y1 - yEntry));
+      // กล่องโซน TP (เขียว)
+      ctx.fillStyle = 'rgba(8, 153, 129, 0.28)';
+      ctx.fillRect(left, Math.min(yEntry, yTP), w, Math.abs(yTP - yEntry));
+      ctx.strokeStyle = '#089981'; ctx.lineWidth = 1.2;
+      ctx.strokeRect(left, Math.min(yEntry, yTP), w, Math.abs(yTP - yEntry));
 
-      const risk = Math.abs(d.midP - d.p1);
-      const reward = Math.abs(d.p2 - d.midP);
-      const rr = risk > 0 ? (reward / risk).toFixed(2) : '2.00';
-      ctx.fillStyle = '#1e222d';
-      ctx.fillRect(left + 4, yEntry - 8, 62, 16);
+      // กล่องโซน SL (แดง)
+      ctx.fillStyle = 'rgba(242, 54, 69, 0.28)';
+      ctx.fillRect(left, Math.min(yEntry, ySL), w, Math.abs(ySL - yEntry));
+      ctx.strokeStyle = '#f23645'; ctx.lineWidth = 1.2;
+      ctx.strokeRect(left, Math.min(yEntry, ySL), w, Math.abs(ySL - yEntry));
+
+      // คำนวณ RR และเงินกำไร/ขาดทุนตาม Lot ปัจจุบัน
+      const riskDiff = Math.abs(d.midP - d.p1);
+      const rewardDiff = Math.abs(d.p2 - d.midP);
+      const rr = riskDiff > 0 ? (rewardDiff / riskDiff).toFixed(2) : '0.00';
+      const tpMoney = (rewardDiff * spec.contractSize * lotSize).toFixed(0);
+      const slMoney = (riskDiff * spec.contractSize * lotSize).toFixed(0);
+
+      // ป้ายแสดงผลบนกล่อง (TP / RR / SL)
+      ctx.fillStyle = '#089981';
+      ctx.fillRect(left + 4, yTP - 15, Math.min(w - 8, 105), 14);
       ctx.fillStyle = '#fff'; ctx.font = 'bold 9px sans-serif';
-      ctx.fillText(`RR 1:${rr}`, left + 8, yEntry + 3);
+      ctx.fillText(`TP: +$${tpMoney} (${rewardDiff.toFixed(spec.decimals)})`, left + 7, yTP - 5);
+
+      ctx.fillStyle = '#1e222d';
+      ctx.fillRect(left + 4, yEntry - 8, Math.min(w - 8, 95), 16);
+      ctx.fillStyle = '#fff';
+      ctx.fillText(`RR 1 : ${rr}`, left + 8, yEntry + 3);
+
+      ctx.fillStyle = '#f23645';
+      ctx.fillRect(left + 4, ySL + 1, Math.min(w - 8, 105), 14);
+      ctx.fillStyle = '#fff';
+      ctx.fillText(`SL: -$${slMoney} (${riskDiff.toFixed(spec.decimals)})`, left + 7, ySL + 11);
+
+      // จุดจับ (Control Circles) สำหรับลากปรับขอบบน-ล่าง-กลาง-ขวาด้วยนิ้ว
+      const handles = [
+        { x: left + w / 2, y: yTP, color: '#089981' },   // ปรับ TP
+        { x: left + w / 2, y: ySL, color: '#f23645' },   // ปรับ SL
+        { x: left, y: yEntry, color: '#2962ff' },        // ย้าย Entry
+        { x: right, y: yEntry, color: '#ffffff' }        // ยืดความกว้างช่วงเวลา
+      ];
+      handles.forEach(h => {
+        ctx.fillStyle = h.color;
+        ctx.beginPath(); ctx.arc(h.x, h.y, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#000'; ctx.lineWidth = 1; ctx.stroke();
+      });
     }
     ctx.restore();
   }
@@ -689,14 +776,9 @@
   }
 
   // =========================================================================
-  // TradingView Touch & Mouse Engine:
-  // 1) ลากแกนราคาด้านขวา -> ยืด/หดความสูงกราฟ (Y-Axis Zoom)
-  // 2) ลากพื้นที่กราฟ (โหมด Cursor) -> เลื่อนดูกราฟซ้าย-ขวา/ขึ้น-ลง (Pan)
-  // 3) ถ่าง/หุบ 2 นิ้ว (Pinch) หรือหมุนลูกกลิ้งเมาส์ -> Zoom In / Zoom Out แท่งเทียน
-  // 4) ลากเส้น Order (Entry/SL/TP) -> ปรับราคาคำสั่งซื้อขาย
-  // 5) โหมดวาด (Box/Trend/Ray/Fib/Long/Short) -> วาดลงบนกราฟทันที
+  // Touch & Mouse Gesture Engine (Natural TradingView Pan & Zoom)
   // =========================================================================
-  let pointerMode = null; // 'dragOrder' | 'draw' | 'scaleY' | 'panChart'
+  let pointerMode = null; // 'dragOrder' | 'dragRRHandle' | 'draw' | 'scaleY' | 'panChart'
   let draggingOrder = null;
   let lastPointer = { x: 0, y: 0 };
   let initialPinchDist = null;
@@ -707,7 +789,6 @@
     return { x: clientX - rect.left, y: clientY - rect.top };
   }
 
-  // Multi-touch Pinch Zoom สำหรับ iPhone / iPad
   canvas.addEventListener('touchstart', e => {
     if (e.touches.length === 2) {
       e.preventDefault();
@@ -731,11 +812,8 @@
     }
   }, { passive: false });
 
-  canvas.addEventListener('touchend', () => {
-    initialPinchDist = null;
-  });
+  canvas.addEventListener('touchend', () => { initialPinchDist = null; });
 
-  // Mouse Wheel Zoom บน Windows
   canvas.addEventListener('wheel', e => {
     e.preventDefault();
     const zoomFactor = e.deltaY > 0 ? 1.12 : 0.88;
@@ -743,14 +821,10 @@
     render();
   }, { passive: false });
 
-  // Double-click แกนราคาขวาเพื่อ Auto Fit
   canvas.addEventListener('dblclick', e => {
     const pos = getLocalPos(e.clientX, e.clientY);
     if (pos.x >= chartBounds.chartW) {
-      autoScaleY = true;
-      yScaleZoom = 1.0;
-      yPanOffset = 0.0;
-      render();
+      autoScaleY = true; yScaleZoom = 1.0; yPanOffset = 0.0; render();
     }
   });
 
@@ -759,23 +833,28 @@
     const pos = getLocalPos(e.clientX, e.clientY);
     lastPointer = pos;
 
-    // 1. แตะที่แกนราคาด้านขวา -> ยืด/หดความสูงกราฟ (Price Scale Zoom)
+    // 1. แตะแกนราคาขวา -> ยืด/หดความสูงกราฟ
     if (pos.x >= chartBounds.chartW) {
       pointerMode = 'scaleY';
       autoScaleY = false;
       return;
     }
 
-    // 2. โหมด Bar Replay Cut (✂️) -> ตัดกราฟเริ่มตรงแท่งที่จิ้ม
+    // 2. โหมด Bar Replay Cut (✂️)
     if (selectedTool === 'cut') {
-      currentIndex = Math.max(5, Math.min(candles.length - 1, xToIdx(pos.x)));
-      document.getElementById('progressSlider').value = currentIndex;
+      const clickedCandleIdx = Math.max(5, Math.min(candles.length - 1, xToIdx(pos.x)));
+      const targetTs = candles[clickedCandleIdx].time;
+      const found1m = base1mCandles.findIndex(c => c.time >= targetTs);
+      if (found1m > 5) {
+        current1mIndex = found1m;
+        rebuildTimeframeCandles();
+      }
       setTool('cursor');
       render(); updateUI();
       return;
     }
 
-    // 3. โหมด Crosshair -> เลื่อนดูราคาและเวลา
+    // 3. โหมด Crosshair
     if (selectedTool === 'crosshair') {
       crosshairPos = pos;
       pointerMode = 'crosshair';
@@ -783,8 +862,33 @@
       return;
     }
 
-    // 4. โหมด Cursor -> เช็กว่าจับเส้น Order อยู่หรือไม่ ถ้าไม่ถือเป็นการลากเลื่อนกราฟ (Pan)
+    // 4. โหมด Cursor: เช็กจุดจับกล่อง RR -> เช็กเส้น Order -> ถ้าไม่ใช่ให้เลื่อนกราฟ (Natural Pan)
     if (selectedTool === 'cursor') {
+      // 4A. เช็กจุดจับของกล่อง Long / Short RR ก่อน
+      for (let i = drawings.length - 1; i >= 0; i--) {
+        const d = drawings[i];
+        if (d.tool === 'long' || d.tool === 'short') {
+          const x1 = timeToX(d.t1), x2 = timeToX(d.t2);
+          const left = Math.min(x1, x2), right = Math.max(x1, x2, left + 65);
+          const midX = (left + right) / 2;
+          const yTP = priceToY(d.p2), ySL = priceToY(d.p1), yEntry = priceToY(d.midP);
+
+          if (Math.hypot(pos.x - midX, pos.y - yTP) < 18) {
+            pointerMode = 'dragRRHandle'; draggingHandle = { drawIdx: i, handle: 'tp' }; return;
+          }
+          if (Math.hypot(pos.x - midX, pos.y - ySL) < 18) {
+            pointerMode = 'dragRRHandle'; draggingHandle = { drawIdx: i, handle: 'sl' }; return;
+          }
+          if (Math.hypot(pos.x - left, pos.y - yEntry) < 18) {
+            pointerMode = 'dragRRHandle'; draggingHandle = { drawIdx: i, handle: 'entry' }; return;
+          }
+          if (Math.hypot(pos.x - right, pos.y - yEntry) < 18) {
+            pointerMode = 'dragRRHandle'; draggingHandle = { drawIdx: i, handle: 'resizeRight' }; return;
+          }
+        }
+      }
+
+      // 4B. เช็กเส้น Order (Entry / SL / TP)
       for (let i = orders.length - 1; i >= 0; i--) {
         const o = orders[i];
         const yEntry = priceToY(o.entry);
@@ -793,30 +897,26 @@
             orders.splice(i, 1); render(); updateUI(); return;
           }
           if (!o.triggered) {
-            pointerMode = 'dragOrder';
-            draggingOrder = { idx: i, field: 'entry' };
-            return;
+            pointerMode = 'dragOrder'; draggingOrder = { idx: i, field: 'entry' }; return;
           }
         }
         if (o.sl && Math.abs(pos.y - priceToY(o.sl)) < 14) {
-          pointerMode = 'dragOrder';
-          draggingOrder = { idx: i, field: 'sl' };
-          return;
+          pointerMode = 'dragOrder'; draggingOrder = { idx: i, field: 'sl' }; return;
         }
         if (o.tp && Math.abs(pos.y - priceToY(o.tp)) < 14) {
-          pointerMode = 'dragOrder';
-          draggingOrder = { idx: i, field: 'tp' };
-          return;
+          pointerMode = 'dragOrder'; draggingOrder = { idx: i, field: 'tp' }; return;
         }
       }
+
+      // 4C. เลื่อนกราฟ (Natural Pan)
       pointerMode = 'panChart';
       return;
     }
 
-    // 5. โหมดวาดเครื่องมือต่างๆ (Box / Trend / Ray / H-Line / Fib / Long / Short)
+    // 5. โหมดวาดเครื่องมือใหม่
     pointerMode = 'draw';
-    const i1 = xToIdx(pos.x), p1 = yToPrice(pos.y);
-    activeDrawing = { tool: selectedTool, i1, i2: i1, p1, p2: p1, midP: p1 };
+    const t1 = xToTime(pos.x), p1 = yToPrice(pos.y);
+    activeDrawing = { tool: selectedTool, t1, t2: t1, p1, p2: p1, midP: p1 };
   });
 
   canvas.addEventListener('pointermove', e => {
@@ -826,16 +926,16 @@
     lastPointer = pos;
 
     if (pointerMode === 'scaleY') {
-      // ลากขึ้น = ขยายกราฟให้สูงขึ้น, ลากลง = บีบกราฟให้แบนลง
       const factor = 1 - dy * 0.008;
       yScaleZoom = Math.max(0.15, Math.min(8.0, yScaleZoom * factor));
       render();
     } else if (pointerMode === 'panChart') {
-      // เลื่อนกราฟซ้าย-ขวา
-      rightOffsetBars += dx / chartBounds.stepX;
-      rightOffsetBars = Math.max(-currentIndex + 10, Math.min(visibleBars - 5, rightOffsetBars));
+      // แก้ไขทิศทางให้ตรงตาม TradingView:
+      // ลากนิ้วไปทางซ้าย (dx < 0) -> กราฟเลื่อนไปทางซ้ายเพื่อเปิดพื้นที่อนาคตทางขวา (rightOffsetBars เพิ่มขึ้น)
+      // ลากนิ้วไปทางขวา (dx > 0) -> กราฟเลื่อนไปทางขวาเพื่อย้อนดูอดีตทางซ้าย (rightOffsetBars ลดลง)
+      rightOffsetBars -= dx / chartBounds.stepX;
+      rightOffsetBars = Math.max(-currentIndex + 8, Math.min(visibleBars - 5, rightOffsetBars));
 
-      // ถ้าปิด AutoScaleY ให้เลื่อนกราฟขึ้น-ลงอิสระได้เหมือน TradingView
       if (!autoScaleY) {
         const pricePerPx = (chartBounds.max - chartBounds.min) / chartBounds.chartH;
         yPanOffset += dy * pricePerPx;
@@ -847,8 +947,20 @@
     } else if (pointerMode === 'dragOrder' && draggingOrder) {
       orders[draggingOrder.idx][draggingOrder.field] = yToPrice(pos.y);
       render();
+    } else if (pointerMode === 'dragRRHandle' && draggingHandle) {
+      const d = drawings[draggingHandle.drawIdx];
+      if (draggingHandle.handle === 'tp') d.p2 = yToPrice(pos.y);
+      else if (draggingHandle.handle === 'sl') d.p1 = yToPrice(pos.y);
+      else if (draggingHandle.handle === 'entry') {
+        const newMid = yToPrice(pos.y);
+        const shift = newMid - d.midP;
+        d.midP = newMid; d.p1 += shift; d.p2 += shift;
+      } else if (draggingHandle.handle === 'resizeRight') {
+        d.t2 = Math.max(d.t1 + timeframeMin * 60000 * 3, xToTime(pos.x));
+      }
+      render();
     } else if (pointerMode === 'draw' && activeDrawing) {
-      activeDrawing.i2 = xToIdx(pos.x);
+      activeDrawing.t2 = xToTime(pos.x);
       activeDrawing.p2 = yToPrice(pos.y);
       if (activeDrawing.tool === 'long') {
         const r = Math.abs(activeDrawing.p1 - activeDrawing.p2);
@@ -865,6 +977,10 @@
 
   window.addEventListener('pointerup', () => {
     if (pointerMode === 'draw' && activeDrawing) {
+      // กำหนดความกว้างเริ่มต้นให้กล่อง Long/Short RR หากแตะสั้นๆ
+      if ((activeDrawing.tool === 'long' || activeDrawing.tool === 'short') && Math.abs(activeDrawing.t2 - activeDrawing.t1) < timeframeMin * 60000 * 4) {
+        activeDrawing.t2 = activeDrawing.t1 + timeframeMin * 60000 * 10;
+      }
       drawings.push(activeDrawing);
       activeDrawing = null;
       setTool('cursor');
@@ -872,44 +988,55 @@
     }
     pointerMode = null;
     draggingOrder = null;
+    draggingHandle = null;
   });
 
-  // Simulation Step & Order Matching
+  // Simulation Step (เดินหน้าตาม Master Clock 1m และอัปเดตทุก Timeframe ให้ตรงกัน)
   function stepForward() {
-    if (currentIndex >= candles.length - 1) { stopPlay(); return; }
-    currentIndex++;
-    document.getElementById('progressSlider').value = currentIndex;
-    const bar = candles[currentIndex];
-    const spec = SYMBOLS[currentSymbol];
-
-    const remaining = [];
-    for (const o of orders) {
-      if (!o.triggered) {
-        if (o.type === 'BUY LIMIT' && bar.low <= o.entry) o.triggered = true;
-        else if (o.type === 'SELL LIMIT' && bar.high >= o.entry) o.triggered = true;
-        else if (o.type === 'BUY STOP' && bar.high >= o.entry) o.triggered = true;
-        else if (o.type === 'SELL STOP' && bar.low <= o.entry) o.triggered = true;
-      }
-      if (o.triggered) {
-        const isBuy = o.type.includes('BUY');
-        let exitP = null, reason = '';
-        if (isBuy) {
-          if (o.sl && bar.low <= o.sl) { exitP = o.sl; reason = 'SL'; }
-          else if (o.tp && bar.high >= o.tp) { exitP = o.tp; reason = 'TP'; }
-        } else {
-          if (o.sl && bar.high >= o.sl) { exitP = o.sl; reason = 'SL'; }
-          else if (o.tp && bar.low <= o.tp) { exitP = o.tp; reason = 'TP'; }
-        }
-        if (exitP !== null) {
-          const pnl = (isBuy ? exitP - o.entry : o.entry - exitP) * spec.contractSize * o.lot;
-          balance += pnl;
-          history.unshift({ type: o.type, entry: o.entry, exit: exitP, pnl, reason });
-          continue;
-        }
-      }
-      remaining.push(o);
+    const stepMinutes = Math.max(1, timeframeMin);
+    if (current1mIndex + stepMinutes >= base1mCandles.length) {
+      stopPlay();
+      return;
     }
-    orders = remaining;
+
+    // เช็กการชน SL / TP / Pending Order ในทุกๆ 1 นาทีที่ผ่านไป เพื่อความแม่นยำสูงสุดระดับ Tick/M1
+    const spec = SYMBOLS[currentSymbol];
+    for (let m = 1; m <= stepMinutes; m++) {
+      const bar1m = base1mCandles[current1mIndex + m];
+      if (!bar1m) break;
+
+      const remaining = [];
+      for (const o of orders) {
+        if (!o.triggered) {
+          if (o.type === 'BUY LIMIT' && bar1m.low <= o.entry) o.triggered = true;
+          else if (o.type === 'SELL LIMIT' && bar1m.high >= o.entry) o.triggered = true;
+          else if (o.type === 'BUY STOP' && bar1m.high >= o.entry) o.triggered = true;
+          else if (o.type === 'SELL STOP' && bar1m.low <= o.entry) o.triggered = true;
+        }
+        if (o.triggered) {
+          const isBuy = o.type.includes('BUY');
+          let exitP = null, reason = '';
+          if (isBuy) {
+            if (o.sl && bar1m.low <= o.sl) { exitP = o.sl; reason = 'SL'; }
+            else if (o.tp && bar1m.high >= o.tp) { exitP = o.tp; reason = 'TP'; }
+          } else {
+            if (o.sl && bar1m.high >= o.sl) { exitP = o.sl; reason = 'SL'; }
+            else if (o.tp && bar1m.low <= o.tp) { exitP = o.tp; reason = 'TP'; }
+          }
+          if (exitP !== null) {
+            const pnl = (isBuy ? exitP - o.entry : o.entry - exitP) * spec.contractSize * o.lot;
+            balance += pnl;
+            history.unshift({ type: o.type, entry: o.entry, exit: exitP, pnl, reason });
+            continue;
+          }
+        }
+        remaining.push(o);
+      }
+      orders = remaining;
+    }
+
+    current1mIndex += stepMinutes;
+    rebuildTimeframeCandles();
     render();
     updateUI();
   }
@@ -959,7 +1086,7 @@
           <div><b style="color:${isBuy ? 'var(--blue)' : 'var(--purple)'}">${o.type}</b> ${o.lot.toFixed(2)} @ ${o.entry.toFixed(spec.decimals)}</div>
           <div>${o.triggered ? `<b style="color:${pnl >= 0 ? 'var(--green)' : 'var(--red)'}">${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}</b>` : '<span style="color:var(--yellow)">PENDING</span>'}</div>
         </div>`;
-      }).join('') || '<div style="color:var(--muted);text-align:center;margin-top:15px;">ไม่มีออเดอร์ (กด Place หรือลากเส้นบนกราฟ)</div>';
+      }).join('') || '<div style="color:var(--muted);text-align:center;margin-top:15px;">ไม่มีออเดอร์ (กด Place หรือวาดกล่อง RR แล้วลากปรับได้)</div>';
     } else {
       list.innerHTML = history.map(h => `
         <div class="order-row">
@@ -973,32 +1100,30 @@
   // Controls Binding
   document.getElementById('symbolSelect').onchange = e => {
     currentSymbol = e.target.value;
-    loadMarketData(false);
+    document.getElementById('anchorPriceInput').value = SYMBOLS[currentSymbol].defaultPrice;
+    initSymbolData(false);
   };
 
   dateInput.onchange = e => {
     const parsed = Date.parse(e.target.value);
     if (!isNaN(parsed)) {
       startDateMs = parsed;
-      loadMarketData(true);
+      initSymbolData(false);
     }
   };
 
-  document.getElementById('syncLiveBtn').onclick = () => loadMarketData(false);
+  document.getElementById('applyPriceBtn').onclick = () => initSymbolData(false);
+  document.getElementById('syncLiveBtn').onclick = () => initSymbolData(true);
 
   document.getElementById('autoFitBtn').onclick = () => {
-    autoScaleY = true;
-    yScaleZoom = 1.0;
-    yPanOffset = 0.0;
-    rightOffsetBars = 8;
-    render();
+    autoScaleY = true; yScaleZoom = 1.0; yPanOffset = 0.0; rightOffsetBars = 8; render();
   };
 
   document.getElementById('applyBalBtn').onclick = () => {
     const val = parseFloat(document.getElementById('initBalInput').value);
     if (!isNaN(val) && val > 0) {
       initialBalance = val;
-      setupSliderAndReset();
+      resetSessionState();
     }
   };
 
@@ -1009,16 +1134,20 @@
     if (isPlaying) { stopPlay(); startPlay(); }
   };
   document.getElementById('progressSlider').oninput = e => {
-    currentIndex = Number(e.target.value); render(); updateUI();
+    current1mIndex = Number(e.target.value);
+    rebuildTimeframeCandles();
+    render(); updateUI();
   };
 
   document.getElementById('lotMinus').onclick = () => {
     lotSize = Math.max(0.01, +(lotSize - 0.05).toFixed(2));
     document.getElementById('lotText').textContent = lotSize.toFixed(2);
+    render();
   };
   document.getElementById('lotPlus').onclick = () => {
     lotSize = +(lotSize + 0.05).toFixed(2);
     document.getElementById('lotText').textContent = lotSize.toFixed(2);
+    render();
   };
   document.getElementById('riskSelect').onchange = e => { riskPercent = Number(e.target.value); };
 
@@ -1035,7 +1164,7 @@
 
   document.getElementById('placeOrderBtn').onclick = () => {
     const spec = SYMBOLS[currentSymbol];
-    const price = candles[currentIndex]?.close || spec.fallbackPrice;
+    const price = candles[currentIndex]?.close || spec.defaultPrice;
     const isBuy = selectedOrderType.includes('BUY');
     let entry = price, triggered = false;
 
@@ -1089,13 +1218,14 @@
   document.getElementById('undoDrawBtn').onclick = () => { drawings.pop(); render(); };
   document.getElementById('clearDrawBtn').onclick = () => { drawings = []; render(); };
 
-  document.querySelectorAll('#tfGroup .btn[data-tf]').forEach(b => {
+  // สลับ Timeframe (1m, 5m, 15m, 1H, 4H, 1D) โดยใช้ฐานข้อมูลเดียวกัน 100%
+  document.querySelectorAll('#tfGroup .btn[data-min]').forEach(b => {
     b.onclick = () => {
-      document.querySelectorAll('#tfGroup .btn[data-tf]').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('#tfGroup .btn[data-min]').forEach(x => x.classList.remove('active'));
       b.classList.add('active');
-      currentTF = b.dataset.tf;
       timeframeMin = Number(b.dataset.min);
-      loadMarketData(false);
+      rebuildTimeframeCandles();
+      render();
     };
   });
 
@@ -1112,7 +1242,7 @@
     updateUI();
   };
 
-  // CSV Importer (รองรับไฟล์ MT4 / MT5 ทุกรูปแบบ)
+  // CSV Importer (รองรับไฟล์ M1 จาก MT4 / MT5 แล้วรวมเป็นทุก TF ให้อัตโนมัติ)
   document.getElementById('csvInput').onchange = e => {
     const file = e.target.files[0];
     if (!file) return;
@@ -1125,25 +1255,24 @@
         if (c.length >= 6 && !isNaN(parseFloat(c[2]))) {
           const dt = Date.parse(`${c[0].replace(/\./g, '-')}T${c[1] || '00:00'}:00Z`);
           parsed.push({
-            time: isNaN(dt) ? Date.now() : dt,
+            time: isNaN(dt) ? (Date.now() + parsed.length * 60000) : dt,
             open: parseFloat(c[2]), high: parseFloat(c[3]),
-            low: parseFloat(c[4]), close: parseFloat(c[5]),
-            emaF: null, emaS: null
+            low: parseFloat(c[4]), close: parseFloat(c[5])
           });
         }
       }
       if (parsed.length > 20) {
-        candles = calcEMA(parsed, 9, 21);
-        currentIndex = Math.min(40, candles.length - 1);
-        setupSliderAndReset();
-        document.getElementById('ohlcBadge').textContent = `📂 โหลดไฟล์ CSV สำเร็จ (${candles.length} แท่ง)`;
+        base1mCandles = parsed;
+        current1mIndex = Math.min(200, base1mCandles.length - 1);
+        resetSessionState();
+        document.getElementById('ohlcBadge').textContent = `📂 CSV MT4/MT5 (${parsed.length} แท่ง) — ทุก TF ซิงค์ตรงกัน`;
       }
     };
     reader.readAsText(file);
   };
 
   window.addEventListener('resize', render);
-  loadMarketData(false);
+  initSymbolData(false);
 })();
 </script>
 </body>
