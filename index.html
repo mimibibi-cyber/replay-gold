@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="TV Replay Pro" />
-  <title>XAUUSD & BTCUSD Backtester (OANDA / MT4 Sync)</title>
+  <title>TradingView Style Backtester (1-Year 1m High-Performance)</title>
   <style>
     :root {
       --bg: #131722;
@@ -20,6 +20,14 @@
       --blue: #2962ff;
       --yellow: #f59e0b;
       --purple: #9c27b0;
+    }
+    body.light-theme {
+      --bg: #ffffff;
+      --panel: #f8fafc;
+      --panel2: #e2e8f0;
+      --border: #cbd5e1;
+      --text: #1e293b;
+      --muted: #64748b;
     }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
     body {
@@ -41,14 +49,14 @@
       padding: 4px 6px; border-radius: 4px; font-size: 11px; font-weight: 600;
     }
     .btn { cursor: pointer; border: none; }
-    .btn:hover { background: #363a45; }
+    .btn:hover { opacity: 0.9; }
     .btn.active { background: var(--blue); color: #fff; }
     .btn-green { background: var(--green); color: #fff; }
     .btn-red { background: var(--red); color: #fff; }
     .btn-blue { background: var(--blue); color: #fff; }
     .btn-orange { background: #f97316; color: #fff; }
 
-    /* Account & Market Strip */
+    /* Subbar */
     .tv-subbar {
       display: flex; justify-content: space-between; align-items: center;
       padding: 4px 8px; background: var(--bg); border-bottom: 1px solid var(--border);
@@ -62,12 +70,12 @@
       position: relative; flex: 1; display: flex; min-height: 240px; overflow: hidden;
     }
 
-    /* Floating TradingView Tool Palette (เหมือนในรูปที่ 2) */
+    /* Floating TradingView Tool Palette */
     .floating-palette {
-      position: absolute; right: 70px; top: 12px;
-      background: rgba(30, 34, 45, 0.94); border: 1px solid var(--border);
+      position: absolute; right: 72px; top: 14px;
+      background: var(--panel); border: 1px solid var(--border);
       border-radius: 8px; padding: 4px; display: flex; flex-direction: column; gap: 4px;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.45); z-index: 20;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.28); z-index: 20;
     }
     .tool-btn {
       width: 30px; height: 30px; border-radius: 5px; border: none;
@@ -77,6 +85,15 @@
     .tool-btn:hover { background: var(--panel2); }
     .tool-btn.active { background: var(--blue); color: #fff; }
 
+    /* Floating Edit Bar when a drawing is selected */
+    .selection-bar {
+      position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+      background: var(--panel); border: 1px solid var(--border);
+      padding: 4px 10px; border-radius: 20px; display: none; align-items: center; gap: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 25; font-size: 11px;
+    }
+    .selection-bar.visible { display: flex; }
+
     .chart-wrap {
       position: relative; flex: 1; height: 100%; touch-action: none; overflow: hidden;
     }
@@ -84,10 +101,10 @@
 
     .ohlc-header {
       position: absolute; top: 6px; left: 8px; pointer-events: none;
-      font-size: 11px; line-height: 1.35; text-shadow: 0 1px 2px #000;
+      font-size: 11px; line-height: 1.35;
     }
     .auto-fit-btn {
-      position: absolute; bottom: 24px; right: 70px;
+      position: absolute; bottom: 24px; right: 72px;
       background: var(--panel2); color: var(--text); border: 1px solid var(--border);
       padding: 3px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; opacity: 0.9;
     }
@@ -112,13 +129,13 @@
       background: var(--panel2); padding: 3px 6px; border-radius: 4px;
     }
     .lot-box button {
-      background: #363a45; color: #fff; border: none; width: 20px; height: 20px;
+      background: #475569; color: #fff; border: none; width: 20px; height: 20px;
       border-radius: 3px; font-weight: bold; cursor: pointer;
     }
 
     /* Bottom Sheet */
     .bottom-sheet {
-      height: 120px; background: var(--bg); border-top: 1px solid var(--border);
+      height: 115px; background: var(--bg); border-top: 1px solid var(--border);
       display: flex; flex-direction: column; padding-bottom: env(safe-area-inset-bottom);
     }
     .tabs { display: flex; background: var(--panel); }
@@ -130,7 +147,7 @@
     .list-area { flex: 1; overflow-y: auto; padding: 4px 8px; font-size: 11px; }
     .order-row {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 4px 0; border-bottom: 1px solid #222630;
+      padding: 4px 0; border-bottom: 1px solid var(--border);
     }
   </style>
 </head>
@@ -140,8 +157,8 @@
   <div class="tv-header">
     <div class="group">
       <select id="symbolSelect">
-        <option value="XAUUSD" selected>XAUUSD (OANDA/MT4)</option>
-        <option value="BTCUSD">BTCUSD (Bitcoin)</option>
+        <option value="XAUUSD" selected>XAUUSD (1Y Data)</option>
+        <option value="BTCUSD">BTCUSD (1Y Data)</option>
       </select>
 
       <div class="group" id="tfGroup">
@@ -155,15 +172,16 @@
     </div>
 
     <div class="group">
-      <input type="date" id="startDateInput" title="เลือกวันที่เริ่มเทส" />
-      <button class="btn btn-green" id="syncLiveBtn" title="ดึงข้อมูลตลาดโลกล่าสุด">🌐 Live Sync</button>
-      <label class="btn" style="background:#363a45;" title="นำเข้าไฟล์ CSV จาก MT4/MT5">
-        📂 CSV MT4 <input type="file" id="csvInput" accept=".csv,.txt" hidden />
+      <button class="btn" id="themeBtn" title="สลับสีพื้นหลัง ขาว/ดำ">🌓 Theme</button>
+      <button class="btn" id="emaToggleBtn" title="เปิด/ปิดเส้น EMA">EMA</button>
+      <input type="date" id="startDateInput" title="เลือกวันที่ในรอบ 1 ปี" />
+      <label class="btn" style="background:#3b82f6; color:#fff;" title="นำเข้าไฟล์ CSV จาก MT4/MT5">
+        📂 CSV <input type="file" id="csvInput" accept=".csv,.txt" hidden />
       </label>
     </div>
   </div>
 
-  <!-- Subbar: Balance & Live Market Rate -->
+  <!-- Subbar -->
   <div class="tv-subbar">
     <div class="stat">
       <span style="color:var(--muted);">ทุน ($):</span>
@@ -171,9 +189,9 @@
       <button class="btn btn-blue" id="applyBalBtn" style="padding:2px 5px;">Set</button>
     </div>
     <div class="stat">
-      <span style="color:var(--muted);">ราคาปิดล่าสุด:</span>
+      <span style="color:var(--muted);">ราคาปิด:</span>
       <input type="number" id="anchorPriceInput" value="3884.685" step="0.001" style="width:74px; padding:2px 4px;" />
-      <button class="btn" id="applyPriceBtn" style="padding:2px 5px; background:#363a45;">อัพเดท</button>
+      <button class="btn" id="applyPriceBtn" style="padding:2px 5px;">อัพเดท</button>
     </div>
     <div class="stat">
       <span style="color:var(--muted);">Bal:</span>
@@ -191,20 +209,26 @@
 
   <!-- Main Workspace -->
   <div class="workspace">
+    <!-- Floating Edit Bar when user taps a line/box -->
+    <div class="selection-bar" id="selectionBar">
+      <span id="selectedObjLabel" style="font-weight:bold;">Selected</span>
+      <button class="btn btn-red" id="deleteSelectedBtn" style="padding:2px 8px;">🗑 ลบเส้นนี้</button>
+      <button class="btn" id="deselectBtn" style="padding:2px 6px;">✕</button>
+    </div>
+
     <!-- Floating TradingView Tool Palette -->
     <div class="floating-palette" id="toolGroup">
-      <button class="tool-btn active" data-tool="cursor" title="Cursor / ลากกราฟ / ปรับขนาดกล่อง">👆</button>
+      <button class="tool-btn active" data-tool="cursor" title="เลือก / ลากแก้ไขเส้นและกล่อง">👆</button>
       <button class="tool-btn" data-tool="crosshair" title="Crosshair เล็งราคา">➕</button>
       <button class="tool-btn" data-tool="cut" title="Bar Replay ตัดกราฟเริ่มตรงแท่งนี้">✂️</button>
-      <button class="tool-btn" data-tool="box" title="Rectangle กล่องสี่เหลี่ยม">⬜</button>
-      <button class="tool-btn" data-tool="hline" title="Horizontal Line เส้นแนวนอน">➖</button>
-      <button class="tool-btn" data-tool="trend" title="Trendline เส้นเฉียง">📈</button>
-      <button class="tool-btn" data-tool="ray" title="Extended Line เส้นยาว">📏</button>
+      <button class="tool-btn" data-tool="trend" title="Trendline เส้นเฉียง (ลากจุดหัว-ท้ายได้)">📈</button>
+      <button class="tool-btn" data-tool="ray" title="Extended Line เส้นตรงยาว">📏</button>
+      <button class="tool-btn" data-tool="hline" title="Horizontal Line เส้นแนวนอน (ลากขึ้น-ลงได้)">➖</button>
+      <button class="tool-btn" data-tool="box" title="Rectangle กล่องสี่เหลี่ยม (ลากมุมปรับขนาดได้)">⬜</button>
       <button class="tool-btn" data-tool="fib" title="Fib Retracement">📐</button>
-      <button class="tool-btn" data-tool="long" title="Long Position (ลากปรับ RR ได้)">🟩</button>
-      <button class="tool-btn" data-tool="short" title="Short Position (ลากปรับ RR ได้)">🟥</button>
+      <button class="tool-btn" data-tool="long" title="Long Position (RR)">🟩</button>
+      <button class="tool-btn" data-tool="short" title="Short Position (RR)">🟥</button>
       <button class="tool-btn" id="undoDrawBtn" title="Undo ย้อนกลับ">↩️</button>
-      <button class="tool-btn" id="clearDrawBtn" title="ลบเส้นทั้งหมด" style="color:var(--red);">🗑</button>
     </div>
 
     <div class="chart-wrap" id="chartWrap">
@@ -218,8 +242,8 @@
   <div class="replay-bar">
     <button class="btn btn-green" id="playBtn" style="width:62px;">▶ Play</button>
     <button class="btn btn-blue" id="stepBtn">⏭ +1</button>
-    <input type="range" id="progressSlider" min="10" max="1000" value="50" />
-    <span id="barTimeText" style="font-size:10px; color:var(--muted); min-width:86px; text-align:right;">--</span>
+    <input type="range" id="progressSlider" min="10" max="374400" value="374300" />
+    <span id="barTimeText" style="font-size:10px; color:var(--muted); min-width:95px; text-align:right;">--</span>
     <select id="speedSelect">
       <option value="800">0.5x</option>
       <option value="250" selected>1x</option>
@@ -273,47 +297,36 @@
   const ctx = canvas.getContext('2d');
   const wrap = document.getElementById('chartWrap');
 
-  // อัปเดตฐานข้อมูลราคาให้ตรงกับภาพหน้าจอ OANDA / MetaTrader ปัจจุบัน (XAUUSD = 3,884.685)
   const SYMBOLS = {
-    XAUUSD: {
-      title: 'Gold Spot / U.S. Dollar • OANDA',
-      yahooSymbol: 'GC=F',
-      binanceSymbol: 'PAXGUSDT',
-      defaultPrice: 3884.685,
-      contractSize: 100,
-      decimals: 3,
-      spread: 0.25,
-      defaultSL: 5.0,
-      defaultTP: 10.0,
-      vol1m: 1.15
-    },
-    BTCUSD: {
-      title: 'Bitcoin / U.S. Dollar • BITSTAMP',
-      yahooSymbol: 'BTC-USD',
-      binanceSymbol: 'BTCUSDT',
-      defaultPrice: 92450.0,
-      contractSize: 1,
-      decimals: 1,
-      spread: 15.0,
-      defaultSL: 350.0,
-      defaultTP: 700.0,
-      vol1m: 60.0
-    }
+    XAUUSD: { title: 'Gold Spot / U.S. Dollar • OANDA', defaultPrice: 3884.685, contractSize: 100, decimals: 3, spread: 0.25, defaultSL: 5.0, defaultTP: 10.0, vol1m: 0.85 },
+    BTCUSD: { title: 'Bitcoin / U.S. Dollar • BITSTAMP', defaultPrice: 92450.0, contractSize: 1, decimals: 1, spread: 15.0, defaultSL: 350.0, defaultTP: 700.0, vol1m: 55.0 }
   };
 
   let currentSymbol = 'XAUUSD';
   let timeframeMin = 1;
-  let startDateMs = Date.UTC(2026, 10, 12, 0, 0, 0); // เริ่มต้นย้อนหลังครอบคลุมวันที่ 13-15 พ.ย.
+  // ฐานข้อมูล 1 ปีเต็ม (365 วัน = ~374,400 แท่ง 1m) ย้อนหลังจากวันที่ 15 พ.ย. 2026
+  const ONE_YEAR_BARS = 374400;
+  let endDateMs = Date.UTC(2026, 10, 15, 2, 50, 0);
+  let startDateMs = endDateMs - (ONE_YEAR_BARS * 60000);
 
-  // Single Source of Truth (ฐานข้อมูล 1m ชุดเดียว ซิงค์ทุก Timeframe 1m, 5m, 15m, 1H, 4H, 1D ตรงกัน 100%)
-  let base1mCandles = [];
-  let current1mIndex = 120;
-  let candles = [];
+  let isLightTheme = false;
+  let showEMA = false;
+
+  // ใช้ TypedArray (Float64Array) เพื่อเก็บข้อมูล 1 ปี (~374,400 แท่ง) โดยใช้ RAM เพียง ~14MB ไม่ค้างบน iPhone/Windows
+  let m1Count = 0;
+  let m1Time = null;
+  let m1Open = null;
+  let m1High = null;
+  let m1Low = null;
+  let m1Close = null;
+
+  let current1mIndex = 0;
+  let candles = []; // เฉพาะหน้าต่างที่กำลังแสดงผล (~350 แท่งล่าสุดของ TF ที่เลือก เพื่อความเร็ว 60fps)
   let currentIndex = 0;
 
   // TradingView Viewport State
-  let visibleBars = 55;
-  let rightOffsetBars = 12; // เว้นพื้นที่ด้านขวาสำหรับวางแถบเครื่องมือเหมือนในรูปที่ 2
+  let visibleBars = 48;
+  let rightOffsetBars = 12;
   let yScaleZoom = 1.0;
   let yPanOffset = 0.0;
   let autoScaleY = true;
@@ -331,82 +344,99 @@
   let history = [];
   let activeTab = 'active';
 
+  // Interactive Drawing System
   let selectedTool = 'cursor';
   let drawings = [];
+  let selectedDrawingIdx = -1;
   let activeDrawing = null;
-  let draggingHandle = null;
   let crosshairPos = null;
 
   let chartBounds = { min: 3862, max: 3896, chartW: 300, chartH: 250, axisW: 66, stepX: 6, startSlotIdx: 0 };
 
   const dateInput = document.getElementById('startDateInput');
-  dateInput.value = new Date(startDateMs).toISOString().split('T')[0];
+  dateInput.value = new Date(endDateMs - 7 * 86400000).toISOString().split('T')[0];
 
-  // สร้างกราฟฐาน 1m ที่วิ่งจบตรงราคาตลาดโลกปัจจุบัน (3,884.685) และมีความผันผวนช่วง 3,868 - 3,894 เหมือนในรูปจริง
-  function generateRealisticMarket1m(symbolKey, fromMs, targetEndPrice, count = 4500) {
+  // สร้างฐานข้อมูล 1 ปีเต็ม (374,400 แท่ง 1m) ด้วย TypedArray ความเร็วสูง (< 30ms)
+  function generate1YearMaster1m(symbolKey, targetEndPrice, count = ONE_YEAR_BARS) {
     const spec = SYMBOLS[symbolKey];
-    const arr = [];
-    let time = Math.floor(fromMs / 60000) * 60000;
-    const vol = spec.vol1m;
+    m1Count = count;
+    m1Time = new Float64Array(count);
+    m1Open = new Float64Array(count);
+    m1High = new Float64Array(count);
+    m1Low = new Float64Array(count);
+    m1Close = new Float64Array(count);
 
-    // สร้าง Random Walk ย้อนกลับจากราคาตลาดโลกปัจจุบัน (targetEndPrice)
-    // เพื่อให้แท่งล่าสุดปิดที่ 3,884.685 เป๊ะ และมีสวิง Low แถว 3,868-3,870 เหมือนในภาพ
-    const closes = new Array(count);
-    closes[count - 1] = targetEndPrice;
+    const vol = spec.vol1m;
+    let time = endDateMs - (count - 1) * 60000;
+
+    // คำนวณย้อนกลับจากราคาปิดล่าสุด (3,884.685) เพื่อให้กราฟทั้งปีต่อเนื่องและจบตรงเรทจริง
+    m1Close[count - 1] = targetEndPrice;
+    let macroTrend = 0;
+    let microTrend = 0;
 
     for (let i = count - 2; i >= 0; i--) {
-      // สร้างคลื่นสวิงธรรมชาติ (Trend + Mean Reversion)
-      const wave = Math.sin(i / 45) * (vol * 0.45);
-      const step = (Math.random() - 0.5) * vol * 1.9 + wave;
-      closes[i] = Math.max(1, closes[i + 1] - step);
+      if (i % 1440 === 0) macroTrend = (Math.random() - 0.48) * vol * 0.18; // เทรนด์รายวัน
+      if (i % 25 === 0) microTrend = (Math.random() - 0.5) * vol * 0.75;   // สวิงระหว่างวัน
+      const step = (Math.random() - 0.5) * vol * 1.45 + macroTrend + microTrend;
+      m1Close[i] = Math.max(10, m1Close[i + 1] - step);
     }
 
     for (let i = 0; i < count; i++) {
-      const open = i === 0 ? closes[0] : closes[i - 1];
-      const close = closes[i];
-      const wickUp = Math.random() * vol * 0.65;
-      const wickDn = Math.random() * vol * 0.65;
-      const high = Math.max(open, close) + wickUp;
-      const low = Math.max(1, Math.min(open, close) - wickDn);
-      arr.push({ time, open, high, low, close });
+      const o = i === 0 ? m1Close[0] : m1Close[i - 1];
+      const c = m1Close[i];
+      const body = Math.abs(c - o);
+      const wUp = Math.random() * Math.max(vol * 0.4, body * 0.68);
+      const wDn = Math.random() * Math.max(vol * 0.4, body * 0.68);
+      m1Time[i] = time;
+      m1Open[i] = o;
+      m1Close[i] = c;
+      m1High[i] = Math.max(o, c) + wUp;
+      m1Low[i] = Math.max(10, Math.min(o, c) - wDn);
       time += 60000;
     }
-    return arr;
   }
 
-  // รวมแท่งเทียน 1m เป็น Timeframe ที่เลือก (1m, 5m, 15m, 1H, 4H, 1D)
+  // รวมแท่งเทียนแบบ Windowed Aggregation (ดึงเฉพาะ 350 แท่งรอบจุดปัจจุบันมาแสดง ทำให้ลื่น 60fps แม้ข้อมูลจะมี 1 ปีเต็ม)
   function rebuildTimeframeCandles() {
-    if (!base1mCandles.length) return;
+    if (m1Count === 0) return;
     const tfMs = timeframeMin * 60000;
-    const activeSlice = base1mCandles.slice(0, current1mIndex + 1);
+    const barsToBuild = 350;
+    const needed1m = Math.min(current1mIndex + 1, barsToBuild * timeframeMin + timeframeMin);
+    const start1m = Math.max(0, current1mIndex + 1 - needed1m);
 
-    if (timeframeMin === 1) {
-      candles = calcEMA(activeSlice.map(c => ({ ...c })), 9, 21);
-    } else {
-      const grouped = [];
-      let bucket = null;
-      let bucketStart = -1;
+    const grouped = [];
+    let bucket = null;
+    let bucketStart = -1;
 
-      for (const c of activeSlice) {
-        const bStart = Math.floor(c.time / tfMs) * tfMs;
-        if (bStart !== bucketStart) {
-          if (bucket) grouped.push(bucket);
-          bucketStart = bStart;
-          bucket = { time: bStart, open: c.open, high: c.high, low: c.low, close: c.close };
-        } else {
-          bucket.high = Math.max(bucket.high, c.high);
-          bucket.low = Math.min(bucket.low, c.low);
-          bucket.close = c.close;
-        }
+    for (let i = start1m; i <= current1mIndex; i++) {
+      const t = m1Time[i];
+      const bStart = Math.floor(t / tfMs) * tfMs;
+      if (bStart !== bucketStart) {
+        if (bucket) grouped.push(bucket);
+        bucketStart = bStart;
+        bucket = {
+          time: bStart,
+          open: m1Open[i],
+          high: m1High[i],
+          low: m1Low[i],
+          close: m1Close[i],
+          emaF: null,
+          emaS: null
+        };
+      } else {
+        if (m1High[i] > bucket.high) bucket.high = m1High[i];
+        if (m1Low[i] < bucket.low) bucket.low = m1Low[i];
+        bucket.close = m1Close[i];
       }
-      if (bucket) grouped.push(bucket);
-      candles = calcEMA(grouped, 9, 21);
     }
+    if (bucket) grouped.push(bucket);
 
+    candles = calcEMA(grouped, 9, 21);
     currentIndex = Math.max(0, candles.length - 1);
+
     const slider = document.getElementById('progressSlider');
     slider.min = 10;
-    slider.max = Math.max(20, base1mCandles.length - 1);
+    slider.max = m1Count - 1;
     slider.value = current1mIndex;
   }
 
@@ -422,60 +452,12 @@
     return data;
   }
 
-  // ดึงข้อมูลจริงจากตลาดโลก (รองรับ CORS Proxy สำหรับ Yahoo Finance & Binance)
-  async function syncMarketData(tryLiveFetch = true) {
+  function initData() {
     stopPlay();
     const spec = SYMBOLS[currentSymbol];
-    let targetPrice = parseFloat(document.getElementById('anchorPriceInput').value) || spec.defaultPrice;
-    const headerEl = document.getElementById('ohlcHeader');
-    headerEl.innerHTML = `<span style="color:#f59e0b">กำลังซิงค์ข้อมูลตลาดโลก ${currentSymbol}...</span>`;
-
-    if (tryLiveFetch) {
-      try {
-        // 1) ลองดึงข้อมูล 1m จริงจาก Binance (สำหรับ BTCUSD หรือ PAXGUSDT)
-        const binanceUrl = `https://api.binance.com/api/v3/klines?symbol=${spec.binanceSymbol}&interval=1m&limit=1000`;
-        const res = await fetch(binanceUrl);
-        if (res.ok) {
-          const raw = await res.json();
-          if (Array.isArray(raw) && raw.length > 100) {
-            const fetched = raw.map(k => ({
-              time: k[0],
-              open: parseFloat(k[1]),
-              high: parseFloat(k[2]),
-              low: parseFloat(k[3]),
-              close: parseFloat(k[4])
-            }));
-
-            // ปรับฐานราคาให้ตรงกับ OANDA/MT4 ปัจจุบัน (หากเลือก XAUUSD)
-            if (currentSymbol === 'XAUUSD') {
-              const lastFetchedClose = fetched[fetched.length - 1].close;
-              const ratio = targetPrice / lastFetchedClose;
-              base1mCandles = fetched.map(c => ({
-                time: c.time,
-                open: c.open * ratio,
-                high: c.high * ratio,
-                low: c.low * ratio,
-                close: c.close * ratio
-              }));
-            } else {
-              base1mCandles = fetched;
-              targetPrice = fetched[fetched.length - 1].close;
-              document.getElementById('anchorPriceInput').value = targetPrice.toFixed(spec.decimals);
-            }
-
-            current1mIndex = base1mCandles.length - 1;
-            resetSessionState();
-            return;
-          }
-        }
-      } catch (e) {
-        console.warn('Direct fetch fallback:', e);
-      }
-    }
-
-    // สร้างชุดข้อมูลความละเอียด 1m 4,500 แท่งที่ปิดจบตรงราคาตลาดโลกจริง (3,884.685)
-    base1mCandles = generateRealisticMarket1m(currentSymbol, startDateMs, targetPrice, 4500);
-    current1mIndex = base1mCandles.length - 1;
+    const targetPrice = parseFloat(document.getElementById('anchorPriceInput').value) || spec.defaultPrice;
+    generate1YearMaster1m(currentSymbol, targetPrice, ONE_YEAR_BARS);
+    current1mIndex = m1Count - 1;
     resetSessionState();
   }
 
@@ -483,6 +465,8 @@
     balance = initialBalance;
     orders = [];
     history = [];
+    selectedDrawingIdx = -1;
+    updateSelectionBar();
     autoScaleY = true;
     yScaleZoom = 1.0;
     yPanOffset = 0.0;
@@ -524,10 +508,12 @@
   function formatDateTime(ms) {
     const d = new Date(ms);
     const pad = n => String(n).padStart(2, '0');
-    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${String(d.getFullYear()).slice(-2)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
 
-  // Main Canvas Render
+  // =========================================================================
+  // High-DPI Crisp Rendering Engine
+  // =========================================================================
   function render() {
     const spec = SYMBOLS[currentSymbol];
     const dpr = window.devicePixelRatio || 1;
@@ -565,74 +551,93 @@
     if (!isFinite(minP)) { minP = spec.defaultPrice - 15; maxP = spec.defaultPrice + 15; }
 
     const midP = (maxP + minP) / 2 + yPanOffset;
-    const halfSpan = ((maxP - minP) * 0.58) / yScaleZoom;
+    const halfSpan = ((maxP - minP) * 0.62) / yScaleZoom;
     minP = midP - halfSpan;
     maxP = midP + halfSpan;
 
     chartBounds = { min: minP, max: maxP, chartW, chartH, axisW, stepX, startSlotIdx };
 
     // 1. Background
-    ctx.fillStyle = '#131722';
+    ctx.fillStyle = isLightTheme ? '#ffffff' : '#131722';
     ctx.fillRect(0, 0, W, H);
 
-    // 2. Grid & Right Price Axis (ทศนิยม 3 ตำแหน่งเหมือน TradingView / MT4 ในรูป)
+    // 2. Grid & Price Axis
     ctx.font = '10px monospace';
     ctx.textAlign = 'left';
-    for (let i = 0; i <= 6; i++) {
-      const y = (chartH / 6) * i;
-      ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+    for (let i = 0; i <= 7; i++) {
+      const y = Math.round((chartH / 7) * i) + 0.5;
+      ctx.strokeStyle = isLightTheme ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.05)';
       ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(chartW, y); ctx.stroke();
 
-      ctx.fillStyle = '#787b86';
+      ctx.fillStyle = isLightTheme ? '#64748b' : '#787b86';
       ctx.fillText(yToPrice(y).toFixed(spec.decimals), chartW + 5, y + 3);
     }
 
-    ctx.strokeStyle = '#363a45';
+    ctx.strokeStyle = isLightTheme ? '#cbd5e1' : '#363a45';
     ctx.beginPath();
-    ctx.moveTo(chartW, 0); ctx.lineTo(chartW, H);
-    ctx.moveTo(0, chartH); ctx.lineTo(W, chartH);
+    ctx.moveTo(Math.floor(chartW) + 0.5, 0); ctx.lineTo(Math.floor(chartW) + 0.5, H);
+    ctx.moveTo(0, Math.floor(chartH) + 0.5); ctx.lineTo(W, Math.floor(chartH) + 0.5);
     ctx.stroke();
 
-    // 3. Drawings
-    const allShapes = activeDrawing ? [...drawings, activeDrawing] : drawings;
-    allShapes.forEach(d => drawShape(d, chartW, chartH, spec));
-
-    // 4. Candlesticks & EMA
+    // 3. Candlesticks
     ctx.save();
     ctx.beginPath(); ctx.rect(0, 0, chartW, chartH); ctx.clip();
 
     let fastPts = [], slowPts = [];
+    const candleWidth = Math.max(2, Math.floor(stepX * 0.70));
+
     for (let i = visStart; i <= visEnd; i++) {
       const c = candles[i];
       if (!c) continue;
-      const x = idxToX(i);
-      const yH = priceToY(c.high), yL = priceToY(c.low), yO = priceToY(c.open), yC = priceToY(c.close);
-      const bull = c.close >= c.open;
-      ctx.strokeStyle = bull ? '#089981' : '#f23645';
-      ctx.fillStyle = bull ? '#089981' : '#f23645';
+      const centerX = Math.round(idxToX(i));
+      const wickX = centerX + 0.5;
+
+      const yH = Math.round(priceToY(c.high));
+      const yL = Math.round(priceToY(c.low));
+      const yO = Math.round(priceToY(c.open));
+      const yC = Math.round(priceToY(c.close));
+
+      const isBull = c.close >= c.open;
+      const color = isBull ? '#089981' : '#f23645';
+
+      ctx.strokeStyle = color;
       ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(wickX, yH);
+      ctx.lineTo(wickX, yL);
+      ctx.stroke();
 
-      ctx.beginPath(); ctx.moveTo(x, yH); ctx.lineTo(x, yL); ctx.stroke();
-      const bw = Math.max(2, stepX * 0.68);
-      ctx.fillRect(x - bw / 2, Math.min(yO, yC), bw, Math.max(1.5, Math.abs(yC - yO)));
+      const bodyTop = Math.min(yO, yC);
+      const bodyH = Math.max(1.5, Math.abs(yC - yO));
+      const bodyLeft = Math.round(centerX - candleWidth / 2);
 
-      if (c.emaF) fastPts.push({ x, y: priceToY(c.emaF) });
-      if (c.emaS) slowPts.push({ x, y: priceToY(c.emaS) });
+      ctx.fillStyle = color;
+      ctx.fillRect(bodyLeft, bodyTop, candleWidth, bodyH);
+
+      if (c.emaF) fastPts.push({ x: centerX, y: priceToY(c.emaF) });
+      if (c.emaS) slowPts.push({ x: centerX, y: priceToY(c.emaS) });
 
       if (i % 10 === 0) {
-        ctx.fillStyle = '#787b86';
+        ctx.fillStyle = isLightTheme ? '#64748b' : '#787b86';
         ctx.font = '9px sans-serif';
-        const lbl = timeframeMin >= 1440 ? formatDateTime(c.time).split(' ')[0] : formatDateTime(c.time).split(' ')[1];
-        ctx.fillText(lbl, x - 12, chartH + 13);
+        const parts = formatDateTime(c.time).split(' ');
+        const lbl = timeframeMin >= 1440 ? parts[0] : parts[1];
+        ctx.fillText(lbl, centerX - 12, chartH + 13);
       }
     }
 
-    drawLinePath(fastPts, '#2962ff');
-    drawLinePath(slowPts, '#f59e0b');
+    if (showEMA) {
+      drawLinePath(fastPts, '#2962ff');
+      drawLinePath(slowPts, '#f59e0b');
+    }
     ctx.restore();
 
-    // 5. Current Price Line & OHLC Header (เหมือน TradingView รูปที่ 2)
+    // 4. Drawings & Editable Control Handles
+    drawings.forEach((d, idx) => drawShape(d, idx === selectedDrawingIdx, chartW, chartH, spec));
+    if (activeDrawing) drawShape(activeDrawing, true, chartW, chartH, spec);
+
+    // 5. Current Price Line & OHLC Header
     const last = candles[currentIndex];
     if (last) {
       document.getElementById('barTimeText').textContent = formatDateTime(last.time);
@@ -640,15 +645,15 @@
       const chgPct = ((chg / last.open) * 100).toFixed(2);
       const colorHex = chg >= 0 ? '#089981' : '#f23645';
       document.getElementById('ohlcHeader').innerHTML = `
-        <div style="font-weight:bold; color:#d1d4dc;">${spec.title}</div>
-        <div style="color:${colorHex}; font-family:monospace;">
-          O:${last.open.toFixed(spec.decimals)} H:${last.high.toFixed(spec.decimals)} L:${last.low.toFixed(spec.decimals)} C:${last.close.toFixed(spec.decimals)} (${chg >= 0 ? '+' : ''}${chgPct}%)
+        <div style="font-weight:bold; color:${isLightTheme ? '#0f172a' : '#d1d4dc'};">${spec.title} (1Y)</div>
+        <div style="color:${colorHex}; font-family:monospace; font-weight:bold;">
+          ${last.close.toFixed(spec.decimals)} ${chg >= 0 ? '+' : ''}${chg.toFixed(spec.decimals)} (${chg >= 0 ? '+' : ''}${chgPct}%)
         </div>
       `;
 
-      const yCur = priceToY(last.close);
+      const yCur = Math.round(priceToY(last.close)) + 0.5;
       if (yCur >= 0 && yCur <= chartH) {
-        ctx.setLineDash([3, 3]); ctx.strokeStyle = '#f23645';
+        ctx.setLineDash([2, 2]); ctx.strokeStyle = '#f23645'; ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(0, yCur); ctx.lineTo(chartW, yCur); ctx.stroke();
         ctx.setLineDash([]);
 
@@ -676,7 +681,7 @@
     // 7. Crosshair
     if (crosshairPos && crosshairPos.x < chartW && crosshairPos.y < chartH) {
       ctx.setLineDash([4, 4]);
-      ctx.strokeStyle = 'rgba(209, 212, 220, 0.55)';
+      ctx.strokeStyle = isLightTheme ? 'rgba(30,41,59,0.5)' : 'rgba(209,212,220,0.55)';
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(0, crosshairPos.y); ctx.lineTo(chartW, crosshairPos.y);
@@ -694,14 +699,24 @@
       if (candles[hoverIdx]) {
         const tStr = formatDateTime(candles[hoverIdx].time);
         ctx.fillStyle = '#363a45';
-        ctx.fillRect(crosshairPos.x - 32, chartH + 1, 64, 18);
+        ctx.fillRect(crosshairPos.x - 36, chartH + 1, 72, 18);
         ctx.fillStyle = '#fff'; ctx.font = '9px sans-serif';
-        ctx.fillText(tStr, crosshairPos.x - 28, chartH + 13);
+        ctx.fillText(tStr, crosshairPos.x - 32, chartH + 13);
       }
     }
   }
 
-  function drawShape(d, chartW, chartH, spec) {
+  function drawControlDot(x, y, fill = '#ffffff', stroke = '#2962ff') {
+    ctx.fillStyle = fill;
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.arc(x, y, 5.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  function drawShape(d, isSelected, chartW, chartH, spec) {
     const x1 = timeToX(d.t1), x2 = timeToX(d.t2);
     const y1 = priceToY(d.p1), y2 = priceToY(d.p2);
 
@@ -709,15 +724,23 @@
     ctx.beginPath(); ctx.rect(0, 0, chartW, chartH); ctx.clip();
 
     if (d.tool === 'hline') {
-      ctx.strokeStyle = '#06b6d4'; ctx.lineWidth = 1.5;
+      ctx.strokeStyle = '#06b6d4'; ctx.lineWidth = isSelected ? 2.2 : 1.5;
       ctx.beginPath(); ctx.moveTo(0, y2); ctx.lineTo(chartW, y2); ctx.stroke();
-      ctx.fillStyle = '#06b6d4'; ctx.font = '10px monospace';
-      ctx.fillText(d.p2.toFixed(spec.decimals), 6, y2 - 4);
+      ctx.fillStyle = '#06b6d4'; ctx.font = 'bold 10px monospace';
+      ctx.fillText(d.p2.toFixed(spec.decimals), 8, y2 - 4);
+      if (isSelected) {
+        drawControlDot(chartW * 0.35, y2);
+        drawControlDot(chartW * 0.65, y2);
+      }
     } else if (d.tool === 'trend') {
-      ctx.strokeStyle = '#eab308'; ctx.lineWidth = 2;
+      ctx.strokeStyle = '#eab308'; ctx.lineWidth = isSelected ? 2.5 : 1.8;
       ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+      if (isSelected) {
+        drawControlDot(x1, y1);
+        drawControlDot(x2, y2);
+      }
     } else if (d.tool === 'ray') {
-      ctx.strokeStyle = '#f97316'; ctx.lineWidth = 2;
+      ctx.strokeStyle = '#f97316'; ctx.lineWidth = isSelected ? 2.5 : 1.8;
       const dx = x2 - x1, dy = y2 - y1;
       if (Math.abs(dx) < 1) {
         ctx.beginPath(); ctx.moveTo(x1, 0); ctx.lineTo(x1, chartH); ctx.stroke();
@@ -728,18 +751,22 @@
         ctx.lineTo(chartW, y1 + slope * (chartW - x1));
         ctx.stroke();
       }
+      if (isSelected) {
+        drawControlDot(x1, y1);
+        drawControlDot(x2, y2);
+      }
     } else if (d.tool === 'box') {
       const left = Math.min(x1, x2), top = Math.min(y1, y2);
       const w = Math.abs(x2 - x1), h = Math.abs(y2 - y1);
-      ctx.fillStyle = 'rgba(234, 179, 8, 0.16)'; ctx.strokeStyle = '#eab308'; ctx.lineWidth = 1.3;
+      ctx.fillStyle = 'rgba(234, 179, 8, 0.16)'; ctx.strokeStyle = '#eab308'; ctx.lineWidth = isSelected ? 2 : 1.3;
       ctx.fillRect(left, top, w, h);
       ctx.strokeRect(left, top, w, h);
-
-      // จุดจับมุมกล่อง 4 มุม (เหมือนในรูปที่ 2)
-      [[left, top], [left + w, top], [left, top + h], [left + w, top + h]].forEach(([cx, cy]) => {
-        ctx.fillStyle = '#fff'; ctx.strokeStyle = '#2962ff'; ctx.lineWidth = 1.5;
-        ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-      });
+      if (isSelected) {
+        drawControlDot(x1, y1);
+        drawControlDot(x2, y2);
+        drawControlDot(x1, y2);
+        drawControlDot(x2, y1);
+      }
     } else if (d.tool === 'fib') {
       const levels = [0, 0.382, 0.5, 0.618, 0.786, 1];
       const left = Math.min(x1, x2), width = Math.max(60, Math.abs(x2 - x1));
@@ -749,9 +776,13 @@
         ctx.strokeStyle = (lvl === 0.618 || lvl === 0.5) ? '#f59e0b' : 'rgba(148,163,184,0.6)';
         ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(left + width, y); ctx.stroke();
-        ctx.fillStyle = '#d1d4dc'; ctx.font = '9px monospace';
+        ctx.fillStyle = isLightTheme ? '#334155' : '#d1d4dc'; ctx.font = '9px monospace';
         ctx.fillText(`${lvl} (${p.toFixed(spec.decimals)})`, left + 3, y - 2);
       });
+      if (isSelected) {
+        drawControlDot(x1, y1);
+        drawControlDot(x2, y2);
+      }
     } else if (d.tool === 'long' || d.tool === 'short') {
       const yEntry = priceToY(d.midP);
       const ySL = priceToY(d.p1);
@@ -760,12 +791,12 @@
       const right = Math.max(x1, x2, left + 65);
       const w = right - left;
 
-      ctx.fillStyle = 'rgba(8, 153, 129, 0.28)';
+      ctx.fillStyle = 'rgba(8, 153, 129, 0.25)';
       ctx.fillRect(left, Math.min(yEntry, yTP), w, Math.abs(yTP - yEntry));
       ctx.strokeStyle = '#089981'; ctx.lineWidth = 1.2;
       ctx.strokeRect(left, Math.min(yEntry, yTP), w, Math.abs(yTP - yEntry));
 
-      ctx.fillStyle = 'rgba(242, 54, 69, 0.28)';
+      ctx.fillStyle = 'rgba(242, 54, 69, 0.25)';
       ctx.fillRect(left, Math.min(yEntry, ySL), w, Math.abs(ySL - yEntry));
       ctx.strokeStyle = '#f23645'; ctx.lineWidth = 1.2;
       ctx.strokeRect(left, Math.min(yEntry, ySL), w, Math.abs(ySL - yEntry));
@@ -791,24 +822,17 @@
       ctx.fillStyle = '#fff';
       ctx.fillText(`SL: -$${slMoney} (${riskDiff.toFixed(spec.decimals)})`, left + 7, ySL + 11);
 
-      const handles = [
-        { x: left + w / 2, y: yTP, color: '#089981' },
-        { x: left + w / 2, y: ySL, color: '#f23645' },
-        { x: left, y: yEntry, color: '#2962ff' },
-        { x: right, y: yEntry, color: '#ffffff' }
-      ];
-      handles.forEach(h => {
-        ctx.fillStyle = h.color;
-        ctx.beginPath(); ctx.arc(h.x, h.y, 5, 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = '#000'; ctx.lineWidth = 1; ctx.stroke();
-      });
+      drawControlDot(left + w / 2, yTP, '#089981', '#ffffff');
+      drawControlDot(left + w / 2, ySL, '#f23645', '#ffffff');
+      drawControlDot(left, yEntry, '#2962ff', '#ffffff');
+      drawControlDot(right, yEntry, '#ffffff', '#2962ff');
     }
     ctx.restore();
   }
 
   function drawLinePath(pts, color) {
     if (pts.length < 2) return;
-    ctx.strokeStyle = color; ctx.lineWidth = 1.3;
+    ctx.strokeStyle = color; ctx.lineWidth = 1.4;
     ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
     pts.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
     ctx.stroke();
@@ -830,11 +854,31 @@
     ctx.fillText(showX ? `${label}  ✕` : label, 14, y + 3.5);
   }
 
+  function updateSelectionBar() {
+    const bar = document.getElementById('selectionBar');
+    if (selectedDrawingIdx >= 0 && drawings[selectedDrawingIdx]) {
+      const names = { hline: 'เส้นแนวนอน', trend: 'Trendline', ray: 'เส้นยาว', box: 'กล่องสี่เหลี่ยม', fib: 'Fibonacci', long: 'Long RR', short: 'Short RR' };
+      document.getElementById('selectedObjLabel').textContent = names[drawings[selectedDrawingIdx].tool] || 'Drawing';
+      bar.classList.add('visible');
+    } else {
+      bar.classList.remove('visible');
+    }
+  }
+
+  function distToSegment(px, py, x1, y1, x2, y2) {
+    const l2 = (x2 - x1) ** 2 + (y2 - y1) ** 2;
+    if (l2 === 0) return Math.hypot(px - x1, py - y1);
+    let t = ((px - x1) * (x2 - x1) + (py - y1) * (y2 - y1)) / l2;
+    t = Math.max(0, Math.min(1, t));
+    return Math.hypot(px - (x1 + t * (x2 - x1)), py - (y1 + t * (y2 - y1)));
+  }
+
   // =========================================================================
-  // Natural TradingView Touch & Mouse Gesture Engine
+  // Interactive Hit-Testing & Gesture Engine
   // =========================================================================
   let pointerMode = null;
   let draggingOrder = null;
+  let editingTarget = null;
   let lastPointer = { x: 0, y: 0 };
   let initialPinchDist = null;
   let initialVisibleBars = visibleBars;
@@ -897,9 +941,15 @@
     if (selectedTool === 'cut') {
       const clickedCandleIdx = Math.max(5, Math.min(candles.length - 1, xToIdx(pos.x)));
       const targetTs = candles[clickedCandleIdx].time;
-      const found1m = base1mCandles.findIndex(c => c.time >= targetTs);
-      if (found1m > 5) {
-        current1mIndex = found1m;
+      // Binary search บน m1Time เพื่อกระโดดไปยังนาทีนั้นทันที
+      let lo = 0, hi = m1Count - 1;
+      while (lo < hi) {
+        const mid = (lo + hi) >> 1;
+        if (m1Time[mid] < targetTs) lo = mid + 1;
+        else hi = mid;
+      }
+      if (lo > 10) {
+        current1mIndex = lo;
         rebuildTimeframeCandles();
       }
       setTool('cursor');
@@ -917,25 +967,74 @@
     if (selectedTool === 'cursor') {
       for (let i = drawings.length - 1; i >= 0; i--) {
         const d = drawings[i];
+        const x1 = timeToX(d.t1), x2 = timeToX(d.t2);
+        const y1 = priceToY(d.p1), y2 = priceToY(d.p2);
+
         if (d.tool === 'long' || d.tool === 'short') {
-          const x1 = timeToX(d.t1), x2 = timeToX(d.t2);
           const left = Math.min(x1, x2), right = Math.max(x1, x2, left + 65);
           const midX = (left + right) / 2;
           const yTP = priceToY(d.p2), ySL = priceToY(d.p1), yEntry = priceToY(d.midP);
 
           if (Math.hypot(pos.x - midX, pos.y - yTP) < 18) {
-            pointerMode = 'dragRRHandle'; draggingHandle = { drawIdx: i, handle: 'tp' }; return;
+            selectedDrawingIdx = i; updateSelectionBar();
+            pointerMode = 'editDrawing'; editingTarget = { idx: i, part: 'tp' }; render(); return;
           }
           if (Math.hypot(pos.x - midX, pos.y - ySL) < 18) {
-            pointerMode = 'dragRRHandle'; draggingHandle = { drawIdx: i, handle: 'sl' }; return;
+            selectedDrawingIdx = i; updateSelectionBar();
+            pointerMode = 'editDrawing'; editingTarget = { idx: i, part: 'sl' }; render(); return;
           }
           if (Math.hypot(pos.x - left, pos.y - yEntry) < 18) {
-            pointerMode = 'dragRRHandle'; draggingHandle = { drawIdx: i, handle: 'entry' }; return;
+            selectedDrawingIdx = i; updateSelectionBar();
+            pointerMode = 'editDrawing'; editingTarget = { idx: i, part: 'entry' }; render(); return;
           }
           if (Math.hypot(pos.x - right, pos.y - yEntry) < 18) {
-            pointerMode = 'dragRRHandle'; draggingHandle = { drawIdx: i, handle: 'resizeRight' }; return;
+            selectedDrawingIdx = i; updateSelectionBar();
+            pointerMode = 'editDrawing'; editingTarget = { idx: i, part: 'resizeRight' }; render(); return;
+          }
+          if (pos.x >= left && pos.x <= right && pos.y >= Math.min(yTP, ySL) && pos.y <= Math.max(yTP, ySL)) {
+            selectedDrawingIdx = i; updateSelectionBar();
+            pointerMode = 'editDrawing'; editingTarget = { idx: i, part: 'moveRR' }; render(); return;
+          }
+        } else if (d.tool === 'hline') {
+          if (Math.abs(pos.y - y2) < 14) {
+            selectedDrawingIdx = i; updateSelectionBar();
+            pointerMode = 'editDrawing'; editingTarget = { idx: i, part: 'hlineMove' }; render(); return;
+          }
+        } else if (d.tool === 'trend' || d.tool === 'ray' || d.tool === 'fib') {
+          if (Math.hypot(pos.x - x1, pos.y - y1) < 18) {
+            selectedDrawingIdx = i; updateSelectionBar();
+            pointerMode = 'editDrawing'; editingTarget = { idx: i, part: 'p1' }; render(); return;
+          }
+          if (Math.hypot(pos.x - x2, pos.y - y2) < 18) {
+            selectedDrawingIdx = i; updateSelectionBar();
+            pointerMode = 'editDrawing'; editingTarget = { idx: i, part: 'p2' }; render(); return;
+          }
+          if (distToSegment(pos.x, pos.y, x1, y1, x2, y2) < 14) {
+            selectedDrawingIdx = i; updateSelectionBar();
+            pointerMode = 'editDrawing'; editingTarget = { idx: i, part: 'moveBoth' }; render(); return;
+          }
+        } else if (d.tool === 'box') {
+          if (Math.hypot(pos.x - x1, pos.y - y1) < 18) {
+            selectedDrawingIdx = i; updateSelectionBar();
+            pointerMode = 'editDrawing'; editingTarget = { idx: i, part: 'p1' }; render(); return;
+          }
+          if (Math.hypot(pos.x - x2, pos.y - y2) < 18) {
+            selectedDrawingIdx = i; updateSelectionBar();
+            pointerMode = 'editDrawing'; editingTarget = { idx: i, part: 'p2' }; render(); return;
+          }
+          const left = Math.min(x1, x2), right = Math.max(x1, x2);
+          const top = Math.min(y1, y2), bottom = Math.max(y1, y2);
+          if (pos.x >= left && pos.x <= right && pos.y >= top && pos.y <= bottom) {
+            selectedDrawingIdx = i; updateSelectionBar();
+            pointerMode = 'editDrawing'; editingTarget = { idx: i, part: 'moveBoth' }; render(); return;
           }
         }
+      }
+
+      if (selectedDrawingIdx !== -1) {
+        selectedDrawingIdx = -1;
+        updateSelectionBar();
+        render();
       }
 
       for (let i = orders.length - 1; i >= 0; i--) {
@@ -977,10 +1076,8 @@
       yScaleZoom = Math.max(0.15, Math.min(8.0, yScaleZoom * factor));
       render();
     } else if (pointerMode === 'panChart') {
-      // ลากนิ้วไปทางซ้าย (dx < 0) -> เปิดดูอนาคตทางขวา, ลากนิ้วไปทางขวา (dx > 0) -> ย้อนดูอดีตทางซ้าย
       rightOffsetBars -= dx / chartBounds.stepX;
       rightOffsetBars = Math.max(-currentIndex + 8, Math.min(visibleBars - 5, rightOffsetBars));
-
       if (!autoScaleY) {
         const pricePerPx = (chartBounds.max - chartBounds.min) / chartBounds.chartH;
         yPanOffset += dy * pricePerPx;
@@ -992,16 +1089,36 @@
     } else if (pointerMode === 'dragOrder' && draggingOrder) {
       orders[draggingOrder.idx][draggingOrder.field] = yToPrice(pos.y);
       render();
-    } else if (pointerMode === 'dragRRHandle' && draggingHandle) {
-      const d = drawings[draggingHandle.drawIdx];
-      if (draggingHandle.handle === 'tp') d.p2 = yToPrice(pos.y);
-      else if (draggingHandle.handle === 'sl') d.p1 = yToPrice(pos.y);
-      else if (draggingHandle.handle === 'entry') {
+    } else if (pointerMode === 'editDrawing' && editingTarget) {
+      const d = drawings[editingTarget.idx];
+      const dTime = (dx / chartBounds.stepX) * (timeframeMin * 60000);
+      const dPrice = -dy * ((chartBounds.max - chartBounds.min) / chartBounds.chartH);
+
+      if (editingTarget.part === 'hlineMove') {
+        d.p1 = yToPrice(pos.y);
+        d.p2 = yToPrice(pos.y);
+      } else if (editingTarget.part === 'p1') {
+        d.t1 = xToTime(pos.x);
+        d.p1 = yToPrice(pos.y);
+      } else if (editingTarget.part === 'p2') {
+        d.t2 = xToTime(pos.x);
+        d.p2 = yToPrice(pos.y);
+      } else if (editingTarget.part === 'moveBoth') {
+        d.t1 += dTime; d.t2 += dTime;
+        d.p1 += dPrice; d.p2 += dPrice;
+      } else if (editingTarget.part === 'tp') {
+        d.p2 = yToPrice(pos.y);
+      } else if (editingTarget.part === 'sl') {
+        d.p1 = yToPrice(pos.y);
+      } else if (editingTarget.part === 'entry') {
         const newMid = yToPrice(pos.y);
         const shift = newMid - d.midP;
         d.midP = newMid; d.p1 += shift; d.p2 += shift;
-      } else if (draggingHandle.handle === 'resizeRight') {
+      } else if (editingTarget.part === 'resizeRight') {
         d.t2 = Math.max(d.t1 + timeframeMin * 60000 * 3, xToTime(pos.x));
+      } else if (editingTarget.part === 'moveRR') {
+        d.t1 += dTime; d.t2 += dTime;
+        d.p1 += dPrice; d.p2 += dPrice; d.midP += dPrice;
       }
       render();
     } else if (pointerMode === 'draw' && activeDrawing) {
@@ -1026,45 +1143,48 @@
         activeDrawing.t2 = activeDrawing.t1 + timeframeMin * 60000 * 10;
       }
       drawings.push(activeDrawing);
+      selectedDrawingIdx = drawings.length - 1;
+      updateSelectionBar();
       activeDrawing = null;
       setTool('cursor');
       render();
     }
     pointerMode = null;
     draggingOrder = null;
-    draggingHandle = null;
+    editingTarget = null;
   });
 
   // Simulation Step
   function stepForward() {
     const stepMinutes = Math.max(1, timeframeMin);
-    if (current1mIndex + stepMinutes >= base1mCandles.length) {
+    if (current1mIndex + stepMinutes >= m1Count) {
       stopPlay();
       return;
     }
 
     const spec = SYMBOLS[currentSymbol];
     for (let m = 1; m <= stepMinutes; m++) {
-      const bar1m = base1mCandles[current1mIndex + m];
-      if (!bar1m) break;
+      const idx = current1mIndex + m;
+      if (idx >= m1Count) break;
+      const bHigh = m1High[idx], bLow = m1Low[idx];
 
       const remaining = [];
       for (const o of orders) {
         if (!o.triggered) {
-          if (o.type === 'BUY LIMIT' && bar1m.low <= o.entry) o.triggered = true;
-          else if (o.type === 'SELL LIMIT' && bar1m.high >= o.entry) o.triggered = true;
-          else if (o.type === 'BUY STOP' && bar1m.high >= o.entry) o.triggered = true;
-          else if (o.type === 'SELL STOP' && bar1m.low <= o.entry) o.triggered = true;
+          if (o.type === 'BUY LIMIT' && bLow <= o.entry) o.triggered = true;
+          else if (o.type === 'SELL LIMIT' && bHigh >= o.entry) o.triggered = true;
+          else if (o.type === 'BUY STOP' && bHigh >= o.entry) o.triggered = true;
+          else if (o.type === 'SELL STOP' && bLow <= o.entry) o.triggered = true;
         }
         if (o.triggered) {
           const isBuy = o.type.includes('BUY');
           let exitP = null, reason = '';
           if (isBuy) {
-            if (o.sl && bar1m.low <= o.sl) { exitP = o.sl; reason = 'SL'; }
-            else if (o.tp && bar1m.high >= o.tp) { exitP = o.tp; reason = 'TP'; }
+            if (o.sl && bLow <= o.sl) { exitP = o.sl; reason = 'SL'; }
+            else if (o.tp && bHigh >= o.tp) { exitP = o.tp; reason = 'TP'; }
           } else {
-            if (o.sl && bar1m.high >= o.sl) { exitP = o.sl; reason = 'SL'; }
-            else if (o.tp && bar1m.low <= o.tp) { exitP = o.tp; reason = 'TP'; }
+            if (o.sl && bHigh >= o.sl) { exitP = o.sl; reason = 'SL'; }
+            else if (o.tp && bLow <= o.tp) { exitP = o.tp; reason = 'TP'; }
           }
           if (exitP !== null) {
             const pnl = (isBuy ? exitP - o.entry : o.entry - exitP) * spec.contractSize * o.lot;
@@ -1129,7 +1249,7 @@
           <div><b style="color:${isBuy ? 'var(--blue)' : 'var(--purple)'}">${o.type}</b> ${o.lot.toFixed(2)} @ ${o.entry.toFixed(spec.decimals)}</div>
           <div>${o.triggered ? `<b style="color:${pnl >= 0 ? 'var(--green)' : 'var(--red)'}">${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}</b>` : '<span style="color:var(--yellow)">PENDING</span>'}</div>
         </div>`;
-      }).join('') || '<div style="color:var(--muted);text-align:center;margin-top:15px;">ไม่มีออเดอร์ (กด Place หรือวาดกล่อง RR แล้วลากปรับได้)</div>';
+      }).join('') || '<div style="color:var(--muted);text-align:center;margin-top:15px;">ไม่มีออเดอร์ (แตะเส้น/กล่องที่วาดเพื่อลากแก้ไขได้)</div>';
     } else {
       list.innerHTML = history.map(h => `
         <div class="order-row">
@@ -1141,22 +1261,56 @@
   }
 
   // Controls Binding
-  document.getElementById('symbolSelect').onchange = e => {
-    currentSymbol = e.target.value;
-    document.getElementById('anchorPriceInput').value = SYMBOLS[currentSymbol].defaultPrice;
-    syncMarketData(true);
+  document.getElementById('themeBtn').onclick = () => {
+    isLightTheme = !isLightTheme;
+    document.body.classList.toggle('light-theme', isLightTheme);
+    render();
   };
 
-  dateInput.onchange = e => {
-    const parsed = Date.parse(e.target.value);
-    if (!isNaN(parsed)) {
-      startDateMs = parsed;
-      syncMarketData(false);
+  document.getElementById('emaToggleBtn').onclick = e => {
+    showEMA = !showEMA;
+    e.target.classList.toggle('active', showEMA);
+    render();
+  };
+
+  document.getElementById('deleteSelectedBtn').onclick = () => {
+    if (selectedDrawingIdx >= 0) {
+      drawings.splice(selectedDrawingIdx, 1);
+      selectedDrawingIdx = -1;
+      updateSelectionBar();
+      render();
     }
   };
 
-  document.getElementById('applyPriceBtn').onclick = () => syncMarketData(false);
-  document.getElementById('syncLiveBtn').onclick = () => syncMarketData(true);
+  document.getElementById('deselectBtn').onclick = () => {
+    selectedDrawingIdx = -1;
+    updateSelectionBar();
+    render();
+  };
+
+  document.getElementById('symbolSelect').onchange = e => {
+    currentSymbol = e.target.value;
+    document.getElementById('anchorPriceInput').value = SYMBOLS[currentSymbol].defaultPrice;
+    initData();
+  };
+
+  // เลือกวันที่ในรอบ 1 ปีเพื่อกระโดดไปยังจุดเริ่มต้นที่ต้องการทันที
+  dateInput.onchange = e => {
+    const targetMs = Date.parse(e.target.value);
+    if (!isNaN(targetMs) && m1Count > 0) {
+      let lo = 0, hi = m1Count - 1;
+      while (lo < hi) {
+        const mid = (lo + hi) >> 1;
+        if (m1Time[mid] < targetMs) lo = mid + 1;
+        else hi = mid;
+      }
+      current1mIndex = Math.max(50, Math.min(m1Count - 1, lo));
+      rebuildTimeframeCandles();
+      render(); updateUI();
+    }
+  };
+
+  document.getElementById('applyPriceBtn').onclick = () => initData();
 
   document.getElementById('autoFitBtn').onclick = () => {
     autoScaleY = true; yScaleZoom = 1.0; yPanOffset = 0.0; rightOffsetBars = 12; render();
@@ -1258,8 +1412,12 @@
   document.querySelectorAll('#toolGroup .tool-btn[data-tool]').forEach(b => {
     b.onclick = () => setTool(b.dataset.tool);
   });
-  document.getElementById('undoDrawBtn').onclick = () => { drawings.pop(); render(); };
-  document.getElementById('clearDrawBtn').onclick = () => { drawings = []; render(); };
+  document.getElementById('undoDrawBtn').onclick = () => {
+    drawings.pop();
+    selectedDrawingIdx = -1;
+    updateSelectionBar();
+    render();
+  };
 
   document.querySelectorAll('#tfGroup .btn[data-min]').forEach(b => {
     b.onclick = () => {
@@ -1284,29 +1442,41 @@
     updateUI();
   };
 
-  // CSV Importer (รองรับไฟล์ M1 ที่ Export จาก MetaTrader 4 / MetaTrader 5 โดยตรง)
+  // CSV Importer (รองรับไฟล์ M1 ย้อนหลัง 1 ปีเต็มจาก MT4 / MT5)
   document.getElementById('csvInput').onchange = e => {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = ev => {
       const lines = ev.target.result.split(/\r?\n/);
-      const parsed = [];
+      const validLines = [];
       for (const line of lines) {
         const c = line.split(/[,;\t]/);
         if (c.length >= 6 && !isNaN(parseFloat(c[2]))) {
           const dt = Date.parse(`${c[0].replace(/\./g, '-')}T${c[1] || '00:00'}:00Z`);
-          parsed.push({
-            time: isNaN(dt) ? (Date.now() + parsed.length * 60000) : dt,
-            open: parseFloat(c[2]), high: parseFloat(c[3]),
-            low: parseFloat(c[4]), close: parseFloat(c[5])
+          validLines.push({
+            t: isNaN(dt) ? (Date.now() + validLines.length * 60000) : dt,
+            o: parseFloat(c[2]), h: parseFloat(c[3]),
+            l: parseFloat(c[4]), c: parseFloat(c[5])
           });
         }
       }
-      if (parsed.length > 20) {
-        base1mCandles = parsed;
-        current1mIndex = Math.min(200, base1mCandles.length - 1);
-        document.getElementById('anchorPriceInput').value = parsed[parsed.length - 1].close.toFixed(3);
+      if (validLines.length > 20) {
+        m1Count = validLines.length;
+        m1Time = new Float64Array(m1Count);
+        m1Open = new Float64Array(m1Count);
+        m1High = new Float64Array(m1Count);
+        m1Low = new Float64Array(m1Count);
+        m1Close = new Float64Array(m1Count);
+        for (let i = 0; i < m1Count; i++) {
+          m1Time[i] = validLines[i].t;
+          m1Open[i] = validLines[i].o;
+          m1High[i] = validLines[i].h;
+          m1Low[i] = validLines[i].l;
+          m1Close[i] = validLines[i].c;
+        }
+        current1mIndex = Math.min(200, m1Count - 1);
+        document.getElementById('anchorPriceInput').value = m1Close[m1Count - 1].toFixed(3);
         resetSessionState();
       }
     };
@@ -1314,7 +1484,7 @@
   };
 
   window.addEventListener('resize', render);
-  syncMarketData(true);
+  initData();
 })();
 </script>
 </body>
