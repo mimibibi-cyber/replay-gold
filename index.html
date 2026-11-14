@@ -5,200 +5,225 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="FXReplay Pro" />
-  <title>FXReplay & TradingView Backtester (XAUUSD / BTCUSD)</title>
+  <meta name="apple-mobile-web-app-title" content="TV Replay Pro" />
+  <title>TradingView & FXReplay Backtester (XAUUSD / BTCUSD)</title>
   <style>
     :root {
-      --bg: #0f1117;
-      --panel: #181b24;
-      --panel2: #222632;
-      --border: #2c3140;
-      --text: #f1f5f9;
-      --muted: #94a3b8;
-      --green: #10b981;
-      --red: #ef4444;
-      --blue: #3b82f6;
-      --yellow: #eab308;
-      --purple: #a855f7;
-      --cyan: #06b6d4;
+      --bg: #131722;
+      --panel: #1e222d;
+      --panel2: #2a2e39;
+      --border: #363a45;
+      --text: #d1d4dc;
+      --muted: #787b86;
+      --green: #089981;
+      --red: #f23645;
+      --blue: #2962ff;
+      --yellow: #f59e0b;
+      --purple: #9c27b0;
     }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
     body {
       margin: 0; padding: 0;
       background: var(--bg); color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Trebuchet MS", Roboto, sans-serif;
       display: flex; flex-direction: column; height: 100dvh; overflow: hidden;
     }
 
-    /* Top Bar */
-    .top-bar {
+    /* Top Header (TradingView Style) */
+    .tv-header {
       display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px;
-      padding: 6px 10px; background: var(--panel); border-bottom: 1px solid var(--border);
-      padding-top: max(6px, env(safe-area-inset-top));
+      padding: 5px 8px; background: var(--panel); border-bottom: 1px solid var(--border);
+      padding-top: max(5px, env(safe-area-inset-top));
     }
-    .row-group { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+    .group { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
     .btn, select, input[type="date"], input[type="number"] {
       background: var(--panel2); color: var(--text); border: 1px solid var(--border);
-      padding: 5px 8px; border-radius: 6px; font-size: 11px; font-weight: 600;
+      padding: 4px 7px; border-radius: 4px; font-size: 11px; font-weight: 600;
     }
     .btn { cursor: pointer; border: none; }
+    .btn:hover { background: #363a45; }
     .btn.active { background: var(--blue); color: #fff; }
     .btn-green { background: var(--green); color: #fff; }
     .btn-red { background: var(--red); color: #fff; }
     .btn-blue { background: var(--blue); color: #fff; }
     .btn-orange { background: #f97316; color: #fff; }
-    .btn-yellow { background: var(--yellow); color: #000; }
 
-    /* Account & Stats Strip */
-    .stats-bar {
+    /* Account & Live Sync Strip */
+    .tv-subbar {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 5px 10px; background: #13161f; border-bottom: 1px solid var(--border);
-      font-size: 11px; overflow-x: auto; gap: 10px; flex-shrink: 0;
+      padding: 4px 8px; background: var(--bg); border-bottom: 1px solid var(--border);
+      font-size: 11px; overflow-x: auto; gap: 8px; flex-shrink: 0;
     }
-    .stats-bar::-webkit-scrollbar { display: none; }
-    .stat-item { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+    .tv-subbar::-webkit-scrollbar { display: none; }
+    .stat { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
 
-    /* Drawing Toolbar */
-    .toolbar {
-      display: flex; gap: 5px; padding: 5px 10px; background: var(--bg);
-      overflow-x: auto; border-bottom: 1px solid var(--border); flex-shrink: 0;
+    /* Workspace: Left Drawing Toolbar + Chart */
+    .workspace {
+      position: relative; flex: 1; display: flex; min-height: 240px; overflow: hidden;
     }
-    .toolbar::-webkit-scrollbar { display: none; }
+    .left-toolbar {
+      width: 38px; background: var(--panel); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; align-items: center; padding: 4px 0; gap: 4px;
+      overflow-y: auto; z-index: 10; flex-shrink: 0;
+    }
+    .left-toolbar::-webkit-scrollbar { display: none; }
+    .tool-btn {
+      width: 30px; height: 30px; border-radius: 5px; border: none;
+      background: transparent; color: var(--text); font-size: 14px;
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+    }
+    .tool-btn:hover { background: var(--panel2); }
+    .tool-btn.active { background: var(--blue); color: #fff; }
 
-    /* Main Chart Area */
     .chart-wrap {
-      position: relative; flex: 1; min-height: 220px; width: 100%; touch-action: none;
+      position: relative; flex: 1; height: 100%; touch-action: none; overflow: hidden;
     }
     canvas { display: block; width: 100%; height: 100%; }
 
+    /* Floating Hint / Status Badge */
+    .chart-badge {
+      position: absolute; top: 6px; left: 8px; pointer-events: none;
+      background: rgba(30, 34, 45, 0.85); padding: 3px 7px; border-radius: 4px;
+      font-size: 10px; color: var(--muted); border: 1px solid var(--border);
+    }
+    .auto-fit-btn {
+      position: absolute; bottom: 24px; right: 64px;
+      background: var(--panel2); color: var(--text); border: 1px solid var(--border);
+      padding: 3px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; opacity: 0.85;
+    }
+
     /* Replay Bar */
     .replay-bar {
-      display: flex; align-items: center; gap: 8px; padding: 6px 10px;
+      display: flex; align-items: center; gap: 6px; padding: 5px 8px;
       background: var(--panel); border-top: 1px solid var(--border);
     }
     input[type="range"] { flex: 1; accent-color: var(--blue); }
 
-    /* Trade Execution Panel */
+    /* Order Execution */
     .trade-panel {
-      padding: 6px 10px; background: var(--panel); border-top: 1px solid var(--border);
-      display: flex; flex-direction: column; gap: 6px;
+      padding: 6px 8px; background: var(--panel); border-top: 1px solid var(--border);
+      display: flex; flex-direction: column; gap: 5px;
     }
     .order-types { display: flex; gap: 4px; overflow-x: auto; }
     .order-types::-webkit-scrollbar { display: none; }
     .trade-actions { display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap; }
-    .lot-control {
-      display: flex; align-items: center; gap: 5px; font-size: 11px;
-      background: var(--panel2); padding: 3px 7px; border-radius: 6px;
+    .lot-box {
+      display: flex; align-items: center; gap: 4px; font-size: 11px;
+      background: var(--panel2); padding: 3px 6px; border-radius: 4px;
     }
-    .lot-control button {
-      background: #374151; color: #fff; border: none; width: 22px; height: 22px;
-      border-radius: 4px; font-weight: bold; cursor: pointer;
+    .lot-box button {
+      background: #363a45; color: #fff; border: none; width: 20px; height: 20px;
+      border-radius: 3px; font-weight: bold; cursor: pointer;
     }
 
-    /* Bottom Orders / Analytics */
+    /* Bottom Sheet */
     .bottom-sheet {
-      height: 135px; background: #13161e; border-top: 1px solid var(--border);
+      height: 125px; background: var(--bg); border-top: 1px solid var(--border);
       display: flex; flex-direction: column; padding-bottom: env(safe-area-inset-bottom);
     }
     .tabs { display: flex; background: var(--panel); }
     .tab {
-      flex: 1; text-align: center; padding: 5px; font-size: 11px;
+      flex: 1; text-align: center; padding: 4px; font-size: 11px;
       font-weight: bold; color: var(--muted); cursor: pointer;
     }
     .tab.active { color: var(--text); border-bottom: 2px solid var(--blue); }
-    .list-area { flex: 1; overflow-y: auto; padding: 5px 10px; font-size: 11px; }
+    .list-area { flex: 1; overflow-y: auto; padding: 4px 8px; font-size: 11px; }
     .order-row {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 5px 0; border-bottom: 1px solid #222630;
+      padding: 4px 0; border-bottom: 1px solid #222630;
     }
   </style>
 </head>
 <body>
 
-  <!-- Top Controls: Symbol, Timeframe, Start Date, CSV -->
-  <div class="top-bar">
-    <div class="row-group">
+  <!-- Top Header -->
+  <div class="tv-header">
+    <div class="group">
       <select id="symbolSelect">
-        <option value="XAUUSD" selected>XAUUSD (Gold)</option>
-        <option value="BTCUSD">BTCUSD (Bitcoin)</option>
+        <option value="XAUUSD" selected>XAUUSD</option>
+        <option value="BTCUSD">BTCUSD</option>
       </select>
 
-      <div class="row-group" id="tfGroup">
-        <button class="btn active" data-tf="1">1m</button>
-        <button class="btn" data-tf="5">5m</button>
-        <button class="btn" data-tf="15">15m</button>
-        <button class="btn" data-tf="60">1H</button>
-        <button class="btn" data-tf="240">4H</button>
-        <button class="btn" data-tf="1440">1D</button>
+      <div class="group" id="tfGroup">
+        <button class="btn active" data-tf="1m" data-min="1">1m</button>
+        <button class="btn" data-tf="5m" data-min="5">5m</button>
+        <button class="btn" data-tf="15m" data-min="15">15m</button>
+        <button class="btn" data-tf="1h" data-min="60">1H</button>
+        <button class="btn" data-tf="4h" data-min="240">4H</button>
+        <button class="btn" data-tf="1d" data-min="1440">1D</button>
       </div>
     </div>
 
-    <div class="row-group">
-      <span style="font-size:10px; color:var(--muted);">เริ่มวันที่:</span>
-      <input type="date" id="startDateInput" />
-      <label class="btn" style="background:#334155;">
+    <div class="group">
+      <input type="date" id="startDateInput" title="เลือกวันที่เริ่มเทส" />
+      <button class="btn btn-green" id="syncLiveBtn" title="ดึงกราฟจริงล่าสุด">🌐 Live Data</button>
+      <label class="btn" style="background:#363a45;" title="นำเข้าไฟล์ CSV จาก MT4/MT5">
         📂 CSV <input type="file" id="csvInput" accept=".csv,.txt" hidden />
       </label>
     </div>
   </div>
 
-  <!-- Account & Initial Balance Setup -->
-  <div class="stats-bar">
-    <div class="stat-item">
-      <span style="color:var(--muted);">ทุนเริ่มต้น ($):</span>
-      <input type="number" id="initBalInput" value="10000" style="width:72px; padding:3px 5px;" />
-      <button class="btn btn-blue" id="applyBalBtn" style="padding:3px 7px;">Set</button>
+  <!-- Subbar: Balance, Equity, WinRate -->
+  <div class="tv-subbar">
+    <div class="stat">
+      <span style="color:var(--muted);">ทุน ($):</span>
+      <input type="number" id="initBalInput" value="10000" style="width:68px; padding:2px 4px;" />
+      <button class="btn btn-blue" id="applyBalBtn" style="padding:2px 6px;">Set</button>
     </div>
-    <div class="stat-item">
-      <span style="color:var(--muted);">Balance:</span>
+    <div class="stat">
+      <span style="color:var(--muted);">Bal:</span>
       <b id="balText">$10000.00</b>
     </div>
-    <div class="stat-item">
-      <span style="color:var(--muted);">Equity:</span>
+    <div class="stat">
+      <span style="color:var(--muted);">Eq:</span>
       <b id="eqText" style="color:var(--green);">$10000.00</b>
     </div>
-    <div class="stat-item">
-      <span style="color:var(--muted);">WinRate:</span>
+    <div class="stat">
+      <span style="color:var(--muted);">Win:</span>
       <b id="winRateText">0%</b>
     </div>
   </div>
 
-  <!-- FXReplay / TradingView Drawing Toolbar -->
-  <div class="toolbar" id="toolGroup">
-    <button class="btn active" data-tool="cursor">👆 Cursor</button>
-    <button class="btn" data-tool="cut">✂️ Bar Replay</button>
-    <button class="btn" data-tool="trend">📈 Trendline</button>
-    <button class="btn" data-tool="ray">📏 เส้นยาว (Ray)</button>
-    <button class="btn" data-tool="hline">➖ แนวนอน</button>
-    <button class="btn" data-tool="vline">│ แนวตั้ง</button>
-    <button class="btn" data-tool="box">⬜ กล่อง (Box)</button>
-    <button class="btn" data-tool="fib">📐 Fib</button>
-    <button class="btn" data-tool="long">🟩 Long RR</button>
-    <button class="btn" data-tool="short">🟥 Short RR</button>
-    <button class="btn" id="undoDrawBtn">↩️ Undo</button>
-    <button class="btn" id="clearDrawBtn" style="color:var(--red);">🗑 Clear</button>
-  </div>
+  <!-- Main Workspace: TradingView Left Drawing Toolbar + Interactive Chart -->
+  <div class="workspace">
+    <div class="left-toolbar" id="toolGroup">
+      <button class="tool-btn active" data-tool="cursor" title="Cursor / เลื่อนกราฟ / ลากเส้น">👆</button>
+      <button class="tool-btn" data-tool="crosshair" title="Crosshair เล็งราคา">➕</button>
+      <button class="tool-btn" data-tool="cut" title="Bar Replay ตัดกราฟเริ่มตรงนี้">✂️</button>
+      <button class="tool-btn" data-tool="trend" title="Trendline เส้นเฉียง">📈</button>
+      <button class="tool-btn" data-tool="ray" title="Extended Line เส้นตรงยาว">📏</button>
+      <button class="tool-btn" data-tool="hline" title="Horizontal Line เส้นแนวนอน">➖</button>
+      <button class="tool-btn" data-tool="vline" title="Vertical Line เส้นแนวตั้ง">│</button>
+      <button class="tool-btn" data-tool="box" title="Rectangle กล่องสี่เหลี่ยม">⬜</button>
+      <button class="tool-btn" data-tool="fib" title="Fib Retracement">📐</button>
+      <button class="tool-btn" data-tool="long" title="Long Position (RR)">🟩</button>
+      <button class="tool-btn" data-tool="short" title="Short Position (RR)">🟥</button>
+      <button class="tool-btn" id="undoDrawBtn" title="Undo ย้อนกลับ">↩️</button>
+      <button class="tool-btn" id="clearDrawBtn" title="ลบเส้นทั้งหมด" style="color:var(--red);">🗑</button>
+    </div>
 
-  <!-- Interactive Chart -->
-  <div class="chart-wrap" id="chartWrap">
-    <canvas id="chartCanvas"></canvas>
+    <div class="chart-wrap" id="chartWrap">
+      <canvas id="chartCanvas"></canvas>
+      <div class="chart-badge" id="ohlcBadge">กำลังโหลดกราฟ...</div>
+      <button class="auto-fit-btn" id="autoFitBtn">Auto Fit</button>
+    </div>
   </div>
 
   <!-- Replay Controls -->
   <div class="replay-bar">
-    <button class="btn btn-green" id="playBtn" style="width:66px;">▶ Play</button>
-    <button class="btn btn-blue" id="stepBtn">⏭ +1 แท่ง</button>
-    <input type="range" id="progressSlider" min="40" max="600" value="40" />
-    <span id="barTimeText" style="font-size:10px; color:var(--muted); min-width:86px; text-align:right;">--</span>
+    <button class="btn btn-green" id="playBtn" style="width:64px;">▶ Play</button>
+    <button class="btn btn-blue" id="stepBtn">⏭ +1</button>
+    <input type="range" id="progressSlider" min="10" max="500" value="40" />
+    <span id="barTimeText" style="font-size:10px; color:var(--muted); min-width:82px; text-align:right;">--</span>
     <select id="speedSelect">
       <option value="800">0.5x</option>
-      <option value="300" selected>1x</option>
-      <option value="120">3x</option>
-      <option value="40">10x</option>
+      <option value="250" selected>1x</option>
+      <option value="100">3x</option>
+      <option value="35">10x</option>
     </select>
   </div>
 
-  <!-- Order Execution Panel -->
+  <!-- Trade Execution -->
   <div class="trade-panel">
     <div class="order-types" id="orderTypeGroup">
       <button class="btn active" data-type="BUY">BUY</button>
@@ -209,13 +234,13 @@
       <button class="btn" data-type="SELL STOP">SELL STOP</button>
     </div>
     <div class="trade-actions">
-      <div class="lot-control">
+      <div class="lot-box">
         <button id="lotMinus">-</button>
         <span>Lot: <b id="lotText">0.10</b></span>
         <button id="lotPlus">+</button>
-        <span style="color:var(--muted); margin-left:4px;">| Risk:</span>
-        <select id="riskSelect" style="padding:2px 4px; font-size:10px;">
-          <option value="0" selected>Manual Lot</option>
+        <span style="color:var(--muted); margin-left:3px;">|</span>
+        <select id="riskSelect" style="padding:1px 3px; font-size:10px;">
+          <option value="0" selected>Manual</option>
           <option value="1">1% Risk</option>
           <option value="2">2% Risk</option>
           <option value="5">5% Risk</option>
@@ -228,7 +253,7 @@
     </div>
   </div>
 
-  <!-- Orders & History Tabs -->
+  <!-- Orders & History -->
   <div class="bottom-sheet">
     <div class="tabs">
       <div class="tab active" id="tabActive">Active / Pending (<span id="activeCount">0</span>)</div>
@@ -243,22 +268,30 @@
   const ctx = canvas.getContext('2d');
   const wrap = document.getElementById('chartWrap');
 
-  // Symbol Specs (XAUUSD vs BTCUSD)
+  // สเปกคู่เทรด (อัปเดตฐานราคา XAUUSD ให้ตรงกับเรทปัจจุบัน ~3802)
   const SYMBOLS = {
-    XAUUSD: { startPrice: 2680.00, contractSize: 100, decimals: 2, spread: 0.20, defaultSL: 5.0, defaultTP: 10.0, volBase: 1.5 },
-    BTCUSD: { startPrice: 91500.00, contractSize: 1, decimals: 1, spread: 15.0, defaultSL: 350.0, defaultTP: 700.0, volBase: 95.0 }
+    XAUUSD: { binancePair: 'PAXGUSDT', fallbackPrice: 3802.50, contractSize: 100, decimals: 2, spread: 0.25, defaultSL: 6.0, defaultTP: 12.0, volBase: 2.2 },
+    BTCUSD: { binancePair: 'BTCUSDT', fallbackPrice: 92500.0, contractSize: 1, decimals: 1, spread: 15.0, defaultSL: 350.0, defaultTP: 700.0, volBase: 110.0 }
   };
 
   let currentSymbol = 'XAUUSD';
+  let currentTF = '1m';
   let timeframeMin = 1;
-  let startDateMs = Date.now() - 3 * 24 * 3600 * 1000;
+  let startDateMs = Date.now() - 2 * 24 * 3600 * 1000;
 
   let candles = [];
-  let currentIndex = 40;
-  let visibleCount = 48;
+  let currentIndex = 50;
+
+  // TradingView Viewport State (Zoom & Pan ทั้งแกน X และแกน Y)
+  let visibleBars = 55;        // จำนวนแท่งที่แสดง (Zoom X)
+  let rightOffsetBars = 8;     // ระยะเว้นว่างด้านขวา (Pan X)
+  let yScaleZoom = 1.0;        // ตัวคูณยืด/หดความสูงแท่งเทียน (Zoom Y จากการลากแกนราคา)
+  let yPanOffset = 0.0;        // เลื่อนกราฟขึ้น-ลงอิสระ (Pan Y)
+  let autoScaleY = true;       // โหมด Auto Fit แกนราคา
+
   let isPlaying = false;
   let playTimer = null;
-  let speedMs = 300;
+  let speedMs = 250;
 
   let initialBalance = 10000;
   let balance = 10000;
@@ -272,21 +305,63 @@
   let selectedTool = 'cursor';
   let drawings = [];
   let activeDrawing = null;
-  let draggingTarget = null;
-  let chartBounds = { min: 2600, max: 2700, chartW: 300, chartH: 250, stepX: 6, startIdx: 0 };
+  let crosshairPos = null; // {x, y}
 
-  // Set Default Start Date Input (3 days ago)
+  let chartBounds = { min: 3780, max: 3820, chartW: 300, chartH: 250, axisW: 62, stepX: 6, startSlotIdx: 0 };
+
   const dateInput = document.getElementById('startDateInput');
   dateInput.value = new Date(startDateMs).toISOString().split('T')[0];
 
-  // Generate Realistic Historical Data from Chosen Start Date
-  function generateData(symbolKey, tfMin, fromMs, count = 800) {
+  // 1. ดึงข้อมูลกราฟจริงจาก Binance API (PAXGUSDT = ทองคำ Spot 1:1 / BTCUSDT = บิตคอยน์)
+  async function loadMarketData(useStartDate = false) {
+    stopPlay();
+    const spec = SYMBOLS[currentSymbol];
+    const badge = document.getElementById('ohlcBadge');
+    badge.textContent = `กำลังดึงข้อมูลจริง ${currentSymbol} (${currentTF})...`;
+
+    try {
+      let url = `https://api.binance.com/api/v3/klines?symbol=${spec.binancePair}&interval=${currentTF}&limit=800`;
+      if (useStartDate) {
+        url += `&startTime=${startDateMs}`;
+      }
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('API Error');
+      const raw = await res.json();
+
+      if (Array.isArray(raw) && raw.length > 20) {
+        candles = calcEMA(raw.map(k => ({
+          time: k[0],
+          open: parseFloat(k[1]),
+          high: parseFloat(k[2]),
+          low: parseFloat(k[3]),
+          close: parseFloat(k[4]),
+          emaF: null,
+          emaS: null
+        })), 9, 21);
+
+        // หากเลือกวันที่เริ่มต้น ให้เริ่มเล่นจากแท่งที่ 30 ของช่วงเวลานั้น
+        currentIndex = useStartDate ? Math.min(30, candles.length - 1) : Math.min(80, candles.length - 1);
+        setupSliderAndReset();
+        badge.textContent = `🟢 Live Sync: ${currentSymbol} (${currentTF}) | ลากแกนราคาขวาเพื่อยืด/หด`;
+        return;
+      }
+    } catch (err) {
+      console.warn('Fallback to simulated data:', err);
+    }
+
+    // Fallback กรณีไม่มีเน็ต หรือ API บล็อก
+    candles = generateFallbackData(currentSymbol, timeframeMin, startDateMs, 800);
+    currentIndex = Math.min(50, candles.length - 1);
+    setupSliderAndReset();
+    badge.textContent = `🟡 Offline Mode: ${currentSymbol} (~${spec.fallbackPrice}) | นำเข้า CSV ได้`;
+  }
+
+  function generateFallbackData(symbolKey, tfMin, fromMs, count = 800) {
     const spec = SYMBOLS[symbolKey];
     const arr = [];
     let time = fromMs;
-    let price = spec.startPrice;
-    const tfFactor = Math.sqrt(tfMin); // Scaling volatility by sqrt of timeframe
-    const vol = spec.volBase * tfFactor;
+    let price = spec.fallbackPrice;
+    const vol = spec.volBase * Math.sqrt(tfMin);
 
     for (let i = 0; i < count; i++) {
       const chg = (Math.random() - 0.492) * vol * 1.8;
@@ -313,36 +388,35 @@
     return data;
   }
 
-  function resetAll(customCandles = null) {
-    stopPlay();
-    candles = customCandles || generateData(currentSymbol, timeframeMin, startDateMs, 800);
-    currentIndex = Math.min(40, candles.length - 1);
+  function setupSliderAndReset() {
     const slider = document.getElementById('progressSlider');
-    slider.min = 10;
-    slider.max = candles.length - 1;
+    slider.min = 5;
+    slider.max = Math.max(10, candles.length - 1);
     slider.value = currentIndex;
     balance = initialBalance;
     orders = [];
     history = [];
-    drawings = [];
+    autoScaleY = true;
+    yScaleZoom = 1.0;
+    yPanOffset = 0.0;
+    rightOffsetBars = 8;
     render();
     updateUI();
   }
 
-  // Coordinate Conversion
+  // Coordinate System
   function priceToY(p) {
     const r = Math.max(0.0001, chartBounds.max - chartBounds.min);
     return chartBounds.chartH * (1 - (p - chartBounds.min) / r);
   }
   function yToPrice(y) {
-    const clamped = Math.max(0, Math.min(chartBounds.chartH, y));
-    return chartBounds.min + (1 - clamped / chartBounds.chartH) * (chartBounds.max - chartBounds.min);
+    return chartBounds.min + (1 - y / chartBounds.chartH) * (chartBounds.max - chartBounds.min);
   }
   function idxToX(idx) {
-    return (idx - chartBounds.startIdx) * chartBounds.stepX + chartBounds.stepX / 2;
+    return (idx - chartBounds.startSlotIdx) * chartBounds.stepX + chartBounds.stepX / 2;
   }
   function xToIdx(x) {
-    return chartBounds.startIdx + Math.floor(x / chartBounds.stepX);
+    return Math.round(chartBounds.startSlotIdx + (x - chartBounds.stepX / 2) / chartBounds.stepX);
   }
 
   function formatDateTime(ms) {
@@ -361,158 +435,233 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     const W = rect.width, H = rect.height;
-    const axisW = 58;
+    const axisW = 62;
+    const timeAxisH = 20;
     const chartW = W - axisW;
-    const endIdx = Math.min(currentIndex + 1, candles.length);
-    const startIdx = Math.max(0, endIdx - visibleCount);
-    const slice = candles.slice(startIdx, endIdx);
+    const chartH = H - timeAxisH;
 
+    // คำนวณช่วง Index ที่แสดงผลตามการ Pan/Zoom
+    const endSlotIdx = currentIndex + Math.round(rightOffsetBars);
+    const startSlotIdx = endSlotIdx - Math.round(visibleBars);
+    const stepX = chartW / Math.max(5, visibleBars);
+
+    // หา Min/Max ของราคาเฉพาะแท่งที่มองเห็น
     let minP = Infinity, maxP = -Infinity;
-    slice.forEach(c => { minP = Math.min(minP, c.low); maxP = Math.max(maxP, c.high); });
-    orders.forEach(o => {
-      minP = Math.min(minP, o.entry, o.sl ?? o.entry, o.tp ?? o.entry);
-      maxP = Math.max(maxP, o.entry, o.sl ?? o.entry, o.tp ?? o.entry);
-    });
-    if (!isFinite(minP)) { minP = spec.startPrice * 0.99; maxP = spec.startPrice * 1.01; }
-    const pad = (maxP - minP) * 0.14;
-    minP -= pad; maxP += pad;
+    const visStart = Math.max(0, startSlotIdx);
+    const visEnd = Math.min(currentIndex, endSlotIdx);
 
-    const totalSlots = visibleCount + 7;
-    const stepX = chartW / totalSlots;
-    chartBounds = { min: minP, max: maxP, chartW, chartH: H, stepX, startIdx };
+    for (let i = visStart; i <= visEnd; i++) {
+      if (candles[i]) {
+        minP = Math.min(minP, candles[i].low);
+        maxP = Math.max(maxP, candles[i].high);
+      }
+    }
+    if (autoScaleY) {
+      orders.forEach(o => {
+        minP = Math.min(minP, o.entry, o.sl ?? o.entry, o.tp ?? o.entry);
+        maxP = Math.max(maxP, o.entry, o.sl ?? o.entry, o.tp ?? o.entry);
+      });
+    }
+    if (!isFinite(minP)) { minP = spec.fallbackPrice * 0.995; maxP = spec.fallbackPrice * 1.005; }
 
-    // Background
-    ctx.fillStyle = '#0f1117';
+    const midP = (maxP + minP) / 2 + yPanOffset;
+    const halfSpan = ((maxP - minP) * 0.58) / yScaleZoom;
+    minP = midP - halfSpan;
+    maxP = midP + halfSpan;
+
+    chartBounds = { min: minP, max: maxP, chartW, chartH, axisW, stepX, startSlotIdx };
+
+    // 1. Background
+    ctx.fillStyle = '#131722';
     ctx.fillRect(0, 0, W, H);
 
-    // Grid & Y-Axis
+    // 2. Grid Lines & Price Axis (Right)
     ctx.font = '10px monospace';
     ctx.textAlign = 'left';
-    for (let i = 0; i <= 5; i++) {
-      const y = (H / 5) * i;
-      ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+    for (let i = 0; i <= 6; i++) {
+      const y = (chartH / 6) * i;
+      ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+      ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(chartW, y); ctx.stroke();
-      ctx.fillStyle = '#64748b';
-      ctx.fillText(yToPrice(y).toFixed(spec.decimals), chartW + 4, y + 3);
+
+      ctx.fillStyle = '#787b86';
+      ctx.fillText(yToPrice(y).toFixed(spec.decimals), chartW + 5, y + 3);
     }
 
-    // Saved & Active Drawings
-    const allShapes = activeDrawing ? [...drawings, activeDrawing] : drawings;
-    allShapes.forEach(d => drawShape(d, chartW, H, spec));
+    // เส้นแบ่งแกนราคาและแกนเวลา
+    ctx.strokeStyle = '#363a45';
+    ctx.beginPath();
+    ctx.moveTo(chartW, 0); ctx.lineTo(chartW, H);
+    ctx.moveTo(0, chartH); ctx.lineTo(W, chartH);
+    ctx.stroke();
 
-    // Candles & EMA
+    // 3. Drawings (อยู่ใต้แท่งเทียนเหมือน TradingView)
+    const allShapes = activeDrawing ? [...drawings, activeDrawing] : drawings;
+    allShapes.forEach(d => drawShape(d, chartW, chartH, spec));
+
+    // 4. Candlesticks & EMA (Clip ให้อยู่ในพื้นที่กราฟ)
+    ctx.save();
+    ctx.beginPath(); ctx.rect(0, 0, chartW, chartH); ctx.clip();
+
     let fastPts = [], slowPts = [];
-    slice.forEach((c, i) => {
-      const x = i * stepX + stepX / 2;
+    for (let i = visStart; i <= visEnd; i++) {
+      const c = candles[i];
+      if (!c) continue;
+      const x = idxToX(i);
       const yH = priceToY(c.high), yL = priceToY(c.low), yO = priceToY(c.open), yC = priceToY(c.close);
       const bull = c.close >= c.open;
-      ctx.strokeStyle = bull ? '#10b981' : '#ef4444';
-      ctx.fillStyle = bull ? '#10b981' : '#ef4444';
+      ctx.strokeStyle = bull ? '#089981' : '#f23645';
+      ctx.fillStyle = bull ? '#089981' : '#f23645';
       ctx.lineWidth = 1.2;
+
       ctx.beginPath(); ctx.moveTo(x, yH); ctx.lineTo(x, yL); ctx.stroke();
-      const bw = Math.max(3, stepX * 0.65);
-      ctx.fillRect(x - bw / 2, Math.min(yO, yC), bw, Math.max(2, Math.abs(yC - yO)));
+      const bw = Math.max(2, stepX * 0.68);
+      ctx.fillRect(x - bw / 2, Math.min(yO, yC), bw, Math.max(1.5, Math.abs(yC - yO)));
+
       if (c.emaF) fastPts.push({ x, y: priceToY(c.emaF) });
       if (c.emaS) slowPts.push({ x, y: priceToY(c.emaS) });
-    });
 
-    drawLinePath(fastPts, '#38bdf8');
-    drawLinePath(slowPts, '#fb923c');
+      // แสดงเวลาด้านล่างทุกๆ 12 แท่ง
+      if (i % 12 === 0) {
+        ctx.fillStyle = '#787b86';
+        ctx.font = '9px sans-serif';
+        ctx.fillText(formatDateTime(c.time).split(' ')[1], x - 12, chartH + 13);
+      }
+    }
 
-    // Current Price Line & Date
-    const last = slice[slice.length - 1];
+    drawLinePath(fastPts, '#2962ff');
+    drawLinePath(slowPts, '#f59e0b');
+    ctx.restore();
+
+    // 5. Current Price Line & Axis Badge
+    const last = candles[currentIndex];
     if (last) {
       document.getElementById('barTimeText').textContent = formatDateTime(last.time);
       const yCur = priceToY(last.close);
-      ctx.setLineDash([3, 3]); ctx.strokeStyle = '#eab308';
-      ctx.beginPath(); ctx.moveTo(0, yCur); ctx.lineTo(chartW, yCur); ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.fillStyle = '#eab308';
-      ctx.fillRect(chartW + 1, yCur - 8, axisW - 2, 16);
-      ctx.fillStyle = '#000'; ctx.font = 'bold 9px monospace';
-      ctx.fillText(last.close.toFixed(spec.decimals), chartW + 3, yCur + 3);
+      if (yCur >= 0 && yCur <= chartH) {
+        ctx.setLineDash([3, 3]); ctx.strokeStyle = '#f59e0b';
+        ctx.beginPath(); ctx.moveTo(0, yCur); ctx.lineTo(chartW, yCur); ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = '#f59e0b';
+        ctx.fillRect(chartW + 1, yCur - 8, axisW - 2, 16);
+        ctx.fillStyle = '#000'; ctx.font = 'bold 10px monospace';
+        ctx.fillText(last.close.toFixed(spec.decimals), chartW + 4, yCur + 3.5);
+      }
     }
 
-    // Interactive Order Lines (Entry / SL / TP)
+    // 6. Interactive Order Lines (Entry / SL / TP)
     orders.forEach(o => {
       const isBuy = o.type.includes('BUY');
-      drawOrderTag(o.entry, `${o.type} ${o.lot.toFixed(2)}`, isBuy ? '#3b82f6' : '#a855f7', !o.triggered, true);
+      drawOrderTag(o.entry, `${o.type} ${o.lot.toFixed(2)}`, isBuy ? '#2962ff' : '#9c27b0', !o.triggered, true);
       if (o.sl) {
         const loss = Math.abs(o.entry - o.sl) * spec.contractSize * o.lot;
-        drawOrderTag(o.sl, `SL -$${loss.toFixed(0)}`, '#ef4444', true, false);
+        drawOrderTag(o.sl, `SL -$${loss.toFixed(0)}`, '#f23645', true, false);
       }
       if (o.tp) {
         const gain = Math.abs(o.tp - o.entry) * spec.contractSize * o.lot;
-        drawOrderTag(o.tp, `TP +$${gain.toFixed(0)}`, '#10b981', true, false);
+        drawOrderTag(o.tp, `TP +$${gain.toFixed(0)}`, '#089981', true, false);
       }
     });
+
+    // 7. Crosshair (TradingView Style)
+    if (crosshairPos && crosshairPos.x < chartW && crosshairPos.y < chartH) {
+      ctx.setLineDash([4, 4]);
+      ctx.strokeStyle = 'rgba(209, 212, 220, 0.5)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, crosshairPos.y); ctx.lineTo(chartW, crosshairPos.y);
+      ctx.moveTo(crosshairPos.x, 0); ctx.lineTo(crosshairPos.x, chartH);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // ป้ายราคาตรงแกนขวา
+      const hoverPrice = yToPrice(crosshairPos.y);
+      ctx.fillStyle = '#363a45';
+      ctx.fillRect(chartW + 1, crosshairPos.y - 8, axisW - 2, 16);
+      ctx.fillStyle = '#fff'; ctx.font = '10px monospace';
+      ctx.fillText(hoverPrice.toFixed(spec.decimals), chartW + 4, crosshairPos.y + 3.5);
+
+      // ป้ายเวลาตรงแกนล่าง
+      const hoverIdx = Math.max(0, Math.min(currentIndex, xToIdx(crosshairPos.x)));
+      if (candles[hoverIdx]) {
+        const tStr = formatDateTime(candles[hoverIdx].time);
+        ctx.fillStyle = '#363a45';
+        ctx.fillRect(crosshairPos.x - 32, chartH + 1, 64, 18);
+        ctx.fillStyle = '#fff'; ctx.font = '9px sans-serif';
+        ctx.fillText(tStr, crosshairPos.x - 28, chartH + 13);
+      }
+    }
   }
 
-  function drawShape(d, chartW, H, spec) {
+  function drawShape(d, chartW, chartH, spec) {
     const x1 = idxToX(d.i1), x2 = idxToX(d.i2);
     const y1 = priceToY(d.p1), y2 = priceToY(d.p2);
+
+    ctx.save();
+    ctx.beginPath(); ctx.rect(0, 0, chartW, chartH); ctx.clip();
 
     if (d.tool === 'hline') {
       ctx.strokeStyle = '#06b6d4'; ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.moveTo(0, y2); ctx.lineTo(chartW, y2); ctx.stroke();
-      ctx.fillStyle = '#06b6d4'; ctx.font = '9px monospace';
-      ctx.fillText(d.p2.toFixed(spec.decimals), chartW - 45, y2 - 3);
+      ctx.fillStyle = '#06b6d4'; ctx.font = '10px monospace';
+      ctx.fillText(d.p2.toFixed(spec.decimals), 6, y2 - 4);
     } else if (d.tool === 'vline') {
       ctx.strokeStyle = '#a855f7'; ctx.lineWidth = 1.5;
       ctx.setLineDash([4, 4]);
-      ctx.beginPath(); ctx.moveTo(x2, 0); ctx.lineTo(x2, H); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x2, 0); ctx.lineTo(x2, chartH); ctx.stroke();
       ctx.setLineDash([]);
     } else if (d.tool === 'trend') {
       ctx.strokeStyle = '#eab308'; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
     } else if (d.tool === 'ray') {
-      // Extended straight line across full canvas width
       ctx.strokeStyle = '#f97316'; ctx.lineWidth = 2;
       const dx = x2 - x1, dy = y2 - y1;
       if (Math.abs(dx) < 1) {
-        ctx.beginPath(); ctx.moveTo(x1, 0); ctx.lineTo(x1, H); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x1, 0); ctx.lineTo(x1, chartH); ctx.stroke();
       } else {
         const slope = dy / dx;
-        const startY = y1 - slope * x1;
-        const endY = y1 + slope * (chartW - x1);
-        ctx.beginPath(); ctx.moveTo(0, startY); ctx.lineTo(chartW, endY); ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(0, y1 - slope * x1);
+        ctx.lineTo(chartW, y1 + slope * (chartW - x1));
+        ctx.stroke();
       }
     } else if (d.tool === 'box') {
-      ctx.fillStyle = 'rgba(59,130,246,0.20)'; ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 1.5;
+      ctx.fillStyle = 'rgba(41, 98, 255, 0.22)'; ctx.strokeStyle = '#2962ff'; ctx.lineWidth = 1.5;
       ctx.fillRect(Math.min(x1, x2), Math.min(y1, y2), Math.abs(x2 - x1), Math.abs(y2 - y1));
       ctx.strokeRect(Math.min(x1, x2), Math.min(y1, y2), Math.abs(x2 - x1), Math.abs(y2 - y1));
     } else if (d.tool === 'fib') {
       const levels = [0, 0.382, 0.5, 0.618, 0.786, 1];
-      const left = Math.min(x1, x2), width = Math.max(50, Math.abs(x2 - x1));
+      const left = Math.min(x1, x2), width = Math.max(60, Math.abs(x2 - x1));
       levels.forEach(lvl => {
         const p = d.p1 + (d.p2 - d.p1) * lvl;
         const y = priceToY(p);
-        ctx.strokeStyle = lvl === 0.618 || lvl === 0.5 ? '#eab308' : 'rgba(148,163,184,0.6)';
+        ctx.strokeStyle = (lvl === 0.618 || lvl === 0.5) ? '#f59e0b' : 'rgba(148,163,184,0.6)';
         ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(left + width, y); ctx.stroke();
-        ctx.fillStyle = '#cbd5e1'; ctx.font = '9px monospace';
-        ctx.fillText(`${lvl} (${p.toFixed(spec.decimals)})`, left + 2, y - 2);
+        ctx.fillStyle = '#d1d4dc'; ctx.font = '9px monospace';
+        ctx.fillText(`${lvl} (${p.toFixed(spec.decimals)})`, left + 3, y - 2);
       });
     } else if (d.tool === 'long' || d.tool === 'short') {
       const yEntry = priceToY(d.midP);
-      const left = Math.min(x1, x2), w = Math.max(45, Math.abs(x2 - x1));
-      // Profit Zone
-      ctx.fillStyle = 'rgba(16,185,129,0.26)';
+      const left = Math.min(x1, x2), w = Math.max(50, Math.abs(x2 - x1));
+      ctx.fillStyle = 'rgba(8, 153, 129, 0.26)';
       ctx.fillRect(left, Math.min(yEntry, y2), w, Math.abs(y2 - yEntry));
-      ctx.strokeStyle = '#10b981'; ctx.strokeRect(left, Math.min(yEntry, y2), w, Math.abs(y2 - yEntry));
-      // Stop Loss Zone
-      ctx.fillStyle = 'rgba(239,68,68,0.26)';
+      ctx.strokeStyle = '#089981'; ctx.strokeRect(left, Math.min(yEntry, y2), w, Math.abs(y2 - yEntry));
+
+      ctx.fillStyle = 'rgba(242, 54, 69, 0.26)';
       ctx.fillRect(left, Math.min(yEntry, y1), w, Math.abs(y1 - yEntry));
-      ctx.strokeStyle = '#ef4444'; ctx.strokeRect(left, Math.min(yEntry, y1), w, Math.abs(y1 - yEntry));
-      // RR Badge
+      ctx.strokeStyle = '#f23645'; ctx.strokeRect(left, Math.min(yEntry, y1), w, Math.abs(y1 - yEntry));
+
       const risk = Math.abs(d.midP - d.p1);
       const reward = Math.abs(d.p2 - d.midP);
       const rr = risk > 0 ? (reward / risk).toFixed(2) : '2.00';
-      ctx.fillStyle = '#1e293b';
-      ctx.fillRect(left + 4, yEntry - 8, 56, 16);
+      ctx.fillStyle = '#1e222d';
+      ctx.fillRect(left + 4, yEntry - 8, 62, 16);
       ctx.fillStyle = '#fff'; ctx.font = 'bold 9px sans-serif';
       ctx.fillText(`RR 1:${rr}`, left + 8, yEntry + 3);
     }
+    ctx.restore();
   }
 
   function drawLinePath(pts, color) {
@@ -525,6 +674,7 @@
 
   function drawOrderTag(price, label, color, dashed, showX) {
     const y = priceToY(price);
+    if (y < -15 || y > chartBounds.chartH + 15) return;
     if (dashed) ctx.setLineDash([4, 4]);
     ctx.strokeStyle = color; ctx.lineWidth = 1.5;
     ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(chartBounds.chartW, y); ctx.stroke();
@@ -538,60 +688,166 @@
     ctx.fillText(showX ? `${label}  ✕` : label, 14, y + 3.5);
   }
 
-  // Touch & Mouse Interactions
-  function getPos(e) {
+  // =========================================================================
+  // TradingView Touch & Mouse Engine:
+  // 1) ลากแกนราคาด้านขวา -> ยืด/หดความสูงกราฟ (Y-Axis Zoom)
+  // 2) ลากพื้นที่กราฟ (โหมด Cursor) -> เลื่อนดูกราฟซ้าย-ขวา/ขึ้น-ลง (Pan)
+  // 3) ถ่าง/หุบ 2 นิ้ว (Pinch) หรือหมุนลูกกลิ้งเมาส์ -> Zoom In / Zoom Out แท่งเทียน
+  // 4) ลากเส้น Order (Entry/SL/TP) -> ปรับราคาคำสั่งซื้อขาย
+  // 5) โหมดวาด (Box/Trend/Ray/Fib/Long/Short) -> วาดลงบนกราฟทันที
+  // =========================================================================
+  let pointerMode = null; // 'dragOrder' | 'draw' | 'scaleY' | 'panChart'
+  let draggingOrder = null;
+  let lastPointer = { x: 0, y: 0 };
+  let initialPinchDist = null;
+  let initialVisibleBars = visibleBars;
+
+  function getLocalPos(clientX, clientY) {
     const rect = canvas.getBoundingClientRect();
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
     return { x: clientX - rect.left, y: clientY - rect.top };
   }
 
-  let dragStart = null;
-  canvas.addEventListener('pointerdown', e => {
-    const pos = getPos(e);
-    dragStart = pos;
+  // Multi-touch Pinch Zoom สำหรับ iPhone / iPad
+  canvas.addEventListener('touchstart', e => {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      initialPinchDist = Math.hypot(dx, dy);
+      initialVisibleBars = visibleBars;
+      pointerMode = 'pinch';
+    }
+  }, { passive: false });
 
-    // TradingView Bar Replay Cut Tool: Jump directly to clicked candle
-    if (selectedTool === 'cut') {
-      const clickedIdx = Math.max(5, Math.min(candles.length - 1, xToIdx(pos.x)));
-      currentIndex = clickedIdx;
-      document.getElementById('progressSlider').value = currentIndex;
-      setTool('cursor');
+  canvas.addEventListener('touchmove', e => {
+    if (e.touches.length === 2 && initialPinchDist) {
+      e.preventDefault();
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.hypot(dx, dy);
+      const scale = initialPinchDist / Math.max(10, dist);
+      visibleBars = Math.max(12, Math.min(250, initialVisibleBars * scale));
       render();
-      updateUI();
+    }
+  }, { passive: false });
+
+  canvas.addEventListener('touchend', () => {
+    initialPinchDist = null;
+  });
+
+  // Mouse Wheel Zoom บน Windows
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    const zoomFactor = e.deltaY > 0 ? 1.12 : 0.88;
+    visibleBars = Math.max(12, Math.min(250, visibleBars * zoomFactor));
+    render();
+  }, { passive: false });
+
+  // Double-click แกนราคาขวาเพื่อ Auto Fit
+  canvas.addEventListener('dblclick', e => {
+    const pos = getLocalPos(e.clientX, e.clientY);
+    if (pos.x >= chartBounds.chartW) {
+      autoScaleY = true;
+      yScaleZoom = 1.0;
+      yPanOffset = 0.0;
+      render();
+    }
+  });
+
+  canvas.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'touch' && !e.isPrimary) return;
+    const pos = getLocalPos(e.clientX, e.clientY);
+    lastPointer = pos;
+
+    // 1. แตะที่แกนราคาด้านขวา -> ยืด/หดความสูงกราฟ (Price Scale Zoom)
+    if (pos.x >= chartBounds.chartW) {
+      pointerMode = 'scaleY';
+      autoScaleY = false;
       return;
     }
 
+    // 2. โหมด Bar Replay Cut (✂️) -> ตัดกราฟเริ่มตรงแท่งที่จิ้ม
+    if (selectedTool === 'cut') {
+      currentIndex = Math.max(5, Math.min(candles.length - 1, xToIdx(pos.x)));
+      document.getElementById('progressSlider').value = currentIndex;
+      setTool('cursor');
+      render(); updateUI();
+      return;
+    }
+
+    // 3. โหมด Crosshair -> เลื่อนดูราคาและเวลา
+    if (selectedTool === 'crosshair') {
+      crosshairPos = pos;
+      pointerMode = 'crosshair';
+      render();
+      return;
+    }
+
+    // 4. โหมด Cursor -> เช็กว่าจับเส้น Order อยู่หรือไม่ ถ้าไม่ถือเป็นการลากเลื่อนกราฟ (Pan)
     if (selectedTool === 'cursor') {
       for (let i = orders.length - 1; i >= 0; i--) {
         const o = orders[i];
         const yEntry = priceToY(o.entry);
         if (Math.abs(pos.y - yEntry) < 14) {
-          if (pos.x > 75 && pos.x < 160) {
+          if (pos.x > 75 && pos.x < 165) {
             orders.splice(i, 1); render(); updateUI(); return;
           }
-          if (!o.triggered) { draggingTarget = { idx: i, field: 'entry' }; return; }
+          if (!o.triggered) {
+            pointerMode = 'dragOrder';
+            draggingOrder = { idx: i, field: 'entry' };
+            return;
+          }
         }
         if (o.sl && Math.abs(pos.y - priceToY(o.sl)) < 14) {
-          draggingTarget = { idx: i, field: 'sl' }; return;
+          pointerMode = 'dragOrder';
+          draggingOrder = { idx: i, field: 'sl' };
+          return;
         }
         if (o.tp && Math.abs(pos.y - priceToY(o.tp)) < 14) {
-          draggingTarget = { idx: i, field: 'tp' }; return;
+          pointerMode = 'dragOrder';
+          draggingOrder = { idx: i, field: 'tp' };
+          return;
         }
       }
-    } else {
-      const i1 = xToIdx(pos.x), p1 = yToPrice(pos.y);
-      activeDrawing = { tool: selectedTool, i1, i2: i1, p1, p2: p1, midP: p1 };
+      pointerMode = 'panChart';
+      return;
     }
+
+    // 5. โหมดวาดเครื่องมือต่างๆ (Box / Trend / Ray / H-Line / Fib / Long / Short)
+    pointerMode = 'draw';
+    const i1 = xToIdx(pos.x), p1 = yToPrice(pos.y);
+    activeDrawing = { tool: selectedTool, i1, i2: i1, p1, p2: p1, midP: p1 };
   });
 
   canvas.addEventListener('pointermove', e => {
-    if (!dragStart) return;
-    const pos = getPos(e);
-    if (draggingTarget) {
-      orders[draggingTarget.idx][draggingTarget.field] = yToPrice(pos.y);
+    const pos = getLocalPos(e.clientX, e.clientY);
+    const dx = pos.x - lastPointer.x;
+    const dy = pos.y - lastPointer.y;
+    lastPointer = pos;
+
+    if (pointerMode === 'scaleY') {
+      // ลากขึ้น = ขยายกราฟให้สูงขึ้น, ลากลง = บีบกราฟให้แบนลง
+      const factor = 1 - dy * 0.008;
+      yScaleZoom = Math.max(0.15, Math.min(8.0, yScaleZoom * factor));
       render();
-    } else if (activeDrawing) {
+    } else if (pointerMode === 'panChart') {
+      // เลื่อนกราฟซ้าย-ขวา
+      rightOffsetBars += dx / chartBounds.stepX;
+      rightOffsetBars = Math.max(-currentIndex + 10, Math.min(visibleBars - 5, rightOffsetBars));
+
+      // ถ้าปิด AutoScaleY ให้เลื่อนกราฟขึ้น-ลงอิสระได้เหมือน TradingView
+      if (!autoScaleY) {
+        const pricePerPx = (chartBounds.max - chartBounds.min) / chartBounds.chartH;
+        yPanOffset += dy * pricePerPx;
+      }
+      render();
+    } else if (pointerMode === 'crosshair') {
+      crosshairPos = pos;
+      render();
+    } else if (pointerMode === 'dragOrder' && draggingOrder) {
+      orders[draggingOrder.idx][draggingOrder.field] = yToPrice(pos.y);
+      render();
+    } else if (pointerMode === 'draw' && activeDrawing) {
       activeDrawing.i2 = xToIdx(pos.x);
       activeDrawing.p2 = yToPrice(pos.y);
       if (activeDrawing.tool === 'long') {
@@ -608,17 +864,17 @@
   });
 
   window.addEventListener('pointerup', () => {
-    if (activeDrawing) {
+    if (pointerMode === 'draw' && activeDrawing) {
       drawings.push(activeDrawing);
       activeDrawing = null;
       setTool('cursor');
       render();
     }
-    draggingTarget = null;
-    dragStart = null;
+    pointerMode = null;
+    draggingOrder = null;
   });
 
-  // Simulation Step
+  // Simulation Step & Order Matching
   function stepForward() {
     if (currentIndex >= candles.length - 1) { stopPlay(); return; }
     currentIndex++;
@@ -703,36 +959,46 @@
           <div><b style="color:${isBuy ? 'var(--blue)' : 'var(--purple)'}">${o.type}</b> ${o.lot.toFixed(2)} @ ${o.entry.toFixed(spec.decimals)}</div>
           <div>${o.triggered ? `<b style="color:${pnl >= 0 ? 'var(--green)' : 'var(--red)'}">${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}</b>` : '<span style="color:var(--yellow)">PENDING</span>'}</div>
         </div>`;
-      }).join('') || '<div style="color:var(--muted);text-align:center;margin-top:18px;">ไม่มีออเดอร์ (กด Place หรือลากเส้นบนกราฟได้)</div>';
+      }).join('') || '<div style="color:var(--muted);text-align:center;margin-top:15px;">ไม่มีออเดอร์ (กด Place หรือลากเส้นบนกราฟ)</div>';
     } else {
       list.innerHTML = history.map(h => `
         <div class="order-row">
           <div><b>${h.type}</b> (${h.reason}) ${h.entry.toFixed(spec.decimals)} → ${h.exit.toFixed(spec.decimals)}</div>
           <b style="color:${h.pnl >= 0 ? 'var(--green)' : 'var(--red)'}">${h.pnl >= 0 ? '+' : ''}$${h.pnl.toFixed(2)}</b>
         </div>
-      `).join('') || '<div style="color:var(--muted);text-align:center;margin-top:18px;">ยังไม่มีประวัติการปิดออเดอร์</div>';
+      `).join('') || '<div style="color:var(--muted);text-align:center;margin-top:15px;">ยังไม่มีประวัติการปิดออเดอร์</div>';
     }
   }
 
-  // Event Listeners
+  // Controls Binding
   document.getElementById('symbolSelect').onchange = e => {
     currentSymbol = e.target.value;
-    resetAll();
+    loadMarketData(false);
   };
 
   dateInput.onchange = e => {
     const parsed = Date.parse(e.target.value);
     if (!isNaN(parsed)) {
       startDateMs = parsed;
-      resetAll();
+      loadMarketData(true);
     }
+  };
+
+  document.getElementById('syncLiveBtn').onclick = () => loadMarketData(false);
+
+  document.getElementById('autoFitBtn').onclick = () => {
+    autoScaleY = true;
+    yScaleZoom = 1.0;
+    yPanOffset = 0.0;
+    rightOffsetBars = 8;
+    render();
   };
 
   document.getElementById('applyBalBtn').onclick = () => {
     const val = parseFloat(document.getElementById('initBalInput').value);
     if (!isNaN(val) && val > 0) {
       initialBalance = val;
-      resetAll();
+      setupSliderAndReset();
     }
   };
 
@@ -754,9 +1020,7 @@
     lotSize = +(lotSize + 0.05).toFixed(2);
     document.getElementById('lotText').textContent = lotSize.toFixed(2);
   };
-  document.getElementById('riskSelect').onchange = e => {
-    riskPercent = Number(e.target.value);
-  };
+  document.getElementById('riskSelect').onchange = e => { riskPercent = Number(e.target.value); };
 
   document.querySelectorAll('#orderTypeGroup .btn').forEach(btn => {
     btn.onclick = () => {
@@ -771,7 +1035,7 @@
 
   document.getElementById('placeOrderBtn').onclick = () => {
     const spec = SYMBOLS[currentSymbol];
-    const price = candles[currentIndex]?.close || spec.startPrice;
+    const price = candles[currentIndex]?.close || spec.fallbackPrice;
     const isBuy = selectedOrderType.includes('BUY');
     let entry = price, triggered = false;
 
@@ -782,7 +1046,6 @@
     else if (selectedOrderType === 'BUY STOP') entry = price + spec.defaultSL * 0.7;
     else if (selectedOrderType === 'SELL STOP') entry = price - spec.defaultSL * 0.7;
 
-    // Auto Lot Calculation if Risk % is selected
     let finalLot = lotSize;
     if (riskPercent > 0) {
       const riskDollars = balance * (riskPercent / 100);
@@ -814,11 +1077,13 @@
 
   function setTool(t) {
     selectedTool = t;
-    document.querySelectorAll('#toolGroup .btn[data-tool]').forEach(b => {
+    if (t !== 'crosshair') crosshairPos = null;
+    document.querySelectorAll('#toolGroup .tool-btn[data-tool]').forEach(b => {
       b.classList.toggle('active', b.dataset.tool === t);
     });
+    render();
   }
-  document.querySelectorAll('#toolGroup .btn[data-tool]').forEach(b => {
+  document.querySelectorAll('#toolGroup .tool-btn[data-tool]').forEach(b => {
     b.onclick = () => setTool(b.dataset.tool);
   });
   document.getElementById('undoDrawBtn').onclick = () => { drawings.pop(); render(); };
@@ -828,8 +1093,9 @@
     b.onclick = () => {
       document.querySelectorAll('#tfGroup .btn[data-tf]').forEach(x => x.classList.remove('active'));
       b.classList.add('active');
-      timeframeMin = Number(b.dataset.tf);
-      resetAll();
+      currentTF = b.dataset.tf;
+      timeframeMin = Number(b.dataset.min);
+      loadMarketData(false);
     };
   });
 
@@ -846,7 +1112,7 @@
     updateUI();
   };
 
-  // CSV Importer (MT4 / MT5 Format)
+  // CSV Importer (รองรับไฟล์ MT4 / MT5 ทุกรูปแบบ)
   document.getElementById('csvInput').onchange = e => {
     const file = e.target.files[0];
     if (!file) return;
@@ -855,7 +1121,7 @@
       const lines = ev.target.result.split(/\r?\n/);
       const parsed = [];
       for (const line of lines) {
-        const c = line.split(',');
+        const c = line.split(/[,;\t]/);
         if (c.length >= 6 && !isNaN(parseFloat(c[2]))) {
           const dt = Date.parse(`${c[0].replace(/\./g, '-')}T${c[1] || '00:00'}:00Z`);
           parsed.push({
@@ -866,13 +1132,18 @@
           });
         }
       }
-      if (parsed.length > 30) resetAll(calcEMA(parsed, 9, 21));
+      if (parsed.length > 20) {
+        candles = calcEMA(parsed, 9, 21);
+        currentIndex = Math.min(40, candles.length - 1);
+        setupSliderAndReset();
+        document.getElementById('ohlcBadge').textContent = `📂 โหลดไฟล์ CSV สำเร็จ (${candles.length} แท่ง)`;
+      }
     };
     reader.readAsText(file);
   };
 
   window.addEventListener('resize', render);
-  resetAll();
+  loadMarketData(false);
 })();
 </script>
 </body>
