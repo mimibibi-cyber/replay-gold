@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="TV Replay Pro" />
-  <title>XAUUSD Real Data Backtester (Aug–Nov 2026)</title>
+  <title>TradingView & FXReplay Pro Backtester</title>
   <script src="https://unpkg.com/lightweight-charts@4.2.1/dist/lightweight-charts.standalone.production.js"></script>
   <style>
     :root {
@@ -40,12 +40,12 @@
 
     /* Header */
     .tv-header {
-      display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 5px;
-      padding: 5px 8px; background: var(--panel); border-bottom: 1px solid var(--border);
-      padding-top: max(5px, env(safe-area-inset-top));
+      display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px;
+      padding: 4px 8px; background: var(--panel); border-bottom: 1px solid var(--border);
+      padding-top: max(4px, env(safe-area-inset-top));
     }
     .group { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
-    .btn, select, input[type="date"], input[type="number"] {
+    .btn, select, input[type="date"], input[type="number"], input[type="text"] {
       background: var(--panel2); color: var(--text); border: 1px solid var(--border);
       padding: 4px 6px; border-radius: 4px; font-size: 11px; font-weight: 600;
     }
@@ -66,12 +66,12 @@
     .tv-subbar::-webkit-scrollbar { display: none; }
     .stat { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
 
-    /* Workspace */
+    /* Main Workspace (Main Chart + Dynamic Indicator Panes) */
     .workspace {
-      position: relative; flex: 1; display: flex; min-height: 250px; overflow: hidden;
+      position: relative; flex: 1; display: flex; flex-direction: column; min-height: 240px; overflow: hidden;
     }
-    #tvChartContainer {
-      position: relative; flex: 1; height: 100%; width: 100%;
+    #mainChartPane {
+      position: relative; flex: 1; width: 100%; min-height: 150px;
     }
     #overlayCanvas {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -79,33 +79,75 @@
     }
     #overlayCanvas.interactive { pointer-events: auto; }
 
-    /* Floating Palette */
-    .floating-palette {
-      position: absolute; right: 74px; top: 12px;
+    /* Sub Indicator Panes */
+    .ind-pane {
+      position: relative; height: 78px; width: 100%; border-top: 1px solid var(--border);
+      display: none; flex-shrink: 0;
+    }
+    .ind-pane.active { display: block; }
+    .ind-label {
+      position: absolute; top: 3px; left: 6px; z-index: 12; font-size: 10px;
+      font-weight: bold; pointer-events: none; background: rgba(19,23,34,0.7); padding: 1px 4px; border-radius: 3px;
+    }
+    body.light-theme .ind-label { background: rgba(255,255,255,0.8); }
+
+    /* Draggable Floating Favorite Toolbar (เหมือนในรูป TradingView) */
+    .fav-toolbar {
+      position: absolute; right: 74px; top: 16px;
       background: var(--panel); border: 1px solid var(--border);
-      border-radius: 8px; padding: 4px; display: flex; flex-direction: column; gap: 4px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.3); z-index: 25;
+      border-radius: 8px; padding: 3px; display: flex; flex-direction: column; gap: 3px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.35); z-index: 30; touch-action: none;
+    }
+    .fav-drag-handle {
+      text-align: center; font-size: 10px; color: var(--muted); cursor: grab;
+      padding: 2px 0; border-bottom: 1px solid var(--border); letter-spacing: 2px;
     }
     .tool-btn {
-      width: 30px; height: 30px; border-radius: 5px; border: none;
-      background: transparent; color: var(--text); font-size: 14px;
+      width: 30px; height: 28px; border-radius: 5px; border: none;
+      background: transparent; color: var(--text); font-size: 13px;
       display: flex; align-items: center; justify-content: center; cursor: pointer;
     }
     .tool-btn:hover { background: var(--panel2); }
     .tool-btn.active { background: var(--blue); color: #fff; }
 
-    /* Selection Bar */
+    /* Floating Style & Action Bar for Selected Object */
     .selection-bar {
       position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
       background: var(--panel); border: 1px solid var(--border);
-      padding: 4px 10px; border-radius: 20px; display: none; align-items: center; gap: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.35); z-index: 30; font-size: 11px;
+      padding: 4px 8px; border-radius: 8px; display: none; align-items: center; gap: 6px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.4); z-index: 35; font-size: 11px; flex-wrap: wrap;
     }
     .selection-bar.visible { display: flex; }
 
     .ohlc-legend {
       position: absolute; top: 6px; left: 8px; pointer-events: none; z-index: 15;
       font-size: 11px; line-height: 1.35;
+    }
+
+    /* Modals (All Tools / Indicators / RR Settings) */
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100;
+      display: none; align-items: center; justify-content: center; padding: 12px;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal-card {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+      width: 100%; max-width: 380px; max-height: 82dvh; overflow-y: auto; padding: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+    .modal-header {
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 10px;
+    }
+    .tool-grid-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 7px 8px; border-bottom: 1px solid var(--border); font-size: 12px;
+    }
+    .ind-setting-box {
+      background: var(--panel2); padding: 8px; border-radius: 6px; margin-bottom: 8px; font-size: 11px;
+    }
+    .ind-setting-row {
+      display: flex; justify-content: space-between; align-items: center; margin-top: 5px; gap: 6px;
     }
 
     /* Replay Bar */
@@ -117,7 +159,7 @@
 
     /* Trade Panel */
     .trade-panel {
-      padding: 6px 8px; background: var(--panel); border-top: 1px solid var(--border);
+      padding: 5px 8px; background: var(--panel); border-top: 1px solid var(--border);
       display: flex; flex-direction: column; gap: 5px;
     }
     .order-types { display: flex; gap: 4px; overflow-x: auto; }
@@ -134,7 +176,7 @@
 
     /* Bottom Sheet */
     .bottom-sheet {
-      height: 115px; background: var(--bg); border-top: 1px solid var(--border);
+      height: 105px; background: var(--bg); border-top: 1px solid var(--border);
       display: flex; flex-direction: column; padding-bottom: env(safe-area-inset-bottom);
     }
     .tabs { display: flex; background: var(--panel); }
@@ -155,7 +197,7 @@
   <!-- Top Header -->
   <div class="tv-header">
     <div class="group">
-      <b style="font-size:12px; color:#eab308; padding:0 4px;">XAUUSD</b>
+      <b style="font-size:12px; color:#eab308;">XAUUSD</b>
 
       <div class="group" id="tfGroup">
         <button class="btn active" data-min="1">1m</button>
@@ -168,20 +210,26 @@
     </div>
 
     <div class="group">
+      <button class="btn btn-blue" id="openIndModalBtn">📊 Indicators</button>
+      <button class="btn active" id="toggleMarkersBtn" title="เปิด/ปิดลูกศรจุดเข้า-ออกบนกราฟ">🏹 Markers</button>
       <button class="btn" id="themeBtn" title="สลับสีพื้นหลัง ขาว/ดำ">🌓</button>
-      <input type="date" id="startDateInput" min="2026-08-01" max="2026-11-30" value="2026-11-01" title="เลือกวันที่เริ่มเทส" />
-      <button class="btn btn-orange" id="newSessionBtn" title="เริ่มรอบเทรดใหม่ (ล้างออเดอร์และกราฟที่วาด)">🔄 New Session</button>
-      <label class="btn" style="background:#3b82f6; color:#fff;" title="เพิ่มไฟล์ CSV อื่นๆ">
+      <input type="date" id="startDateInput" min="2026-08-01" max="2026-11-30" value="2026-11-01" />
+      <label class="btn" style="background:#334155; color:#fff;">
         📂 +CSV <input type="file" id="csvInput" accept=".csv,.txt" multiple hidden />
       </label>
     </div>
   </div>
 
-  <!-- Subbar -->
+  <!-- Subbar: Strategy Profile ID (A/B) & Balance -->
   <div class="tv-subbar">
     <div class="stat">
+      <span style="color:var(--muted);">เทคนิค (ID):</span>
+      <select id="profileSelect" style="max-width:110px;"></select>
+      <button class="btn btn-green" id="addProfileBtn" title="สร้างโปรไฟล์เทคนิคใหม่">+ID</button>
+    </div>
+    <div class="stat">
       <span style="color:var(--muted);">ทุน ($):</span>
-      <input type="number" id="initBalInput" value="10000" style="width:62px; padding:2px 4px;" />
+      <input type="number" id="initBalInput" value="10000" style="width:58px; padding:2px 4px;" />
       <button class="btn btn-blue" id="applyBalBtn" style="padding:2px 5px;">Set</button>
     </div>
     <div class="stat">
@@ -197,34 +245,51 @@
       <b id="winRateText">0%</b>
     </div>
     <div class="stat">
-      <span id="statusBadge" style="color:var(--yellow);">กำลังโหลดฐานข้อมูล...</span>
+      <span id="statusBadge" style="color:var(--yellow);">Loading...</span>
     </div>
   </div>
 
-  <!-- Workspace -->
+  <!-- Workspace: Main Chart + Sub Indicator Panes -->
   <div class="workspace">
+    <!-- Floating Style & RR Action Bar (แสดงเมื่อแตะเลือกเส้น/กล่อง) -->
     <div class="selection-bar" id="selectionBar">
-      <span id="selectedObjLabel" style="font-weight:bold;">Selected</span>
-      <button class="btn btn-red" id="deleteSelectedBtn" style="padding:2px 8px;">🗑 ลบเส้นนี้</button>
-      <button class="btn" id="deselectBtn" style="padding:2px 6px;">✕</button>
+      <span id="selectedObjLabel" style="font-weight:bold;">Tool</span>
+      <input type="color" id="drawColorPicker" value="#eab308" style="width:22px; height:22px; border:none; background:none; padding:0; cursor:pointer;" title="เปลี่ยนสี" />
+      <select id="drawWidthSelect" style="padding:2px 4px; font-size:10px;" title="ความหนาเส้น">
+        <option value="1">1px</option>
+        <option value="2" selected>2px</option>
+        <option value="3">3px</option>
+        <option value="5">5px</option>
+        <option value="8">8px</option>
+      </select>
+      <button class="btn btn-green" id="execRRBtn" style="display:none; padding:2px 6px;">⚡ เปิดออเดอร์</button>
+      <button class="btn btn-red" id="deleteSelectedBtn" style="padding:2px 6px;">🗑 ลบ</button>
+      <button class="btn" id="deselectBtn" style="padding:2px 5px;">✕</button>
     </div>
 
-    <div class="floating-palette" id="toolGroup">
-      <button class="tool-btn active" data-tool="cursor" title="Cursor (เลื่อน/ซูมกราฟ)">👆</button>
-      <button class="tool-btn" data-tool="edit" title="Edit Mode (ลากแก้ไขเส้น/กล่อง/TP/SL)">✏️</button>
-      <button class="tool-btn" data-tool="cut" title="Bar Replay ตัดกราฟเริ่มตรงจุดนี้">✂️</button>
-      <button class="tool-btn" data-tool="trend" title="Trendline เส้นเฉียง">📈</button>
-      <button class="tool-btn" data-tool="ray" title="Extended Line เส้นยาว">📏</button>
-      <button class="tool-btn" data-tool="hline" title="Horizontal Line เส้นแนวนอน">➖</button>
-      <button class="tool-btn" data-tool="box" title="Rectangle กล่องสี่เหลี่ยม">⬜</button>
-      <button class="tool-btn" data-tool="long" title="Long Position (RR)">🟩</button>
-      <button class="tool-btn" data-tool="short" title="Short Position (RR)">🟥</button>
-      <button class="tool-btn" id="undoDrawBtn" title="Undo">↩️</button>
+    <!-- Draggable Floating Favorite Toolbar (เลื่อนย้ายตำแหน่งในหน้าจอได้) -->
+    <div class="fav-toolbar" id="favToolbar">
+      <div class="fav-drag-handle" id="favDragHandle">⋮⋮</div>
+      <div id="favButtonsContainer" style="display:flex; flex-direction:column; gap:3px;"></div>
+      <button class="tool-btn" id="openAllToolsBtn" style="border-top:1px solid var(--border); margin-top:2px;" title="เครื่องมือทั้งหมด / ตั้งค่า Favorite">🧰</button>
+      <button class="tool-btn" id="undoDrawBtn" title="Undo ย้อนกลับ">↩️</button>
     </div>
 
-    <div id="tvChartContainer">
-      <div class="ohlc-legend" id="ohlcLegend">XAUUSD • HistData Real M1 (Aug–Nov 2026)</div>
+    <!-- Main Chart Container -->
+    <div id="mainChartPane">
+      <div class="ohlc-legend" id="ohlcLegend">XAUUSD • HistData Real M1</div>
       <canvas id="overlayCanvas"></canvas>
+    </div>
+
+    <!-- Indicator Sub-Panes (แสดงตามที่ผู้ใช้เปิดใช้งาน) -->
+    <div class="ind-pane" id="paneRSI">
+      <div class="ind-label" id="labelRSI" style="color:#a855f7;">RSI (14)</div>
+    </div>
+    <div class="ind-pane" id="paneMACD">
+      <div class="ind-label" id="labelMACD" style="color:#38bdf8;">MACD (12, 26, 9)</div>
+    </div>
+    <div class="ind-pane" id="paneSTOCH">
+      <div class="ind-label" id="labelSTOCH" style="color:#f59e0b;">Stochastic (14, 3, 3)</div>
     </div>
   </div>
 
@@ -233,7 +298,7 @@
     <button class="btn btn-green" id="playBtn" style="width:62px;">▶ Play</button>
     <button class="btn btn-blue" id="stepBtn">⏭ +1</button>
     <input type="range" id="progressSlider" min="50" max="10000" value="500" />
-    <span id="barTimeText" style="font-size:10px; color:var(--muted); min-width:96px; text-align:right;">--</span>
+    <span id="barTimeText" style="font-size:10px; color:var(--muted); min-width:92px; text-align:right;">--</span>
     <select id="speedSelect">
       <option value="800">0.5x</option>
       <option value="250" selected>1x</option>
@@ -242,7 +307,7 @@
     </select>
   </div>
 
-  <!-- Trade Execution -->
+  <!-- Trade Panel (รองรับกำหนดเงินลงทุน/เสี่ยง เช่น $100 และ RR) -->
   <div class="trade-panel">
     <div class="order-types" id="orderTypeGroup">
       <button class="btn active" data-type="BUY">BUY</button>
@@ -257,13 +322,10 @@
         <button id="lotMinus">-</button>
         <span>Lot: <b id="lotText">0.10</b></span>
         <button id="lotPlus">+</button>
-        <span style="color:var(--muted); margin-left:3px;">|</span>
-        <select id="riskSelect" style="padding:1px 3px; font-size:10px;">
-          <option value="0" selected>Manual</option>
-          <option value="1">1% Risk</option>
-          <option value="2">2% Risk</option>
-          <option value="5">5% Risk</option>
-        </select>
+        <span style="color:var(--muted);">| เสี่ยง($):</span>
+        <input type="number" id="riskDollarInput" value="100" style="width:48px; padding:1px 3px; font-size:10px;" title="กำหนดเงินลงทุน/เสี่ยง เช่น 100 ดอลลาร์" />
+        <span style="color:var(--muted);">RR:</span>
+        <input type="number" id="rrTargetInput" value="2.0" step="0.5" style="width:38px; padding:1px 3px; font-size:10px;" title="อัตราส่วน Risk:Reward" />
       </div>
       <div style="display:flex; gap:5px;">
         <button class="btn btn-blue" id="placeOrderBtn">Place BUY</button>
@@ -281,41 +343,179 @@
     <div class="list-area" id="listArea"></div>
   </div>
 
+  <!-- Modal 1: All Drawing Tools & Favorite Manager -->
+  <div class="modal-backdrop" id="allToolsModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <b>🧰 เครื่องมือทั้งหมด (กด ★ เพื่อปักหมุด Favorite)</b>
+        <button class="btn" id="closeToolsModalBtn">✕</button>
+      </div>
+      <div id="allToolsList"></div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Indicators Manager -->
+  <div class="modal-backdrop" id="indModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <b>📊 ตั้งค่า Indicators & หน้าต่างแสดงผล</b>
+        <button class="btn" id="closeIndModalBtn">✕</button>
+      </div>
+
+      <div class="ind-setting-box">
+        <label><input type="checkbox" id="chkVol" /> <b>Volume (ปริมาณการซื้อขาย)</b></label>
+        <div class="ind-setting-row">
+          <span>MA Length: <input type="number" id="volMaLen" value="20" style="width:45px;" /></span>
+        </div>
+      </div>
+
+      <div class="ind-setting-box">
+        <label><input type="checkbox" id="chkRSI" /> <b>Relative Strength Index (RSI)</b></label>
+        <div class="ind-setting-row">
+          <span>Period: <input type="number" id="rsiPeriod" value="14" style="width:45px;" /></span>
+          <span>OB: <input type="number" id="rsiOB" value="70" style="width:42px;" /></span>
+          <span>OS: <input type="number" id="rsiOS" value="30" style="width:42px;" /></span>
+        </div>
+      </div>
+
+      <div class="ind-setting-box">
+        <label><input type="checkbox" id="chkMACD" /> <b>MACD</b></label>
+        <div class="ind-setting-row">
+          <span>Fast: <input type="number" id="macdFast" value="12" style="width:42px;" /></span>
+          <span>Slow: <input type="number" id="macdSlow" value="26" style="width:42px;" /></span>
+          <span>Sig: <input type="number" id="macdSig" value="9" style="width:42px;" /></span>
+        </div>
+      </div>
+
+      <div class="ind-setting-box">
+        <label><input type="checkbox" id="chkSTOCH" /> <b>Stochastic</b></label>
+        <div class="ind-setting-row">
+          <span>%K: <input type="number" id="stochK" value="14" style="width:42px;" /></span>
+          <span>%D: <input type="number" id="stochD" value="3" style="width:42px;" /></span>
+          <span>Smooth: <input type="number" id="stochSmooth" value="3" style="width:42px;" /></span>
+        </div>
+      </div>
+
+      <button class="btn btn-blue" id="applyIndBtn" style="width:100%; padding:8px; margin-top:4px;">บันทึกและแสดงผลบนกราฟ</button>
+    </div>
+  </div>
+
 <script>
 (() => {
-  const container = document.getElementById('tvChartContainer');
+  const mainPane = document.getElementById('mainChartPane');
   const overlayCanvas = document.getElementById('overlayCanvas');
   const oCtx = overlayCanvas.getContext('2d');
 
-  // รายชื่อไฟล์ CSV หลักที่อัปโหลดขึ้น GitHub (เรียงตามลำดับเวลา)
   const GITHUB_DATA_FILES = ['202608.csv', '202609.csv', '202610.csv', '202611.csv'];
-  const STATE_STORAGE_KEY = 'tv_replay_xauusd_state_v1';
+  const PROFILES_STORAGE_KEY = 'tv_replay_profiles_v2';
 
-  // TradingView Chart Setup
-  const chart = LightweightCharts.createChart(container, {
-    layout: { background: { type: 'solid', color: '#131722' }, textColor: '#d1d4dc', fontSize: 11 },
-    grid: { vertLines: { color: 'rgba(255,255,255,0.05)' }, horzLines: { color: 'rgba(255,255,255,0.05)' } },
-    crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
-    rightPriceScale: { borderColor: '#363a45', autoScale: true },
-    timeScale: { borderColor: '#363a45', timeVisible: true, secondsVisible: false, rightOffset: 10 },
-    handleScroll: { vertTouchDrag: true },
-    handleScale: { axisPressedMouseMove: true, pinch: true },
-  });
+  // =========================================================================
+  // 1. Catalog เครื่องมือวาดทั้งหมด + ค่าเริ่มต้น Favorite (f) ตามที่กำหนด
+  // =========================================================================
+  const ALL_TOOLS = [
+    { id: 'cursor', name: 'Cursor (เลื่อน/ซูมกราฟ)', icon: '👆', defaultFav: true, defaultColor: '#ffffff', defaultWidth: 2 },
+    { id: 'edit', name: 'Edit / Move (แก้ไขเส้น & กล่อง)', icon: '✏️', defaultFav: true, defaultColor: '#ffffff', defaultWidth: 2 },
+    { id: 'cut', name: 'Bar Replay Cut (ตัดกราฟ)', icon: '✂️', defaultFav: true, defaultColor: '#2962ff', defaultWidth: 2 },
+    { id: 'fib', name: 'Fibonacci Retracement (f)', icon: '📐', defaultFav: true, defaultColor: '#f59e0b', defaultWidth: 1 },
+    { id: 'trend', name: 'Trend Line (f)', icon: '📈', defaultFav: true, defaultColor: '#eab308', defaultWidth: 2 },
+    { id: 'hline', name: 'Horizontal Line (f)', icon: '➖', defaultFav: true, defaultColor: '#06b6d4', defaultWidth: 2 },
+    { id: 'vline', name: 'Vertical Line (f)', icon: '│', defaultFav: true, defaultColor: '#a855f7', defaultWidth: 2 },
+    { id: 'highlighter', name: 'Highlighter (f)', icon: '🖍️', defaultFav: true, defaultColor: '#facc15', defaultWidth: 8 },
+    { id: 'box', name: 'Rectangle (f)', icon: '⬜', defaultFav: true, defaultColor: '#3b82f6', defaultWidth: 2 },
+    { id: 'long', name: 'Long Position (RR)', icon: '🟩', defaultFav: true, defaultColor: '#089981', defaultWidth: 2 },
+    { id: 'short', name: 'Short Position (RR)', icon: '🟥', defaultFav: true, defaultColor: '#f23645', defaultWidth: 2 },
+    { id: 'ray', name: 'Ray (เส้นรังสีปลายเปิด)', icon: '↗️', defaultFav: false, defaultColor: '#f97316', defaultWidth: 2 },
+    { id: 'extline', name: 'Extended Line (เส้นยาว 2 ด้าน)', icon: '📏', defaultFav: false, defaultColor: '#ec4899', defaultWidth: 2 },
+    { id: 'regression', name: 'Regression Trend', icon: '📊', defaultFav: false, defaultColor: '#8b5cf6', defaultWidth: 2 },
+    { id: 'channel', name: 'Parallel Channel', icon: '🛤️', defaultFav: false, defaultColor: '#14b8a6', defaultWidth: 2 }
+  ];
 
-  const candleSeries = chart.addCandlestickSeries({
+  let favoriteToolIds = ALL_TOOLS.filter(t => t.defaultFav).map(t => t.id);
+
+  // =========================================================================
+  // 2. สร้าง Main Chart & Indicator Sub-Charts (ซิงค์ TimeScale ร่วมกันทั้งหมด)
+  // =========================================================================
+  function createTVChart(el, showTimeAxis = false) {
+    return LightweightCharts.createChart(el, {
+      layout: { background: { type: 'solid', color: '#131722' }, textColor: '#d1d4dc', fontSize: 10 },
+      grid: { vertLines: { color: 'rgba(255,255,255,0.05)' }, horzLines: { color: 'rgba(255,255,255,0.05)' } },
+      crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+      rightPriceScale: { borderColor: '#363a45', autoScale: true, minimumWidth: 66 },
+      timeScale: {
+        borderColor: '#363a45',
+        visible: showTimeAxis,
+        timeVisible: true,
+        secondsVisible: false,
+        rightOffset: 12,
+      },
+      handleScroll: { vertTouchDrag: true },
+      handleScale: { axisPressedMouseMove: true, pinch: true },
+    });
+  }
+
+  // สร้าง Indicator Charts ก่อน เพื่อให้ Main Chart แสดงแถบเวลาด้านล่างสุดเมื่อปิด Indicator
+  const chartRSI = createTVChart(document.getElementById('paneRSI'), false);
+  const rsiSeries = chartRSI.addLineSeries({ color: '#a855f7', lineWidth: 1.5 });
+  const rsiOBLine = rsiSeries.createPriceLine({ price: 70, color: '#787b86', lineWidth: 1, lineStyle: 2, axisLabelVisible: false });
+  const rsiOSLine = rsiSeries.createPriceLine({ price: 30, color: '#787b86', lineWidth: 1, lineStyle: 2, axisLabelVisible: false });
+
+  const chartMACD = createTVChart(document.getElementById('paneMACD'), false);
+  const macdHistSeries = chartMACD.addHistogramSeries({ color: '#26a69a' });
+  const macdLineSeries = chartMACD.addLineSeries({ color: '#2962ff', lineWidth: 1.5 });
+  const macdSigSeries = chartMACD.addLineSeries({ color: '#ff6d00', lineWidth: 1.5 });
+
+  const chartSTOCH = createTVChart(document.getElementById('paneSTOCH'), false);
+  const stochKSeries = chartSTOCH.addLineSeries({ color: '#2962ff', lineWidth: 1.5 });
+  const stochDSeries = chartSTOCH.addLineSeries({ color: '#f59e0b', lineWidth: 1.5 });
+
+  const mainChart = createTVChart(mainPane, true);
+  const candleSeries = mainChart.addCandlestickSeries({
     upColor: '#089981', downColor: '#f23645', borderVisible: false,
     wickUpColor: '#089981', wickDownColor: '#f23645',
     priceFormat: { type: 'price', precision: 3, minMove: 0.001 }
   });
+  const volumeSeries = mainChart.addHistogramSeries({
+    priceFormat: { type: 'volume' },
+    priceScaleId: 'vol_scale',
+  });
+  mainChart.priceScale('vol_scale').applyOptions({
+    scaleMargins: { top: 0.82, bottom: 0 },
+  });
 
-  // Master 1m TypedArray Storage (รองรับข้อมูลจริงหลายแสนแท่งโดยไม่ค้าง)
+  // ซิงค์การเลื่อน/ซูมของทุกหน้าต่างให้ตรงกันเป๊ะ
+  const allCharts = [mainChart, chartRSI, chartMACD, chartSTOCH];
+  let isSyncingRange = false;
+  allCharts.forEach(src => {
+    src.timeScale().subscribeVisibleLogicalRangeChange(range => {
+      if (isSyncingRange || !range) return;
+      isSyncingRange = true;
+      allCharts.forEach(dst => { if (dst !== src) dst.timeScale().setVisibleLogicalRange(range); });
+      isSyncingRange = false;
+      renderOverlay();
+    });
+  });
+
+  // =========================================================================
+  // 3. Master Data & Multi-Profile (Strategy ID A / B) State
+  // =========================================================================
   let m1Count = 0;
-  let m1Time = null, m1Open = null, m1High = null, m1Low = null, m1Close = null;
+  let m1Time = null, m1Open = null, m1High = null, m1Low = null, m1Close = null, m1Vol = null;
+
+  let profiles = {};
+  let activeProfileId = 'Strategy A (SMC)';
 
   let timeframeMin = 1;
-  let current1mIndex = 1000;
+  let current1mIndex = 1500;
   let visibleCandles = [];
   let isLightTheme = false;
+  let showTradeMarkers = true;
+
+  let indConfig = {
+    vol: false, volMa: 20,
+    rsi: false, rsiPeriod: 14, rsiOB: 70, rsiOS: 30,
+    macd: false, macdFast: 12, macdSlow: 26, macdSig: 9,
+    stoch: false, stochK: 14, stochD: 3, stochSmooth: 3
+  };
 
   let isPlaying = false;
   let playTimer = null;
@@ -324,19 +524,17 @@
   let initialBalance = 10000;
   let balance = 10000;
   let lotSize = 0.10;
-  let riskPercent = 0;
   let selectedOrderType = 'BUY';
   let orders = [];
   let history = [];
-  let activeTab = 'active';
 
   let selectedTool = 'cursor';
-  let drawings = [];
+  let drawings = []; // {id, tool, t1, t2, p1, p2, midP, color, width, points: []}
   let selectedDrawingIdx = -1;
   let activeDrawing = null;
 
   // =========================================================================
-  // 1. Parser สำหรับไฟล์ HistData MT Format (YYYY.MM.DD,HH:MM,O,H,L,C,V)
+  // 4. Parser & Data Loader (รองรับไฟล์ HistData 4 เดือนบน GitHub)
   // =========================================================================
   function parseHistDataCSV(text) {
     const lines = text.split(/\r?\n/);
@@ -347,45 +545,36 @@
       const c = line.split(/[,;\t]/);
       if (c.length < 6) continue;
       const o = parseFloat(c[2]), h = parseFloat(c[3]), l = parseFloat(c[4]), cl = parseFloat(c[5]);
+      const v = c.length >= 7 ? (parseFloat(c[6]) || Math.round(Math.abs(h - l) * 100 + 20)) : Math.round(Math.abs(h - l) * 100 + 20);
       if (isNaN(o) || isNaN(cl)) continue;
 
-      // แปลงวันที่ HistData เช่น 2026.08.03 และ 00:01 เป็น Unix Timestamp (วินาที)
       const dParts = c[0].split(/[.\-\/]/);
       const tParts = (c[1] || '00:00').split(':');
       let ts = 0;
       if (dParts.length === 3) {
         ts = Math.floor(Date.UTC(
-          parseInt(dParts[0], 10),
-          parseInt(dParts[1], 10) - 1,
-          parseInt(dParts[2], 10),
-          parseInt(tParts[0] || '0', 10),
-          parseInt(tParts[1] || '0', 10),
-          0
+          parseInt(dParts[0], 10), parseInt(dParts[1], 10) - 1, parseInt(dParts[2], 10),
+          parseInt(tParts[0] || '0', 10), parseInt(tParts[1] || '0', 10), 0
         ) / 1000);
       }
-      if (ts > 0) {
-        rows.push({ t: ts, o, h, l, c: cl });
-      }
+      if (ts > 0) rows.push({ t: ts, o, h, l, c: cl, v });
     }
     return rows;
   }
 
   function loadMasterRows(allRows) {
-    // เรียงเวลาและตัดแท่งซ้ำ
     allRows.sort((a, b) => a.t - b.t);
     const unique = [];
     for (let i = 0; i < allRows.length; i++) {
-      if (i === 0 || allRows[i].t > allRows[i - 1].t) {
-        unique.push(allRows[i]);
-      }
+      if (i === 0 || allRows[i].t > allRows[i - 1].t) unique.push(allRows[i]);
     }
-
     m1Count = unique.length;
     m1Time = new Float64Array(m1Count);
     m1Open = new Float64Array(m1Count);
     m1High = new Float64Array(m1Count);
     m1Low = new Float64Array(m1Count);
     m1Close = new Float64Array(m1Count);
+    m1Vol = new Float64Array(m1Count);
 
     for (let i = 0; i < m1Count; i++) {
       m1Time[i] = unique[i].t;
@@ -393,6 +582,7 @@
       m1High[i] = unique[i].h;
       m1Low[i] = unique[i].l;
       m1Close[i] = unique[i].c;
+      m1Vol[i] = unique[i].v;
     }
 
     const slider = document.getElementById('progressSlider');
@@ -400,105 +590,240 @@
     slider.max = Math.max(50, m1Count - 1);
   }
 
-  // โหลดฐานข้อมูลหลักทั้ง 4 เดือนจาก GitHub อัตโนมัติ
-  async function loadGitHubMasterDatabase() {
+  async function initMasterDatabase() {
     const badge = document.getElementById('statusBadge');
-    badge.textContent = 'กำลังโหลดข้อมูลจริง (ส.ค.–พ.ย. 2026)...';
-    let combinedRows = [];
+    badge.textContent = 'กำลังโหลดฐานข้อมูล XAUUSD...';
+    let combined = [];
 
-    for (const fileName of GITHUB_DATA_FILES) {
+    for (const f of GITHUB_DATA_FILES) {
       try {
-        const res = await fetch(`./${fileName}`);
-        if (res.ok) {
-          const text = await res.text();
-          const parsed = parseHistDataCSV(text);
-          combinedRows = combinedRows.concat(parsed);
-        }
-      } catch (e) {
-        console.warn(`File ${fileName} not found locally yet:`, e);
-      }
+        const res = await fetch(`./${f}`);
+        if (res.ok) combined = combined.concat(parseHistDataCSV(await res.text()));
+      } catch (e) {}
     }
 
-    if (combinedRows.length > 50) {
-      loadMasterRows(combinedRows);
+    if (combined.length > 50) {
+      loadMasterRows(combined);
       badge.textContent = `🟢 Real Data (${m1Count.toLocaleString()} bars)`;
       badge.style.color = '#089981';
-
-      // โหลดสถานะการเทรดที่บันทึกไว้ล่าสุด (รีเฟรชแล้วข้อมูลไม่หาย!)
-      const hasSaved = restoreUserState();
-      if (!hasSaved) {
-        current1mIndex = Math.min(2000, m1Count - 1);
-      }
-      rebuildChartSeries();
-      updateUI();
     } else {
-      badge.textContent = '🟡 รอไฟล์ CSV (อัปโหลด .csv ขึ้น GitHub หรือกดปุ่ม +CSV)';
+      badge.textContent = '🟡 รอไฟล์ CSV (กดปุ่ม +CSV เพื่อโหลดไฟล์จากเครื่อง)';
       badge.style.color = '#f59e0b';
     }
+
+    loadProfilesFromStorage();
+    switchProfile(activeProfileId);
   }
 
   // =========================================================================
-  // 2. Auto-Save & Restore State (รีเฟรชแล้วกราฟ ออเดอร์ เส้นวาด นิ่งอยู่ครบ 100%)
+  // 5. Strategy Profile ID Manager (สร้าง/สลับเทคนิค A, B และ Auto-Save)
   // =========================================================================
-  function saveUserState() {
-    if (m1Count === 0) return;
-    const cleanOrders = orders.map(o => ({
-      id: o.id, type: o.type, triggered: o.triggered,
-      entry: o.entry, sl: o.sl, tp: o.tp, lot: o.lot
-    }));
-    const stateObj = {
+  function loadProfilesFromStorage() {
+    try {
+      const raw = localStorage.getItem(PROFILES_STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        profiles = parsed.profiles || {};
+        activeProfileId = parsed.activeProfileId || 'Strategy A (SMC)';
+        favoriteToolIds = parsed.favoriteToolIds || favoriteToolIds;
+        isLightTheme = !!parsed.isLightTheme;
+        if (parsed.indConfig) indConfig = { ...indConfig, ...parsed.indConfig };
+      }
+    } catch (e) {}
+
+    if (!profiles['Strategy A (SMC)']) {
+      profiles['Strategy A (SMC)'] = createEmptyProfileState();
+    }
+    if (!profiles['Strategy B (Breakout)']) {
+      profiles['Strategy B (Breakout)'] = createEmptyProfileState();
+    }
+    if (!profiles[activeProfileId]) {
+      activeProfileId = Object.keys(profiles)[0];
+    }
+
+    if (isLightTheme) {
+      document.body.classList.add('light-theme');
+      applyThemeToAllCharts();
+    }
+    renderProfileDropdown();
+    renderFavoriteToolbar();
+    syncIndicatorModalInputs();
+  }
+
+  function createEmptyProfileState() {
+    return {
+      current1mIndex: Math.min(2500, Math.max(50, m1Count - 1)),
+      timeframeMin: 1,
+      initialBalance: 10000,
+      balance: 10000,
+      lotSize: 0.10,
+      orders: [],
+      history: [],
+      drawings: []
+    };
+  }
+
+  function saveCurrentProfile() {
+    if (!activeProfileId) return;
+    profiles[activeProfileId] = {
       current1mIndex,
       timeframeMin,
       initialBalance,
       balance,
       lotSize,
-      orders: cleanOrders,
+      orders: orders.map(o => ({ id: o.id, type: o.type, triggered: o.triggered, entry: o.entry, sl: o.sl, tp: o.tp, lot: o.lot, entryTime: o.entryTime })),
       history,
-      drawings,
-      isLightTheme
+      drawings
     };
     try {
-      localStorage.setItem(STATE_STORAGE_KEY, JSON.stringify(stateObj));
+      localStorage.setItem(PROFILES_STORAGE_KEY, JSON.stringify({
+        activeProfileId,
+        profiles,
+        favoriteToolIds,
+        isLightTheme,
+        indConfig
+      }));
     } catch (e) {}
   }
 
-  function restoreUserState() {
-    try {
-      const raw = localStorage.getItem(STATE_STORAGE_KEY);
-      if (!raw) return false;
-      const st = JSON.parse(raw);
-      current1mIndex = Math.max(30, Math.min(m1Count - 1, st.current1mIndex || 500));
-      timeframeMin = st.timeframeMin || 1;
-      initialBalance = st.initialBalance || 10000;
-      balance = st.balance ?? initialBalance;
-      lotSize = st.lotSize || 0.10;
-      history = st.history || [];
-      drawings = st.drawings || [];
+  function switchProfile(profileId) {
+    stopPlay();
+    clearAllPriceLines();
+    activeProfileId = profileId;
+    const st = profiles[profileId] || createEmptyProfileState();
 
-      document.getElementById('initBalInput').value = initialBalance;
-      document.getElementById('lotText').textContent = lotSize.toFixed(2);
-      document.querySelectorAll('#tfGroup .btn[data-min]').forEach(b => {
-        b.classList.toggle('active', Number(b.dataset.min) === timeframeMin);
-      });
+    current1mIndex = m1Count > 0 ? Math.max(30, Math.min(m1Count - 1, st.current1mIndex)) : 100;
+    timeframeMin = st.timeframeMin || 1;
+    initialBalance = st.initialBalance || 10000;
+    balance = st.balance ?? initialBalance;
+    lotSize = st.lotSize || 0.10;
+    history = st.history || [];
+    drawings = st.drawings || [];
+    selectedDrawingIdx = -1;
+    updateSelectionBar();
 
-      if (st.isLightTheme) {
-        isLightTheme = true;
-        document.body.classList.add('light-theme');
-        applyChartTheme();
-      }
+    document.getElementById('initBalInput').value = initialBalance;
+    document.getElementById('lotText').textContent = lotSize.toFixed(2);
+    document.querySelectorAll('#tfGroup .btn[data-min]').forEach(b => b.classList.toggle('active', Number(b.dataset.min) === timeframeMin));
 
-      orders = (st.orders || []).map(o => ({ ...o, entryLine: null, slLine: null, tpLine: null }));
-      orders.forEach(o => syncOrderPriceLines(o));
-      return true;
-    } catch (e) {
-      return false;
-    }
+    orders = (st.orders || []).map(o => ({ ...o, entryLine: null, slLine: null, tpLine: null }));
+    orders.forEach(o => syncOrderPriceLines(o));
+
+    rebuildAllCharts();
+    updateUI();
+    renderProfileDropdown();
+  }
+
+  function renderProfileDropdown() {
+    const sel = document.getElementById('profileSelect');
+    sel.innerHTML = Object.keys(profiles).map(id => `<option value="${id}" ${id === activeProfileId ? 'selected' : ''}>${id}</option>`).join('');
   }
 
   // =========================================================================
-  // 3. รวมแท่งเทียน 1m เป็น 1m, 5m, 15m, 1H, 4H, 1D (ซิงค์ตรงกันทุก TF 100%)
+  // 6. คำนวณ Indicators (Volume, RSI, MACD, Stochastic) & Build Chart Series
   // =========================================================================
-  function rebuildChartSeries() {
+  function calcIndicators(bars) {
+    // 1. Volume
+    const volData = bars.map(b => ({
+      time: b.time,
+      value: b.volume,
+      color: b.close >= b.open ? 'rgba(8, 153, 129, 0.45)' : 'rgba(242, 54, 69, 0.45)'
+    }));
+    volumeSeries.setData(indConfig.vol ? volData : []);
+
+    // 2. RSI
+    const rsiData = [];
+    const pRsi = indConfig.rsiPeriod;
+    if (bars.length > pRsi) {
+      let avgGain = 0, avgLoss = 0;
+      for (let i = 1; i <= pRsi; i++) {
+        const diff = bars[i].close - bars[i - 1].close;
+        if (diff >= 0) avgGain += diff; else avgLoss -= diff;
+      }
+      avgGain /= pRsi; avgLoss /= pRsi;
+      for (let i = pRsi; i < bars.length; i++) {
+        if (i > pRsi) {
+          const diff = bars[i].close - bars[i - 1].close;
+          avgGain = (avgGain * (pRsi - 1) + (diff > 0 ? diff : 0)) / pRsi;
+          avgLoss = (avgLoss * (pRsi - 1) + (diff < 0 ? -diff : 0)) / pRsi;
+        }
+        const rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
+        rsiData.push({ time: bars[i].time, value: 100 - (100 / (1 + rs)) });
+      }
+    }
+    rsiSeries.setData(indConfig.rsi ? rsiData : []);
+    rsiOBLine.applyOptions({ price: indConfig.rsiOB });
+    rsiOSLine.applyOptions({ price: indConfig.rsiOS });
+    document.getElementById('labelRSI').textContent = `RSI (${pRsi})`;
+
+    // 3. MACD
+    const macdLine = [], sigLine = [], histData = [];
+    const f = indConfig.macdFast, s = indConfig.macdSlow, sig = indConfig.macdSig;
+    if (bars.length > s + sig) {
+      const kF = 2 / (f + 1), kS = 2 / (s + 1), kSig = 2 / (sig + 1);
+      let eF = bars[0].close, eS = bars[0].close, eSig = 0;
+      const rawMacd = [];
+      for (let i = 0; i < bars.length; i++) {
+        eF = bars[i].close * kF + eF * (1 - kF);
+        eS = bars[i].close * kS + eS * (1 - kS);
+        rawMacd.push({ time: bars[i].time, val: eF - eS });
+      }
+      eSig = rawMacd[s].val;
+      for (let i = s; i < rawMacd.length; i++) {
+        eSig = rawMacd[i].val * kSig + eSig * (1 - kSig);
+        const hVal = rawMacd[i].val - eSig;
+        macdLine.push({ time: rawMacd[i].time, value: rawMacd[i].val });
+        sigLine.push({ time: rawMacd[i].time, value: eSig });
+        histData.push({ time: rawMacd[i].time, value: hVal, color: hVal >= 0 ? '#089981' : '#f23645' });
+      }
+    }
+    macdLineSeries.setData(indConfig.macd ? macdLine : []);
+    macdSigSeries.setData(indConfig.macd ? sigLine : []);
+    macdHistSeries.setData(indConfig.macd ? histData : []);
+    document.getElementById('labelMACD').textContent = `MACD (${f}, ${s}, ${sig})`;
+
+    // 4. Stochastic
+    const kData = [], dData = [];
+    const pK = indConfig.stochK, pD = indConfig.stochD, sm = indConfig.stochSmooth;
+    if (bars.length > pK + sm + pD) {
+      const rawK = [];
+      for (let i = pK - 1; i < bars.length; i++) {
+        let hi = -Infinity, lo = Infinity;
+        for (let j = i - pK + 1; j <= i; j++) {
+          if (bars[j].high > hi) hi = bars[j].high;
+          if (bars[j].low < lo) lo = bars[j].low;
+        }
+        const k = hi === lo ? 50 : ((bars[i].close - lo) / (hi - lo)) * 100;
+        rawK.push({ time: bars[i].time, val: k });
+      }
+      const smoothK = [];
+      for (let i = sm - 1; i < rawK.length; i++) {
+        let sum = 0;
+        for (let j = i - sm + 1; j <= i; j++) sum += rawK[j].val;
+        smoothK.push({ time: rawK[i].time, value: sum / sm });
+      }
+      for (let i = pD - 1; i < smoothK.length; i++) {
+        let sum = 0;
+        for (let j = i - pD + 1; j <= i; j++) sum += smoothK[j].value;
+        kData.push(smoothK[i]);
+        dData.push({ time: smoothK[i].time, value: sum / pD });
+      }
+    }
+    stochKSeries.setData(indConfig.stoch ? kData : []);
+    stochDSeries.setData(indConfig.stoch ? dData : []);
+    document.getElementById('labelSTOCH').textContent = `Stochastic (${pK}, ${pD}, ${sm})`;
+
+    // จัดการแสดง/ซ่อนหน้าต่างย่อย และย้ายแถบเวลาให้อยู่ล่างสุดเสมอ
+    document.getElementById('paneRSI').classList.toggle('active', indConfig.rsi);
+    document.getElementById('paneMACD').classList.toggle('active', indConfig.macd);
+    document.getElementById('paneSTOCH').classList.toggle('active', indConfig.stoch);
+
+    const activeBottomChart = indConfig.stoch ? chartSTOCH : (indConfig.macd ? chartMACD : (indConfig.rsi ? chartRSI : mainChart));
+    allCharts.forEach(c => c.timeScale().applyOptions({ visible: c === activeBottomChart }));
+    resizeAllCharts();
+  }
+
+  function rebuildAllCharts() {
     if (m1Count === 0) return;
     const tfSec = timeframeMin * 60;
     const maxVisibleBars = 450;
@@ -515,11 +840,12 @@
       if (bStart !== bucketStart) {
         if (bucket) grouped.push(bucket);
         bucketStart = bStart;
-        bucket = { time: bStart, open: m1Open[i], high: m1High[i], low: m1Low[i], close: m1Close[i] };
+        bucket = { time: bStart, open: m1Open[i], high: m1High[i], low: m1Low[i], close: m1Close[i], volume: m1Vol[i] };
       } else {
         if (m1High[i] > bucket.high) bucket.high = m1High[i];
         if (m1Low[i] < bucket.low) bucket.low = m1Low[i];
         bucket.close = m1Close[i];
+        bucket.volume += m1Vol[i];
       }
     }
     if (bucket) grouped.push(bucket);
@@ -528,13 +854,17 @@
     candleSeries.setData(visibleCandles);
     document.getElementById('progressSlider').value = current1mIndex;
 
+    // อัปเดตลูกศรจุดเข้า-ออก (Trade History Markers)
+    updateTradeMarkers();
+    calcIndicators(visibleCandles);
+
     const last = visibleCandles[visibleCandles.length - 1];
     if (last) {
       const chg = last.close - last.open;
       const pct = ((chg / last.open) * 100).toFixed(2);
       const col = chg >= 0 ? '#089981' : '#f23645';
       document.getElementById('ohlcLegend').innerHTML = `
-        <div style="font-weight:bold;">XAUUSD • Real HistData (${timeframeMin >= 60 ? (timeframeMin / 60) + 'H' : timeframeMin + 'm'})</div>
+        <div style="font-weight:bold;">XAUUSD • ${timeframeMin >= 60 ? (timeframeMin / 60) + 'H' : timeframeMin + 'm'} [${activeProfileId}]</div>
         <div style="color:${col}; font-family:monospace; font-weight:bold;">
           O:${last.open.toFixed(3)} H:${last.high.toFixed(3)} L:${last.low.toFixed(3)} C:${last.close.toFixed(3)} (${chg >= 0 ? '+' : ''}${pct}%)
         </div>
@@ -546,78 +876,140 @@
     renderOverlay();
   }
 
+  function updateTradeMarkers() {
+    if (!showTradeMarkers || !visibleCandles.length) {
+      candleSeries.setMarkers([]);
+      return;
+    }
+    const tfSec = timeframeMin * 60;
+    const minT = visibleCandles[0].time;
+    const markers = [];
+
+    history.forEach(h => {
+      if (h.entryTime && h.entryTime >= minT) {
+        const isBuy = h.type.includes('BUY');
+        markers.push({
+          time: Math.floor(h.entryTime / tfSec) * tfSec,
+          position: isBuy ? 'belowBar' : 'aboveBar',
+          color: isBuy ? '#2962ff' : '#a855f7',
+          shape: isBuy ? 'arrowUp' : 'arrowDown',
+          text: isBuy ? 'B' : 'S'
+        });
+      }
+      if (h.exitTime && h.exitTime >= minT) {
+        markers.push({
+          time: Math.floor(h.exitTime / tfSec) * tfSec,
+          position: h.pnl >= 0 ? 'aboveBar' : 'belowBar',
+          color: h.pnl >= 0 ? '#089981' : '#f23645',
+          shape: 'circle',
+          text: `${h.pnl >= 0 ? '+' : ''}$${h.pnl.toFixed(0)}`
+        });
+      }
+    });
+
+    markers.sort((a, b) => a.time - b.time);
+    candleSeries.setMarkers(markers);
+  }
+
   // =========================================================================
-  // 4. Order Price Lines & Overlay Drawings (ลากแก้ไขได้ทุกชิ้น)
+  // 7. Draggable Floating Favorite Toolbar & All Tools Modal
   // =========================================================================
-  function clearAllPriceLines() {
-    orders.forEach(o => {
-      if (o.entryLine) candleSeries.removePriceLine(o.entryLine);
-      if (o.slLine) candleSeries.removePriceLine(o.slLine);
-      if (o.tpLine) candleSeries.removePriceLine(o.tpLine);
+  function renderFavoriteToolbar() {
+    const container = document.getElementById('favButtonsContainer');
+    container.innerHTML = favoriteToolIds.map(id => {
+      const t = ALL_TOOLS.find(x => x.id === id);
+      if (!t) return '';
+      return `<button class="tool-btn ${selectedTool === t.id ? 'active' : ''}" data-tool="${t.id}" title="${t.name}">${t.icon}</button>`;
+    }).join('');
+
+    container.querySelectorAll('.tool-btn').forEach(btn => {
+      btn.onclick = () => setTool(btn.dataset.tool);
     });
   }
 
-  function syncOrderPriceLines(order) {
-    if (order.entryLine) candleSeries.removePriceLine(order.entryLine);
-    if (order.slLine) candleSeries.removePriceLine(order.slLine);
-    if (order.tpLine) candleSeries.removePriceLine(order.tpLine);
+  function renderAllToolsModal() {
+    const list = document.getElementById('allToolsList');
+    list.innerHTML = ALL_TOOLS.map(t => {
+      const isFav = favoriteToolIds.includes(t.id);
+      return `<div class="tool-grid-item">
+        <div style="display:flex; align-items:center; gap:8px; cursor:pointer; flex:1;" data-pick="${t.id}">
+          <span style="font-size:16px;">${t.icon}</span>
+          <span>${t.name}</span>
+        </div>
+        <button class="btn" data-fav="${t.id}" style="font-size:14px; color:${isFav ? '#f59e0b' : '#64748b'};">★</button>
+      </div>`;
+    }).join('');
 
-    const isBuy = order.type.includes('BUY');
-    order.entryLine = candleSeries.createPriceLine({
-      price: order.entry,
-      color: isBuy ? '#2962ff' : '#9c27b0',
-      lineWidth: 2,
-      lineStyle: order.triggered ? LightweightCharts.LineStyle.Solid : LightweightCharts.LineStyle.Dashed,
-      axisLabelVisible: true,
-      title: `${order.type} ${order.lot.toFixed(2)}`,
+    list.querySelectorAll('[data-pick]').forEach(el => {
+      el.onclick = () => {
+        setTool(el.dataset.pick);
+        document.getElementById('allToolsModal').classList.remove('open');
+      };
     });
 
-    if (order.sl) {
-      const loss = Math.abs(order.entry - order.sl) * 100 * order.lot;
-      order.slLine = candleSeries.createPriceLine({
-        price: order.sl, color: '#f23645', lineWidth: 1,
-        lineStyle: LightweightCharts.LineStyle.Dashed, axisLabelVisible: true,
-        title: `SL -$${loss.toFixed(0)}`,
-      });
-    }
-
-    if (order.tp) {
-      const gain = Math.abs(order.tp - order.entry) * 100 * order.lot;
-      order.tpLine = candleSeries.createPriceLine({
-        price: order.tp, color: '#089981', lineWidth: 1,
-        lineStyle: LightweightCharts.LineStyle.Dashed, axisLabelVisible: true,
-        title: `TP +$${gain.toFixed(0)}`,
-      });
-    }
+    list.querySelectorAll('[data-fav]').forEach(btn => {
+      btn.onclick = () => {
+        const id = btn.dataset.fav;
+        if (favoriteToolIds.includes(id)) {
+          if (favoriteToolIds.length > 2) favoriteToolIds = favoriteToolIds.filter(x => x !== id);
+        } else {
+          favoriteToolIds.push(id);
+        }
+        renderFavoriteToolbar();
+        renderAllToolsModal();
+        saveCurrentProfile();
+      };
+    });
   }
 
-  function resizeOverlay() {
-    const dpr = window.devicePixelRatio || 1;
-    const rect = container.getBoundingClientRect();
-    overlayCanvas.width = rect.width * dpr;
-    overlayCanvas.height = rect.height * dpr;
-    oCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    renderOverlay();
-  }
+  // ทำให้แถบ Favorite Toolbar ลากย้ายตำแหน่งในหน้าจอได้อิสระ
+  const favToolbar = document.getElementById('favToolbar');
+  const favHandle = document.getElementById('favDragHandle');
+  let isDraggingToolbar = false, tbStart = { x: 0, y: 0, left: 0, top: 0 };
 
+  favHandle.addEventListener('pointerdown', e => {
+    isDraggingToolbar = true;
+    const rect = favToolbar.getBoundingClientRect();
+    const parentRect = favToolbar.parentElement.getBoundingClientRect();
+    tbStart = { x: e.clientX, y: e.clientY, left: rect.left - parentRect.left, top: rect.top - parentRect.top };
+    favToolbar.style.right = 'auto';
+    favToolbar.style.left = `${tbStart.left}px`;
+    favToolbar.style.top = `${tbStart.top}px`;
+    favHandle.setPointerCapture(e.pointerId);
+  });
+
+  favHandle.addEventListener('pointermove', e => {
+    if (!isDraggingToolbar) return;
+    const parentRect = favToolbar.parentElement.getBoundingClientRect();
+    const newLeft = Math.max(4, Math.min(parentRect.width - 42, tbStart.left + (e.clientX - tbStart.x)));
+    const newTop = Math.max(4, Math.min(parentRect.height - 120, tbStart.top + (e.clientY - tbStart.y)));
+    favToolbar.style.left = `${newLeft}px`;
+    favToolbar.style.top = `${newTop}px`;
+  });
+
+  favHandle.addEventListener('pointerup', () => { isDraggingToolbar = false; });
+
+  // =========================================================================
+  // 8. Drawing Rendering Engine (ครบทั้ง 12 เครื่องมือ + ปรับสี/ความหนาได้)
+  // =========================================================================
   function timeToX(ts) {
-    const coord = chart.timeScale().timeToCoordinate(ts);
+    const coord = mainChart.timeScale().timeToCoordinate(ts);
     if (coord !== null) return coord;
     if (!visibleCandles.length) return 0;
     const lastBar = visibleCandles[visibleCandles.length - 1];
-    const lastX = chart.timeScale().timeToCoordinate(lastBar.time) || 0;
+    const lastX = mainChart.timeScale().timeToCoordinate(lastBar.time) || 0;
     const diffBars = (ts - lastBar.time) / (timeframeMin * 60);
-    const barSpacing = chart.timeScale().options().barSpacing || 6;
+    const barSpacing = mainChart.timeScale().options().barSpacing || 6;
     return lastX + diffBars * barSpacing;
   }
 
   function xToTime(x) {
-    const t = chart.timeScale().coordinateToTime(x);
+    const t = mainChart.timeScale().coordinateToTime(x);
     if (t !== null) return t;
     if (!visibleCandles.length) return Math.floor(Date.now() / 1000);
     const lastBar = visibleCandles[visibleCandles.length - 1];
-    const lastX = chart.timeScale().timeToCoordinate(lastBar.time) || 0;
-    const barSpacing = chart.timeScale().options().barSpacing || 6;
+    const lastX = mainChart.timeScale().timeToCoordinate(lastBar.time) || 0;
+    const barSpacing = mainChart.timeScale().options().barSpacing || 6;
     return lastBar.time + Math.round((x - lastX) / barSpacing) * (timeframeMin * 60);
   }
 
@@ -630,9 +1022,9 @@
   }
 
   function renderOverlay() {
-    const rect = container.getBoundingClientRect();
-    const W = rect.width - 68;
-    const H = rect.height - 25;
+    const rect = mainPane.getBoundingClientRect();
+    const W = rect.width - 66;
+    const H = rect.height - 22;
     oCtx.clearRect(0, 0, rect.width, rect.height);
 
     const allShapes = activeDrawing ? [...drawings, activeDrawing] : drawings;
@@ -643,58 +1035,118 @@
       const isSelected = (idx === selectedDrawingIdx) || (d === activeDrawing);
       const x1 = timeToX(d.t1), x2 = timeToX(d.t2);
       const y1 = priceToY(d.p1), y2 = priceToY(d.p2);
+      const col = d.color || '#eab308';
+      const lw = d.width || 2;
+
+      oCtx.strokeStyle = col;
+      oCtx.lineWidth = lw;
 
       if (d.tool === 'hline') {
-        oCtx.strokeStyle = '#06b6d4'; oCtx.lineWidth = isSelected ? 2.2 : 1.5;
         oCtx.beginPath(); oCtx.moveTo(0, y2); oCtx.lineTo(W, y2); oCtx.stroke();
-        oCtx.fillStyle = '#06b6d4'; oCtx.font = 'bold 10px monospace';
+        oCtx.fillStyle = col; oCtx.font = 'bold 10px monospace';
         oCtx.fillText(d.p2.toFixed(3), 8, y2 - 4);
         if (isSelected) { drawDot(W * 0.35, y2); drawDot(W * 0.65, y2); }
+      } else if (d.tool === 'vline') {
+        oCtx.beginPath(); oCtx.moveTo(x2, 0); oCtx.lineTo(x2, H); oCtx.stroke();
+        if (isSelected) { drawDot(x2, H * 0.35); drawDot(x2, H * 0.65); }
       } else if (d.tool === 'trend') {
-        oCtx.strokeStyle = '#eab308'; oCtx.lineWidth = isSelected ? 2.5 : 1.8;
         oCtx.beginPath(); oCtx.moveTo(x1, y1); oCtx.lineTo(x2, y2); oCtx.stroke();
         if (isSelected) { drawDot(x1, y1); drawDot(x2, y2); }
       } else if (d.tool === 'ray') {
-        oCtx.strokeStyle = '#f97316'; oCtx.lineWidth = isSelected ? 2.5 : 1.8;
         const dx = x2 - x1, dy = y2 - y1;
-        if (Math.abs(dx) < 1) {
-          oCtx.beginPath(); oCtx.moveTo(x1, 0); oCtx.lineTo(x1, H); oCtx.stroke();
-        } else {
-          const slope = dy / dx;
-          oCtx.beginPath(); oCtx.moveTo(0, y1 - slope * x1); oCtx.lineTo(W, y1 + slope * (W - x1)); oCtx.stroke();
+        oCtx.beginPath(); oCtx.moveTo(x1, y1);
+        if (Math.abs(dx) < 1) oCtx.lineTo(x1, dy >= 0 ? H : 0);
+        else {
+          const targetX = dx > 0 ? W : 0;
+          oCtx.lineTo(targetX, y1 + (dy / dx) * (targetX - x1));
         }
+        oCtx.stroke();
         if (isSelected) { drawDot(x1, y1); drawDot(x2, y2); }
+      } else if (d.tool === 'extline') {
+        const dx = x2 - x1, dy = y2 - y1;
+        oCtx.beginPath();
+        if (Math.abs(dx) < 1) { oCtx.moveTo(x1, 0); oCtx.lineTo(x1, H); }
+        else {
+          const slope = dy / dx;
+          oCtx.moveTo(0, y1 - slope * x1);
+          oCtx.lineTo(W, y1 + slope * (W - x1));
+        }
+        oCtx.stroke();
+        if (isSelected) { drawDot(x1, y1); drawDot(x2, y2); }
+      } else if (d.tool === 'regression' || d.tool === 'channel') {
+        const offsetPx = d.tool === 'channel' ? 35 : 25;
+        oCtx.beginPath(); oCtx.moveTo(x1, y1); oCtx.lineTo(x2, y2); oCtx.stroke();
+        oCtx.setLineDash([4, 4]);
+        oCtx.beginPath(); oCtx.moveTo(x1, y1 - offsetPx); oCtx.lineTo(x2, y2 - offsetPx); oCtx.stroke();
+        oCtx.beginPath(); oCtx.moveTo(x1, y1 + offsetPx); oCtx.lineTo(x2, y2 + offsetPx); oCtx.stroke();
+        oCtx.setLineDash([]);
+        oCtx.fillStyle = col + '22';
+        oCtx.beginPath();
+        oCtx.moveTo(x1, y1 - offsetPx); oCtx.lineTo(x2, y2 - offsetPx);
+        oCtx.lineTo(x2, y2 + offsetPx); oCtx.lineTo(x1, y1 + offsetPx);
+        oCtx.closePath(); oCtx.fill();
+        if (isSelected) { drawDot(x1, y1); drawDot(x2, y2); }
+      } else if (d.tool === 'highlighter') {
+        const pts = d.points || [{ t: d.t1, p: d.p1 }, { t: d.t2, p: d.p2 }];
+        if (pts.length > 1) {
+          oCtx.strokeStyle = col + '77';
+          oCtx.lineWidth = Math.max(6, lw * 3);
+          oCtx.lineCap = 'round';
+          oCtx.lineJoin = 'round';
+          oCtx.beginPath();
+          oCtx.moveTo(timeToX(pts[0].t), priceToY(pts[0].p));
+          pts.slice(1).forEach(pt => oCtx.lineTo(timeToX(pt.t), priceToY(pt.p)));
+          oCtx.stroke();
+        }
       } else if (d.tool === 'box') {
         const left = Math.min(x1, x2), top = Math.min(y1, y2);
         const w = Math.abs(x2 - x1), h = Math.abs(y2 - y1);
-        oCtx.fillStyle = 'rgba(234, 179, 8, 0.18)'; oCtx.strokeStyle = '#eab308'; oCtx.lineWidth = isSelected ? 2 : 1.3;
-        oCtx.fillRect(left, top, w, h); oCtx.strokeRect(left, top, w, h);
+        oCtx.fillStyle = col + '28';
+        oCtx.fillRect(left, top, w, h);
+        oCtx.strokeRect(left, top, w, h);
         if (isSelected) { drawDot(x1, y1); drawDot(x2, y2); drawDot(x1, y2); drawDot(x2, y1); }
+      } else if (d.tool === 'fib') {
+        const levels = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];
+        const left = Math.min(x1, x2), width = Math.max(70, Math.abs(x2 - x1));
+        levels.forEach(lvl => {
+          const p = d.p1 + (d.p2 - d.p1) * lvl;
+          const y = priceToY(p);
+          oCtx.strokeStyle = (lvl === 0.618 || lvl === 0.5) ? '#f59e0b' : col;
+          oCtx.lineWidth = 1;
+          oCtx.beginPath(); oCtx.moveTo(left, y); oCtx.lineTo(left + width, y); oCtx.stroke();
+          oCtx.fillStyle = isLightTheme ? '#1e293b' : '#d1d4dc'; oCtx.font = '9px monospace';
+          oCtx.fillText(`${lvl} (${p.toFixed(2)})`, left + 3, y - 2);
+        });
+        if (isSelected) { drawDot(x1, y1); drawDot(x2, y2); }
       } else if (d.tool === 'long' || d.tool === 'short') {
         const yEntry = priceToY(d.midP), ySL = priceToY(d.p1), yTP = priceToY(d.p2);
-        const left = Math.min(x1, x2), right = Math.max(x1, x2, left + 70), w = right - left;
+        const left = Math.min(x1, x2), right = Math.max(x1, x2, left + 75), w = right - left;
 
-        oCtx.fillStyle = 'rgba(8, 153, 129, 0.25)';
+        oCtx.fillStyle = 'rgba(8, 153, 129, 0.26)';
         oCtx.fillRect(left, Math.min(yEntry, yTP), w, Math.abs(yTP - yEntry));
-        oCtx.strokeStyle = '#089981'; oCtx.strokeRect(left, Math.min(yEntry, yTP), w, Math.abs(yTP - yEntry));
+        oCtx.strokeStyle = '#089981'; oCtx.lineWidth = 1.2;
+        oCtx.strokeRect(left, Math.min(yEntry, yTP), w, Math.abs(yTP - yEntry));
 
-        oCtx.fillStyle = 'rgba(242, 54, 69, 0.25)';
+        oCtx.fillStyle = 'rgba(242, 54, 69, 0.26)';
         oCtx.fillRect(left, Math.min(yEntry, ySL), w, Math.abs(ySL - yEntry));
-        oCtx.strokeStyle = '#f23645'; oCtx.strokeRect(left, Math.min(yEntry, ySL), w, Math.abs(ySL - yEntry));
+        oCtx.strokeStyle = '#f23645'; oCtx.lineWidth = 1.2;
+        oCtx.strokeRect(left, Math.min(yEntry, ySL), w, Math.abs(ySL - yEntry));
 
         const riskDiff = Math.abs(d.midP - d.p1), rewardDiff = Math.abs(d.p2 - d.midP);
         const rr = riskDiff > 0 ? (rewardDiff / riskDiff).toFixed(2) : '0.00';
-        const tpMoney = (rewardDiff * 100 * lotSize).toFixed(0);
-        const slMoney = (riskDiff * 100 * lotSize).toFixed(0);
+        const riskUsd = parseFloat(document.getElementById('riskDollarInput').value) || 100;
+        const calcLot = riskDiff > 0 ? Math.max(0.01, +(riskUsd / (riskDiff * 100)).toFixed(2)) : lotSize;
+        const tpMoney = (rewardDiff * 100 * calcLot).toFixed(0);
+        const slMoney = (riskDiff * 100 * calcLot).toFixed(0);
 
-        oCtx.fillStyle = '#089981'; oCtx.fillRect(left + 4, yTP - 15, Math.min(w - 8, 110), 14);
+        oCtx.fillStyle = '#089981'; oCtx.fillRect(left + 4, yTP - 15, Math.min(w - 8, 125), 14);
         oCtx.fillStyle = '#fff'; oCtx.font = 'bold 9px sans-serif';
-        oCtx.fillText(`TP: +$${tpMoney}`, left + 7, yTP - 5);
+        oCtx.fillText(`TP: +$${tpMoney} (${calcLot}L)`, left + 7, yTP - 5);
 
-        oCtx.fillStyle = '#1e222d'; oCtx.fillRect(left + 4, yEntry - 8, Math.min(w - 8, 95), 16);
+        oCtx.fillStyle = '#1e222d'; oCtx.fillRect(left + 4, yEntry - 8, Math.min(w - 8, 100), 16);
         oCtx.fillStyle = '#fff'; oCtx.fillText(`RR 1 : ${rr}`, left + 8, yEntry + 3);
 
-        oCtx.fillStyle = '#f23645'; oCtx.fillRect(left + 4, ySL + 1, Math.min(w - 8, 110), 14);
+        oCtx.fillStyle = '#f23645'; oCtx.fillRect(left + 4, ySL + 1, Math.min(w - 8, 125), 14);
         oCtx.fillStyle = '#fff'; oCtx.fillText(`SL: -$${slMoney}`, left + 7, ySL + 11);
 
         drawDot(left + w / 2, yTP, '#089981', '#ffffff');
@@ -706,20 +1158,30 @@
     oCtx.restore();
   }
 
-  chart.timeScale().subscribeVisibleLogicalRangeChange(renderOverlay);
-
   // =========================================================================
-  // 5. Interactive Editing & Drawing Gestures
+  // 9. Selection, Style Editing & Interactive Gestures
   // =========================================================================
   function setTool(t) {
     selectedTool = t;
-    document.querySelectorAll('#toolGroup .tool-btn[data-tool]').forEach(b => b.classList.toggle('active', b.dataset.tool === t));
+    renderFavoriteToolbar();
     overlayCanvas.classList.toggle('interactive', t !== 'cursor');
     renderOverlay();
   }
 
   function updateSelectionBar() {
-    document.getElementById('selectionBar').classList.toggle('visible', selectedDrawingIdx >= 0 && !!drawings[selectedDrawingIdx]);
+    const bar = document.getElementById('selectionBar');
+    const execBtn = document.getElementById('execRRBtn');
+    if (selectedDrawingIdx >= 0 && drawings[selectedDrawingIdx]) {
+      const d = drawings[selectedDrawingIdx];
+      const meta = ALL_TOOLS.find(x => x.id === d.tool);
+      document.getElementById('selectedObjLabel').textContent = meta ? meta.icon : 'Tool';
+      document.getElementById('drawColorPicker').value = d.color || '#eab308';
+      document.getElementById('drawWidthSelect').value = String(d.width || 2);
+      execBtn.style.display = (d.tool === 'long' || d.tool === 'short') ? 'inline-block' : 'none';
+      bar.classList.add('visible');
+    } else {
+      bar.classList.remove('visible');
+    }
   }
 
   function distToSegment(px, py, x1, y1, x2, y2) {
@@ -743,11 +1205,7 @@
         const mid = (lo + hi) >> 1;
         if (m1Time[mid] < targetTs) lo = mid + 1; else hi = mid;
       }
-      if (lo > 30) {
-        current1mIndex = lo;
-        rebuildChartSeries();
-        saveUserState();
-      }
+      if (lo > 30) { current1mIndex = lo; rebuildAllCharts(); saveCurrentProfile(); }
       setTool('cursor');
       return;
     }
@@ -765,7 +1223,7 @@
         const x1 = timeToX(d.t1), x2 = timeToX(d.t2), y1 = priceToY(d.p1), y2 = priceToY(d.p2);
 
         if (d.tool === 'long' || d.tool === 'short') {
-          const left = Math.min(x1, x2), right = Math.max(x1, x2, left + 70), midX = (left + right) / 2;
+          const left = Math.min(x1, x2), right = Math.max(x1, x2, left + 75), midX = (left + right) / 2;
           const yTP = priceToY(d.p2), ySL = priceToY(d.p1), yEntry = priceToY(d.midP);
           if (Math.hypot(pos.x - midX, pos.y - yTP) < 18) { selectedDrawingIdx = i; updateSelectionBar(); editingTarget = { idx: i, part: 'tp' }; renderOverlay(); return; }
           if (Math.hypot(pos.x - midX, pos.y - ySL) < 18) { selectedDrawingIdx = i; updateSelectionBar(); editingTarget = { idx: i, part: 'sl' }; renderOverlay(); return; }
@@ -776,23 +1234,36 @@
           }
         } else if (d.tool === 'hline') {
           if (Math.abs(pos.y - y2) < 15) { selectedDrawingIdx = i; updateSelectionBar(); editingTarget = { idx: i, part: 'hlineMove' }; renderOverlay(); return; }
-        } else if (d.tool === 'trend' || d.tool === 'ray') {
-          if (Math.hypot(pos.x - x1, pos.y - y1) < 18) { selectedDrawingIdx = i; updateSelectionBar(); editingTarget = { idx: i, part: 'p1' }; renderOverlay(); return; }
-          if (Math.hypot(pos.x - x2, pos.y - y2) < 18) { selectedDrawingIdx = i; updateSelectionBar(); editingTarget = { idx: i, part: 'p2' }; renderOverlay(); return; }
-          if (distToSegment(pos.x, pos.y, x1, y1, x2, y2) < 15) { selectedDrawingIdx = i; updateSelectionBar(); editingTarget = { idx: i, part: 'moveBoth' }; renderOverlay(); return; }
+        } else if (d.tool === 'vline') {
+          if (Math.abs(pos.x - x2) < 15) { selectedDrawingIdx = i; updateSelectionBar(); editingTarget = { idx: i, part: 'vlineMove' }; renderOverlay(); return; }
         } else if (d.tool === 'box') {
           if (Math.hypot(pos.x - x1, pos.y - y1) < 18) { selectedDrawingIdx = i; updateSelectionBar(); editingTarget = { idx: i, part: 'p1' }; renderOverlay(); return; }
           if (Math.hypot(pos.x - x2, pos.y - y2) < 18) { selectedDrawingIdx = i; updateSelectionBar(); editingTarget = { idx: i, part: 'p2' }; renderOverlay(); return; }
           if (pos.x >= Math.min(x1, x2) && pos.x <= Math.max(x1, x2) && pos.y >= Math.min(y1, y2) && pos.y <= Math.max(y1, y2)) {
             selectedDrawingIdx = i; updateSelectionBar(); editingTarget = { idx: i, part: 'moveBoth' }; renderOverlay(); return;
           }
+        } else if (d.tool === 'highlighter') {
+          const pts = d.points || [];
+          if (pts.some(pt => Math.hypot(pos.x - timeToX(pt.t), pos.y - priceToY(pt.p)) < 20)) {
+            selectedDrawingIdx = i; updateSelectionBar(); editingTarget = { idx: i, part: 'moveHighlight' }; renderOverlay(); return;
+          }
+        } else {
+          if (Math.hypot(pos.x - x1, pos.y - y1) < 18) { selectedDrawingIdx = i; updateSelectionBar(); editingTarget = { idx: i, part: 'p1' }; renderOverlay(); return; }
+          if (Math.hypot(pos.x - x2, pos.y - y2) < 18) { selectedDrawingIdx = i; updateSelectionBar(); editingTarget = { idx: i, part: 'p2' }; renderOverlay(); return; }
+          if (distToSegment(pos.x, pos.y, x1, y1, x2, y2) < 16) { selectedDrawingIdx = i; updateSelectionBar(); editingTarget = { idx: i, part: 'moveBoth' }; renderOverlay(); return; }
         }
       }
       return;
     }
 
+    const meta = ALL_TOOLS.find(x => x.id === selectedTool);
     const t1 = xToTime(pos.x), p1 = yToPrice(pos.y);
-    activeDrawing = { tool: selectedTool, t1, t2: t1, p1, p2: p1, midP: p1 };
+    activeDrawing = {
+      tool: selectedTool, t1, t2: t1, p1, p2: p1, midP: p1,
+      color: meta ? meta.defaultColor : '#eab308',
+      width: meta ? meta.defaultWidth : 2,
+      points: selectedTool === 'highlighter' ? [{ t: t1, p: p1 }] : undefined
+    };
     renderOverlay();
   });
 
@@ -811,14 +1282,18 @@
 
     if (editingTarget) {
       const d = drawings[editingTarget.idx];
-      const barSpacing = chart.timeScale().options().barSpacing || 6;
+      const barSpacing = mainChart.timeScale().options().barSpacing || 6;
       const dTime = Math.round((dx / barSpacing) * (timeframeMin * 60));
       const pNow = yToPrice(pos.y), dPrice = pNow - yToPrice(pos.y - dy);
 
       if (editingTarget.part === 'hlineMove') { d.p1 = pNow; d.p2 = pNow; }
+      else if (editingTarget.part === 'vlineMove') { d.t1 = xToTime(pos.x); d.t2 = d.t1; }
       else if (editingTarget.part === 'p1') { d.t1 = xToTime(pos.x); d.p1 = pNow; }
       else if (editingTarget.part === 'p2') { d.t2 = xToTime(pos.x); d.p2 = pNow; }
       else if (editingTarget.part === 'moveBoth') { d.t1 += dTime; d.t2 += dTime; d.p1 += dPrice; d.p2 += dPrice; }
+      else if (editingTarget.part === 'moveHighlight' && d.points) {
+        d.points.forEach(pt => { pt.t += dTime; pt.p += dPrice; });
+      }
       else if (editingTarget.part === 'tp') { d.p2 = pNow; }
       else if (editingTarget.part === 'sl') { d.p1 = pNow; }
       else if (editingTarget.part === 'entry') { const s = pNow - d.midP; d.midP = pNow; d.p1 += s; d.p2 += s; }
@@ -829,16 +1304,21 @@
     }
 
     if (activeDrawing) {
-      activeDrawing.t2 = xToTime(pos.x);
-      activeDrawing.p2 = yToPrice(pos.y);
-      if (activeDrawing.tool === 'long') {
-        const r = Math.abs(activeDrawing.p1 - activeDrawing.p2);
-        activeDrawing.p2 = activeDrawing.p1 + r * 2;
-        activeDrawing.p1 = yToPrice(pos.y);
-      } else if (activeDrawing.tool === 'short') {
-        const r = Math.abs(activeDrawing.p2 - activeDrawing.p1);
-        activeDrawing.p2 = activeDrawing.p1 - r * 2;
-        activeDrawing.p1 = yToPrice(pos.y);
+      if (activeDrawing.tool === 'highlighter') {
+        activeDrawing.points.push({ t: xToTime(pos.x), p: yToPrice(pos.y) });
+      } else {
+        activeDrawing.t2 = xToTime(pos.x);
+        activeDrawing.p2 = yToPrice(pos.y);
+        const rrTarget = parseFloat(document.getElementById('rrTargetInput').value) || 2.0;
+        if (activeDrawing.tool === 'long') {
+          const r = Math.abs(activeDrawing.p1 - activeDrawing.p2);
+          activeDrawing.p2 = activeDrawing.p1 + r * rrTarget;
+          activeDrawing.p1 = yToPrice(pos.y);
+        } else if (activeDrawing.tool === 'short') {
+          const r = Math.abs(activeDrawing.p2 - activeDrawing.p1);
+          activeDrawing.p2 = activeDrawing.p1 - r * rrTarget;
+          activeDrawing.p1 = yToPrice(pos.y);
+        }
       }
       renderOverlay();
     }
@@ -854,16 +1334,51 @@
       updateSelectionBar();
       activeDrawing = null;
       setTool('edit');
-      saveUserState();
+      saveCurrentProfile();
     }
-    if (editingTarget || draggingOrder) saveUserState();
+    if (editingTarget || draggingOrder) saveCurrentProfile();
     editingTarget = null;
     draggingOrder = null;
   });
 
   // =========================================================================
-  // 6. Simulation Replay Engine (เช็ก SL/TP ระดับ 1 นาทีจริงทุกแท่ง)
+  // 10. Order Price Lines & Simulation Step
   // =========================================================================
+  function clearAllPriceLines() {
+    orders.forEach(o => {
+      if (o.entryLine) candleSeries.removePriceLine(o.entryLine);
+      if (o.slLine) candleSeries.removePriceLine(o.slLine);
+      if (o.tpLine) candleSeries.removePriceLine(o.tpLine);
+    });
+  }
+
+  function syncOrderPriceLines(order) {
+    if (order.entryLine) candleSeries.removePriceLine(order.entryLine);
+    if (order.slLine) candleSeries.removePriceLine(order.slLine);
+    if (order.tpLine) candleSeries.removePriceLine(order.tpLine);
+
+    const isBuy = order.type.includes('BUY');
+    order.entryLine = candleSeries.createPriceLine({
+      price: order.entry, color: isBuy ? '#2962ff' : '#9c27b0', lineWidth: 2,
+      lineStyle: order.triggered ? 0 : 2, axisLabelVisible: true,
+      title: `${order.type} ${order.lot.toFixed(2)}`,
+    });
+    if (order.sl) {
+      const loss = Math.abs(order.entry - order.sl) * 100 * order.lot;
+      order.slLine = candleSeries.createPriceLine({
+        price: order.sl, color: '#f23645', lineWidth: 1, lineStyle: 2, axisLabelVisible: true,
+        title: `SL -$${loss.toFixed(0)}`,
+      });
+    }
+    if (order.tp) {
+      const gain = Math.abs(order.tp - order.entry) * 100 * order.lot;
+      order.tpLine = candleSeries.createPriceLine({
+        price: order.tp, color: '#089981', lineWidth: 1, lineStyle: 2, axisLabelVisible: true,
+        title: `TP +$${gain.toFixed(0)}`,
+      });
+    }
+  }
+
   function stepForward() {
     const stepMinutes = Math.max(1, timeframeMin);
     if (current1mIndex + stepMinutes >= m1Count) { stopPlay(); return; }
@@ -871,15 +1386,19 @@
     for (let m = 1; m <= stepMinutes; m++) {
       const idx = current1mIndex + m;
       if (idx >= m1Count) break;
-      const bHigh = m1High[idx], bLow = m1Low[idx];
+      const bHigh = m1High[idx], bLow = m1Low[idx], bTime = m1Time[idx];
 
       const remaining = [];
       for (const o of orders) {
         if (!o.triggered) {
-          if (o.type === 'BUY LIMIT' && bLow <= o.entry) { o.triggered = true; syncOrderPriceLines(o); }
-          else if (o.type === 'SELL LIMIT' && bHigh >= o.entry) { o.triggered = true; syncOrderPriceLines(o); }
-          else if (o.type === 'BUY STOP' && bHigh >= o.entry) { o.triggered = true; syncOrderPriceLines(o); }
-          else if (o.type === 'SELL STOP' && bLow <= o.entry) { o.triggered = true; syncOrderPriceLines(o); }
+          if ((o.type === 'BUY LIMIT' && bLow <= o.entry) ||
+              (o.type === 'SELL LIMIT' && bHigh >= o.entry) ||
+              (o.type === 'BUY STOP' && bHigh >= o.entry) ||
+              (o.type === 'SELL STOP' && bLow <= o.entry)) {
+            o.triggered = true;
+            o.entryTime = bTime;
+            syncOrderPriceLines(o);
+          }
         }
         if (o.triggered) {
           const isBuy = o.type.includes('BUY');
@@ -897,7 +1416,7 @@
             if (o.entryLine) candleSeries.removePriceLine(o.entryLine);
             if (o.slLine) candleSeries.removePriceLine(o.slLine);
             if (o.tpLine) candleSeries.removePriceLine(o.tpLine);
-            history.unshift({ type: o.type, entry: o.entry, exit: exitP, pnl, reason });
+            history.unshift({ type: o.type, entry: o.entry, exit: exitP, pnl, reason, entryTime: o.entryTime, exitTime: bTime });
             continue;
           }
         }
@@ -907,9 +1426,9 @@
     }
 
     current1mIndex += stepMinutes;
-    rebuildChartSeries();
+    rebuildAllCharts();
     updateUI();
-    saveUserState();
+    saveCurrentProfile();
   }
 
   function startPlay() {
@@ -926,6 +1445,7 @@
     btn.textContent = '▶ Play'; btn.className = 'btn btn-green';
   }
 
+  let activeTab = 'active';
   function updateUI() {
     const curPrice = m1Count > 0 ? m1Close[current1mIndex] : 0;
     let floating = 0;
@@ -956,56 +1476,163 @@
           <div><b style="color:${isBuy ? 'var(--blue)' : 'var(--purple)'}">${o.type}</b> ${o.lot.toFixed(2)} @ ${o.entry.toFixed(3)}</div>
           <div>${o.triggered ? `<b style="color:${pnl >= 0 ? 'var(--green)' : 'var(--red)'}">${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}</b>` : '<span style="color:var(--yellow)">PENDING</span>'}</div>
         </div>`;
-      }).join('') || '<div style="color:var(--muted);text-align:center;margin-top:15px;">ไม่มีออเดอร์ (ข้อมูลบันทึกอัตโนมัติ รีเฟรชไม่หาย)</div>';
+      }).join('') || '<div style="color:var(--muted);text-align:center;margin-top:14px;">ไม่มีออเดอร์ (วาดกล่อง Long/Short RR แล้วกด ⚡ เปิดออเดอร์ได้เลย)</div>';
     } else {
       list.innerHTML = history.map(h => `
         <div class="order-row">
           <div><b>${h.type}</b> (${h.reason}) ${h.entry.toFixed(3)} → ${h.exit.toFixed(3)}</div>
           <b style="color:${h.pnl >= 0 ? 'var(--green)' : 'var(--red)'}">${h.pnl >= 0 ? '+' : ''}$${h.pnl.toFixed(2)}</b>
         </div>
-      `).join('') || '<div style="color:var(--muted);text-align:center;margin-top:15px;">ยังไม่มีประวัติการปิดออเดอร์</div>';
+      `).join('') || '<div style="color:var(--muted);text-align:center;margin-top:14px;">ยังไม่มีประวัติการปิดออเดอร์</div>';
     }
   }
 
-  function applyChartTheme() {
-    chart.applyOptions({
+  function applyThemeToAllCharts() {
+    allCharts.forEach(c => c.applyOptions({
       layout: { background: { type: 'solid', color: isLightTheme ? '#ffffff' : '#131722' }, textColor: isLightTheme ? '#131722' : '#d1d4dc' },
       grid: { vertLines: { color: isLightTheme ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.05)' }, horzLines: { color: isLightTheme ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.05)' } }
-    });
+    }));
   }
 
-  // Event Listeners
-  document.getElementById('themeBtn').onclick = () => {
-    isLightTheme = !isLightTheme;
-    document.body.classList.toggle('light-theme', isLightTheme);
-    applyChartTheme();
-    saveUserState();
+  function resizeAllCharts() {
+    const mRect = mainPane.getBoundingClientRect();
+    mainChart.resize(mRect.width, mRect.height);
+    const dpr = window.devicePixelRatio || 1;
+    overlayCanvas.width = mRect.width * dpr;
+    overlayCanvas.height = mRect.height * dpr;
+    oCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    if (indConfig.rsi) { const r = document.getElementById('paneRSI').getBoundingClientRect(); chartRSI.resize(r.width, r.height); }
+    if (indConfig.macd) { const r = document.getElementById('paneMACD').getBoundingClientRect(); chartMACD.resize(r.width, r.height); }
+    if (indConfig.stoch) { const r = document.getElementById('paneSTOCH').getBoundingClientRect(); chartSTOCH.resize(r.width, r.height); }
+    renderOverlay();
+  }
+
+  function syncIndicatorModalInputs() {
+    document.getElementById('chkVol').checked = indConfig.vol;
+    document.getElementById('chkRSI').checked = indConfig.rsi;
+    document.getElementById('rsiPeriod').value = indConfig.rsiPeriod;
+    document.getElementById('rsiOB').value = indConfig.rsiOB;
+    document.getElementById('rsiOS').value = indConfig.rsiOS;
+    document.getElementById('chkMACD').checked = indConfig.macd;
+    document.getElementById('macdFast').value = indConfig.macdFast;
+    document.getElementById('macdSlow').value = indConfig.macdSlow;
+    document.getElementById('macdSig').value = indConfig.macdSig;
+    document.getElementById('chkSTOCH').checked = indConfig.stoch;
+    document.getElementById('stochK').value = indConfig.stochK;
+    document.getElementById('stochD').value = indConfig.stochD;
+    document.getElementById('stochSmooth').value = indConfig.stochSmooth;
+  }
+
+  // =========================================================================
+  // 11. Event Listeners & Controls
+  // =========================================================================
+  document.getElementById('profileSelect').onchange = e => switchProfile(e.target.value);
+  document.getElementById('addProfileBtn').onclick = () => {
+    const name = prompt('ตั้งชื่อเทคนิค / โปรไฟล์ใหม่ (เช่น Strategy C - ICT):');
+    if (name && name.trim()) {
+      const cleanName = name.trim();
+      profiles[cleanName] = createEmptyProfileState();
+      switchProfile(cleanName);
+      saveCurrentProfile();
+    }
   };
 
-  document.getElementById('newSessionBtn').onclick = () => {
-    stopPlay();
-    clearAllPriceLines();
-    balance = initialBalance;
-    orders = [];
-    history = [];
-    drawings = [];
-    selectedDrawingIdx = -1;
-    updateSelectionBar();
-    rebuildChartSeries();
+  document.getElementById('openAllToolsBtn').onclick = () => {
+    renderAllToolsModal();
+    document.getElementById('allToolsModal').classList.add('open');
+  };
+  document.getElementById('closeToolsModalBtn').onclick = () => document.getElementById('allToolsModal').classList.remove('open');
+
+  document.getElementById('openIndModalBtn').onclick = () => document.getElementById('indModal').classList.add('open');
+  document.getElementById('closeIndModalBtn').onclick = () => document.getElementById('indModal').classList.remove('open');
+  document.getElementById('applyIndBtn').onclick = () => {
+    indConfig.vol = document.getElementById('chkVol').checked;
+    indConfig.rsi = document.getElementById('chkRSI').checked;
+    indConfig.rsiPeriod = parseInt(document.getElementById('rsiPeriod').value) || 14;
+    indConfig.rsiOB = parseInt(document.getElementById('rsiOB').value) || 70;
+    indConfig.rsiOS = parseInt(document.getElementById('rsiOS').value) || 30;
+    indConfig.macd = document.getElementById('chkMACD').checked;
+    indConfig.macdFast = parseInt(document.getElementById('macdFast').value) || 12;
+    indConfig.macdSlow = parseInt(document.getElementById('macdSlow').value) || 26;
+    indConfig.macdSig = parseInt(document.getElementById('macdSig').value) || 9;
+    indConfig.stoch = document.getElementById('chkSTOCH').checked;
+    indConfig.stochK = parseInt(document.getElementById('stochK').value) || 14;
+    indConfig.stochD = parseInt(document.getElementById('stochD').value) || 3;
+    indConfig.stochSmooth = parseInt(document.getElementById('stochSmooth').value) || 3;
+
+    document.getElementById('indModal').classList.remove('open');
+    calcIndicators(visibleCandles);
+    saveCurrentProfile();
+  };
+
+  document.getElementById('toggleMarkersBtn').onclick = e => {
+    showTradeMarkers = !showTradeMarkers;
+    e.target.classList.toggle('active', showTradeMarkers);
+    updateTradeMarkers();
+  };
+
+  document.getElementById('drawColorPicker').oninput = e => {
+    if (selectedDrawingIdx >= 0 && drawings[selectedDrawingIdx]) {
+      drawings[selectedDrawingIdx].color = e.target.value;
+      renderOverlay(); saveCurrentProfile();
+    }
+  };
+  document.getElementById('drawWidthSelect').onchange = e => {
+    if (selectedDrawingIdx >= 0 && drawings[selectedDrawingIdx]) {
+      drawings[selectedDrawingIdx].width = Number(e.target.value);
+      renderOverlay(); saveCurrentProfile();
+    }
+  };
+
+  // เปิดออเดอร์จากกล่อง Long / Short RR ที่ลากไว้ทันที
+  document.getElementById('execRRBtn').onclick = () => {
+    if (selectedDrawingIdx < 0 || !drawings[selectedDrawingIdx] || m1Count === 0) return;
+    const d = drawings[selectedDrawingIdx];
+    if (d.tool !== 'long' && d.tool !== 'short') return;
+
+    const curPrice = m1Close[current1mIndex];
+    const isBuy = d.tool === 'long';
+    const entry = d.midP;
+    const riskDiff = Math.abs(entry - d.p1);
+    const riskUsd = parseFloat(document.getElementById('riskDollarInput').value) || 100;
+    const calcLot = riskDiff > 0 ? Math.max(0.01, +(riskUsd / (riskDiff * 100)).toFixed(2)) : lotSize;
+
+    let orderType = isBuy ? 'BUY' : 'SELL';
+    let triggered = true;
+    if (Math.abs(entry - curPrice) > 0.5) {
+      triggered = false;
+      if (isBuy) orderType = entry < curPrice ? 'BUY LIMIT' : 'BUY STOP';
+      else orderType = entry > curPrice ? 'SELL LIMIT' : 'SELL STOP';
+    }
+
+    const newOrder = {
+      id: Date.now(), type: orderType, triggered, entry,
+      sl: d.p1, tp: d.p2, lot: calcLot,
+      entryTime: triggered ? m1Time[current1mIndex] : null,
+      entryLine: null, slLine: null, tpLine: null
+    };
+    orders.push(newOrder);
+    syncOrderPriceLines(newOrder);
     updateUI();
-    saveUserState();
+    saveCurrentProfile();
   };
 
   document.getElementById('deleteSelectedBtn').onclick = () => {
     if (selectedDrawingIdx >= 0) {
       drawings.splice(selectedDrawingIdx, 1);
       selectedDrawingIdx = -1;
-      updateSelectionBar();
-      renderOverlay();
-      saveUserState();
+      updateSelectionBar(); renderOverlay(); saveCurrentProfile();
     }
   };
   document.getElementById('deselectBtn').onclick = () => { selectedDrawingIdx = -1; updateSelectionBar(); renderOverlay(); };
+
+  document.getElementById('themeBtn').onclick = () => {
+    isLightTheme = !isLightTheme;
+    document.body.classList.toggle('light-theme', isLightTheme);
+    applyThemeToAllCharts();
+    saveCurrentProfile();
+  };
 
   document.getElementById('startDateInput').onchange = e => {
     const targetSec = Math.floor(Date.parse(e.target.value) / 1000);
@@ -1016,19 +1643,14 @@
         if (m1Time[mid] < targetSec) lo = mid + 1; else hi = mid;
       }
       current1mIndex = Math.max(50, Math.min(m1Count - 1, lo));
-      rebuildChartSeries();
-      updateUI();
-      saveUserState();
+      rebuildAllCharts(); updateUI(); saveCurrentProfile();
     }
   };
 
   document.getElementById('applyBalBtn').onclick = () => {
     const val = parseFloat(document.getElementById('initBalInput').value);
     if (!isNaN(val) && val > 0) {
-      initialBalance = val;
-      balance = val;
-      updateUI();
-      saveUserState();
+      initialBalance = val; balance = val; updateUI(); saveCurrentProfile();
     }
   };
 
@@ -1040,22 +1662,19 @@
   };
   document.getElementById('progressSlider').oninput = e => {
     current1mIndex = Number(e.target.value);
-    rebuildChartSeries();
-    updateUI();
-    saveUserState();
+    rebuildAllCharts(); updateUI(); saveCurrentProfile();
   };
 
   document.getElementById('lotMinus').onclick = () => {
     lotSize = Math.max(0.01, +(lotSize - 0.05).toFixed(2));
     document.getElementById('lotText').textContent = lotSize.toFixed(2);
-    renderOverlay(); saveUserState();
+    renderOverlay(); saveCurrentProfile();
   };
   document.getElementById('lotPlus').onclick = () => {
     lotSize = +(lotSize + 0.05).toFixed(2);
     document.getElementById('lotText').textContent = lotSize.toFixed(2);
-    renderOverlay(); saveUserState();
+    renderOverlay(); saveCurrentProfile();
   };
-  document.getElementById('riskSelect').onchange = e => { riskPercent = Number(e.target.value); };
 
   document.querySelectorAll('#orderTypeGroup .btn').forEach(btn => {
     btn.onclick = () => {
@@ -1081,26 +1700,26 @@
     else if (selectedOrderType === 'BUY STOP') entry = price + 3.5;
     else if (selectedOrderType === 'SELL STOP') entry = price - 3.5;
 
-    let finalLot = lotSize;
-    if (riskPercent > 0) {
-      finalLot = Math.max(0.01, +((balance * (riskPercent / 100)) / (5.0 * 100)).toFixed(2));
-    }
+    const rr = parseFloat(document.getElementById('rrTargetInput').value) || 2.0;
+    const slDist = 5.0;
+    const tpDist = slDist * rr;
 
     const newOrder = {
       id: Date.now(), type: selectedOrderType, triggered, entry,
-      sl: isBuy ? entry - 5.0 : entry + 5.0,
-      tp: isBuy ? entry + 10.0 : entry - 10.0,
-      lot: finalLot, entryLine: null, slLine: null, tpLine: null
+      sl: isBuy ? entry - slDist : entry + slDist,
+      tp: isBuy ? entry + tpDist : entry - tpDist,
+      lot: lotSize,
+      entryTime: triggered ? m1Time[current1mIndex] : null,
+      entryLine: null, slLine: null, tpLine: null
     };
     orders.push(newOrder);
     syncOrderPriceLines(newOrder);
-    updateUI();
-    saveUserState();
+    updateUI(); saveCurrentProfile();
   };
 
   document.getElementById('closeAllBtn').onclick = () => {
     if (m1Count === 0) return;
-    const cur = m1Close[current1mIndex];
+    const cur = m1Close[current1mIndex], curT = m1Time[current1mIndex];
     orders = orders.filter(o => {
       if (!o.triggered) return true;
       const isBuy = o.type.includes('BUY');
@@ -1109,16 +1728,14 @@
       if (o.entryLine) candleSeries.removePriceLine(o.entryLine);
       if (o.slLine) candleSeries.removePriceLine(o.slLine);
       if (o.tpLine) candleSeries.removePriceLine(o.tpLine);
-      history.unshift({ type: o.type, entry: o.entry, exit: cur, pnl, reason: 'Manual' });
+      history.unshift({ type: o.type, entry: o.entry, exit: cur, pnl, reason: 'Manual', entryTime: o.entryTime, exitTime: curT });
       return false;
     });
-    updateUI();
-    saveUserState();
+    updateTradeMarkers(); updateUI(); saveCurrentProfile();
   };
 
-  document.querySelectorAll('#toolGroup .tool-btn[data-tool]').forEach(b => b.onclick = () => setTool(b.dataset.tool));
   document.getElementById('undoDrawBtn').onclick = () => {
-    drawings.pop(); selectedDrawingIdx = -1; updateSelectionBar(); renderOverlay(); saveUserState();
+    drawings.pop(); selectedDrawingIdx = -1; updateSelectionBar(); renderOverlay(); saveCurrentProfile();
   };
 
   document.querySelectorAll('#tfGroup .btn[data-min]').forEach(b => {
@@ -1126,8 +1743,7 @@
       document.querySelectorAll('#tfGroup .btn[data-min]').forEach(x => x.classList.remove('active'));
       b.classList.add('active');
       timeframeMin = Number(b.dataset.min);
-      rebuildChartSeries();
-      saveUserState();
+      rebuildAllCharts(); saveCurrentProfile();
     };
   });
 
@@ -1144,34 +1760,22 @@
     updateUI();
   };
 
-  // Manual Multi-CSV Uploader (สามารถเลือกไฟล์ CSV หลายไฟล์พร้อมกันจากเครื่องได้เลย)
   document.getElementById('csvInput').onchange = async e => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
-    document.getElementById('statusBadge').textContent = 'กำลังอ่านไฟล์ CSV...';
     let allRows = [];
-    for (const f of files) {
-      const text = await f.text();
-      allRows = allRows.concat(parseHistDataCSV(text));
-    }
+    for (const f of files) allRows = allRows.concat(parseHistDataCSV(await f.text()));
     if (allRows.length > 50) {
       loadMasterRows(allRows);
-      current1mIndex = Math.min(1500, m1Count - 1);
-      rebuildChartSeries();
-      updateUI();
-      saveUserState();
+      current1mIndex = Math.min(2500, m1Count - 1);
+      rebuildAllCharts(); updateUI(); saveCurrentProfile();
       document.getElementById('statusBadge').textContent = `🟢 Loaded (${m1Count.toLocaleString()} bars)`;
     }
   };
 
-  window.addEventListener('resize', () => {
-    const rect = container.getBoundingClientRect();
-    chart.resize(rect.width, rect.height);
-    resizeOverlay();
-  });
-
-  resizeOverlay();
-  loadGitHubMasterDatabase();
+  window.addEventListener('resize', resizeAllCharts);
+  resizeAllCharts();
+  initMasterDatabase();
 })();
 </script>
 </body>
