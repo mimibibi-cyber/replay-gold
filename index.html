@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="TV Replay Pro" />
-  <title>TradingView & FXReplay Pro (Point-by-Point & Time-Locked Orders)</title>
+  <title>TradingView & FXReplay Pro (Apr–Nov 2026)</title>
   <script src="https://unpkg.com/lightweight-charts@4.2.1/dist/lightweight-charts.standalone.production.js"></script>
   <style>
     :root {
@@ -79,9 +79,20 @@
     }
     #overlayCanvas.interactive { pointer-events: auto; }
 
+    /* Magnifier Zoom Loupe (แว่นขยายตอนลากมุมกล่อง/เส้น) */
+    .magnifier-box {
+      position: absolute; top: 44px; left: 10px;
+      width: 116px; height: 116px; border-radius: 50%;
+      border: 2.5px solid var(--blue); background: var(--bg);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.55); z-index: 40;
+      display: none; overflow: hidden; pointer-events: none;
+    }
+    .magnifier-box.active { display: block; }
+    #magCanvas { width: 100%; height: 100%; display: block; }
+
     /* Sub Indicator Panes */
     .ind-pane {
-      position: relative; height: 75px; width: 100%; border-top: 1px solid var(--border);
+      position: relative; height: 74px; width: 100%; border-top: 1px solid var(--border);
       display: none; flex-shrink: 0;
     }
     .ind-pane.active { display: block; }
@@ -110,26 +121,25 @@
     .tool-btn:hover { background: var(--panel2); }
     .tool-btn.active { background: var(--blue); color: #fff; }
 
-    /* Floating Style, TF Visibility & RR Action Bar */
+    /* Floating Style, Copy, Multi-TF & RR Action Bar */
     .selection-bar {
       position: absolute; top: 8px; left: 8px; right: 112px;
       background: var(--panel); border: 1px solid var(--border);
-      padding: 5px 8px; border-radius: 8px; display: none; align-items: center; gap: 6px;
+      padding: 5px 8px; border-radius: 8px; display: none; align-items: center; gap: 5px;
       box-shadow: 0 4px 14px rgba(0,0,0,0.45); z-index: 35; font-size: 11px; flex-wrap: wrap;
     }
     .selection-bar.visible { display: flex; }
     .tf-vis-chip {
-      padding: 2px 5px; border-radius: 3px; font-size: 9px; font-weight: bold;
+      padding: 2px 4px; border-radius: 3px; font-size: 9px; font-weight: bold;
       background: var(--panel2); color: var(--muted); border: 1px solid var(--border); cursor: pointer;
     }
     .tf-vis-chip.on { background: var(--blue); color: #fff; border-color: var(--blue); }
 
-    /* Point-by-Point Helper Toast */
     .point-hint {
       position: absolute; bottom: 26px; left: 50%; transform: translateX(-50%);
       background: rgba(41, 98, 255, 0.92); color: #fff; padding: 4px 12px;
       border-radius: 16px; font-size: 11px; font-weight: bold; z-index: 28;
-      display: none; pointer-events: none; box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      display: none; pointer-events: none;
     }
     .point-hint.visible { display: block; }
 
@@ -223,26 +233,27 @@
     </div>
 
     <div class="group">
-      <button class="btn btn-blue" id="openIndModalBtn">📊 Indicators</button>
-      <button class="btn active" id="toggleMarkersBtn" title="เปิด/ปิดลูกศรจุดเข้า-ออกบนกราฟ">🏹 Markers</button>
-      <button class="btn" id="themeBtn" title="สลับสีพื้นหลัง ขาว/ดำ">🌓</button>
-      <input type="date" id="startDateInput" min="2026-08-01" max="2026-11-30" value="2026-11-01" />
+      <button class="btn btn-green" id="autoGraphBtn" title="จัดขนาดกราฟให้อยู่ในมุมมองที่เหมาะสม">📐 Auto Graph</button>
+      <button class="btn btn-blue" id="openIndModalBtn">📊 Ind</button>
+      <button class="btn active" id="toggleMarkersBtn" title="เปิด/ปิดลูกศรจุดเข้า-ออก">🏹</button>
+      <button class="btn" id="themeBtn" title="สลับสีพื้นหลัง">🌓</button>
+      <input type="date" id="startDateInput" min="2026-04-01" max="2026-11-30" value="2026-11-01" />
       <label class="btn" style="background:#334155; color:#fff;">
         📂 +CSV <input type="file" id="csvInput" accept=".csv,.txt" multiple hidden />
       </label>
     </div>
   </div>
 
-  <!-- Subbar: Profile ID, Balance, Reset Trade History -->
+  <!-- Subbar -->
   <div class="tv-subbar">
     <div class="stat">
       <span style="color:var(--muted);">ID:</span>
-      <select id="profileSelect" style="max-width:105px;"></select>
-      <button class="btn btn-green" id="addProfileBtn" title="สร้างโปรไฟล์ใหม่">+ID</button>
+      <select id="profileSelect" style="max-width:100px;"></select>
+      <button class="btn btn-green" id="addProfileBtn">+ID</button>
     </div>
     <div class="stat">
       <span style="color:var(--muted);">ทุน:</span>
-      <input type="number" id="initBalInput" value="10000" style="width:56px; padding:2px 4px;" />
+      <input type="number" id="initBalInput" value="10000" style="width:54px; padding:2px 4px;" />
       <button class="btn btn-blue" id="applyBalBtn" style="padding:2px 5px;">Set</button>
     </div>
     <div class="stat">
@@ -258,13 +269,13 @@
       <b id="winRateText">0%</b>
     </div>
     <div class="stat">
-      <button class="btn btn-red" id="resetTradesBtn" style="padding:2px 6px;" title="ล้างประวัติการเทรดทั้งหมดและเริ่มใหม่">🗑 Reset Trade</button>
+      <button class="btn btn-red" id="resetTradesBtn" style="padding:2px 6px;">🗑 Reset Trade</button>
     </div>
   </div>
 
   <!-- Workspace -->
   <div class="workspace">
-    <!-- Floating Style, Multi-TF Visibility & RR Action Bar -->
+    <!-- Floating Style, Copy, Multi-TF & RR Action Bar -->
     <div class="selection-bar" id="selectionBar">
       <span id="selectedObjLabel" style="font-weight:bold;">Tool</span>
       <input type="color" id="drawColorPicker" value="#eab308" style="width:20px; height:20px; border:none; background:none; padding:0; cursor:pointer;" />
@@ -275,8 +286,8 @@
         <option value="5">5px</option>
         <option value="8">8px</option>
       </select>
-      <!-- กำหนดให้แสดงใน Timeframe ไหนบ้าง -->
-      <div class="group" id="tfVisGroup" style="gap:2px;" title="เลือก Timeframe ที่ต้องการให้แสดงเส้น/กล่องนี้">
+      <button class="btn btn-blue" id="copySelectedBtn" style="padding:2px 6px;" title="คัดลอกวัตถุนี้">📋 Copy</button>
+      <div class="group" id="tfVisGroup" style="gap:2px;">
         <span class="tf-vis-chip on" data-vtf="1">1m</span>
         <span class="tf-vis-chip on" data-vtf="5">5m</span>
         <span class="tf-vis-chip on" data-vtf="15">15m</span>
@@ -284,9 +295,14 @@
         <span class="tf-vis-chip on" data-vtf="240">4H</span>
         <span class="tf-vis-chip on" data-vtf="1440">1D</span>
       </div>
-      <button class="btn btn-green" id="execRRBtn" style="display:none; padding:2px 6px;">⚡ เปิดออเดอร์ตามเวลาที่มาร์ค</button>
+      <button class="btn btn-green" id="execRRBtn" style="display:none; padding:2px 6px;">⚡ เปิดออเดอร์ (รอแตะราคา)</button>
       <button class="btn btn-red" id="deleteSelectedBtn" style="padding:2px 6px;">🗑</button>
       <button class="btn" id="deselectBtn" style="padding:2px 5px;">✕</button>
+    </div>
+
+    <!-- Magnifier Zoom Loupe (แว่นขยายตอนลากมุมกล่อง/เส้น) -->
+    <div class="magnifier-box" id="magnifierBox">
+      <canvas id="magCanvas" width="116" height="116"></canvas>
     </div>
 
     <!-- Point-by-Point Guidance Banner -->
@@ -302,7 +318,7 @@
 
     <!-- Main Chart Pane -->
     <div id="mainChartPane">
-      <div class="ohlc-legend" id="ohlcLegend">XAUUSD • HistData Real M1</div>
+      <div class="ohlc-legend" id="ohlcLegend">XAUUSD • HistData Real M1 (Apr–Nov 2026)</div>
       <canvas id="overlayCanvas"></canvas>
     </div>
 
@@ -312,12 +328,12 @@
     <div class="ind-pane" id="paneSTOCH"><div class="ind-label" id="labelSTOCH" style="color:#f59e0b;">Stochastic (14, 3, 3)</div></div>
   </div>
 
-  <!-- Replay Bar -->
+  <!-- Replay Bar (แสดงเวลาทั้งแท่งปัจจุบันและเวลาที่ Cursor ชี้อยู่ด้านล่าง) -->
   <div class="replay-bar">
-    <button class="btn btn-green" id="playBtn" style="width:62px;">▶ Play</button>
+    <button class="btn btn-green" id="playBtn" style="width:60px;">▶ Play</button>
     <button class="btn btn-blue" id="stepBtn">⏭ +1</button>
     <input type="range" id="progressSlider" min="50" max="10000" value="500" />
-    <span id="barTimeText" style="font-size:10px; color:var(--muted); min-width:92px; text-align:right;">--</span>
+    <span id="cursorTimeText" style="font-size:10px; color:var(--yellow); min-width:95px; text-align:right; font-family:monospace;">--</span>
     <select id="speedSelect">
       <option value="800">0.5x</option>
       <option value="250" selected>1x</option>
@@ -416,9 +432,16 @@
   const mainPane = document.getElementById('mainChartPane');
   const overlayCanvas = document.getElementById('overlayCanvas');
   const oCtx = overlayCanvas.getContext('2d');
+  const magBox = document.getElementById('magnifierBox');
+  const magCanvas = document.getElementById('magCanvas');
+  const mCtx = magCanvas.getContext('2d');
 
-  const GITHUB_DATA_FILES = ['202608.csv', '202609.csv', '202610.csv', '202611.csv'];
-  const PROFILES_STORAGE_KEY = 'tv_replay_profiles_v3';
+  // โหลดฐานข้อมูลจริงครบทั้ง 8 เดือน (เม.ย. – พ.ย. 2026)
+  const GITHUB_DATA_FILES = [
+    '202604.csv', '202605.csv', '202606.csv', '202607.csv',
+    '202608.csv', '202609.csv', '202610.csv', '202611.csv'
+  ];
+  const PROFILES_STORAGE_KEY = 'tv_replay_profiles_v4';
   const ALL_TFS = [1, 5, 15, 60, 240, 1440];
 
   const ALL_TOOLS = [
@@ -492,13 +515,28 @@
       isSyncingRange = true;
       allCharts.forEach(dst => { if (dst !== src) dst.timeScale().setVisibleLogicalRange(range); });
       isSyncingRange = false;
-      renderOverlay();
+      scheduleOverlayRender();
     });
   });
 
-  // Master Data & Profile State
+  // แสดงเวลาและราคาตรงแถบด้านล่างตลอดเวลาที่มีการชี้ Cursor บนกราฟ
+  mainChart.subscribeCrosshairMove(param => {
+    if (param && param.time) {
+      document.getElementById('cursorTimeText').textContent = `📍 ${formatUTC(param.time)}`;
+      const barData = param.seriesData.get(candleSeries);
+      if (barData) updateOHLCLegend(barData);
+    } else if (visibleCandles.length) {
+      const last = visibleCandles[visibleCandles.length - 1];
+      document.getElementById('cursorTimeText').textContent = formatUTC(last.time);
+      updateOHLCLegend(last);
+    }
+  });
+
+  // Master Data & Fast Cache
   let m1Count = 0;
   let m1Time = null, m1Open = null, m1High = null, m1Low = null, m1Close = null, m1Vol = null;
+  // แคชข้อมูลที่รวมเป็น 5m, 15m, 1H, 4H, 1D ไว้ล่วงหน้า เพื่อสลับ Timeframe ทันทีโดยไม่ค้าง!
+  let tfAggregatedCache = {};
 
   let profiles = {};
   let activeProfileId = 'Strategy A (SMC)';
@@ -523,15 +561,13 @@
   let balance = 10000;
   let lotSize = 0.10;
   let selectedOrderType = 'BUY';
-  // orders: {id, type, triggered, activateTime, entry, sl, tp, lot, entryTime, entryLine, slLine, tpLine}
   let orders = [];
   let history = [];
 
-  // Drawings: {id, tool, t1, t2, p1, p2, midP, color, width, visibleTFs: [1,5,15,60,240,1440], points}
   let selectedTool = 'cursor';
   let drawings = [];
   let selectedDrawingIdx = -1;
-  let pendingFirstPoint = null; // สำหรับระบบมาร์คจุดทีละจุด (Point 1 -> Point 2)
+  let pendingFirstPoint = null;
   let activeDragDraw = null;
 
   function parseHistDataCSV(text) {
@@ -582,6 +618,30 @@
       m1Close[i] = unique[i].c;
       m1Vol[i] = unique[i].v;
     }
+
+    // สร้าง Pre-aggregated Cache สำหรับ 5m, 15m, 1H, 4H, 1D ล่วงหน้าครั้งเดียว (เปลี่ยน TF ลื่น 0ms)
+    tfAggregatedCache = {};
+    [5, 15, 60, 240, 1440].forEach(tf => {
+      const tfSec = tf * 60;
+      const bars = [];
+      let bucket = null, bucketStart = -1;
+      for (let i = 0; i < m1Count; i++) {
+        const bStart = Math.floor(m1Time[i] / tfSec) * tfSec;
+        if (bStart !== bucketStart) {
+          if (bucket) bars.push(bucket);
+          bucketStart = bStart;
+          bucket = { time: bStart, open: m1Open[i], high: m1High[i], low: m1Low[i], close: m1Close[i], volume: m1Vol[i], endM1Idx: i };
+        } else {
+          if (m1High[i] > bucket.high) bucket.high = m1High[i];
+          if (m1Low[i] < bucket.low) bucket.low = m1Low[i];
+          bucket.close = m1Close[i];
+          bucket.volume += m1Vol[i];
+          bucket.endM1Idx = i;
+        }
+      }
+      if (bucket) bars.push(bucket);
+      tfAggregatedCache[tf] = bars;
+    });
 
     const slider = document.getElementById('progressSlider');
     slider.min = 30;
@@ -644,17 +704,12 @@
   function saveCurrentProfile() {
     if (!activeProfileId) return;
     profiles[activeProfileId] = {
-      current1mIndex,
-      timeframeMin,
-      initialBalance,
-      balance,
-      lotSize,
+      current1mIndex, timeframeMin, initialBalance, balance, lotSize,
       orders: orders.map(o => ({
         id: o.id, type: o.type, triggered: o.triggered, activateTime: o.activateTime,
         entry: o.entry, sl: o.sl, tp: o.tp, lot: o.lot, entryTime: o.entryTime
       })),
-      history,
-      drawings
+      history, drawings
     };
     try {
       localStorage.setItem(PROFILES_STORAGE_KEY, JSON.stringify({
@@ -688,7 +743,7 @@
     orders = (st.orders || []).map(o => ({ ...o, entryLine: null, slLine: null, tpLine: null }));
     orders.forEach(o => syncOrderPriceLines(o));
 
-    rebuildAllCharts();
+    rebuildAllCharts(true);
     updateUI();
     renderProfileDropdown();
   }
@@ -698,91 +753,105 @@
     sel.innerHTML = Object.keys(profiles).map(id => `<option value="${id}" ${id === activeProfileId ? 'selected' : ''}>${id}</option>`).join('');
   }
 
-  // Indicators Calculation
+  // Indicators
   function calcIndicators(bars) {
-    const volData = bars.map(b => ({
-      time: b.time, value: b.volume,
-      color: b.close >= b.open ? 'rgba(8, 153, 129, 0.45)' : 'rgba(242, 54, 69, 0.45)'
-    }));
-    volumeSeries.setData(indConfig.vol ? volData : []);
+    if (indConfig.vol) {
+      volumeSeries.setData(bars.map(b => ({
+        time: b.time, value: b.volume,
+        color: b.close >= b.open ? 'rgba(8, 153, 129, 0.45)' : 'rgba(242, 54, 69, 0.45)'
+      })));
+    } else {
+      volumeSeries.setData([]);
+    }
 
-    const rsiData = [], pRsi = indConfig.rsiPeriod;
-    if (bars.length > pRsi) {
-      let avgGain = 0, avgLoss = 0;
-      for (let i = 1; i <= pRsi; i++) {
-        const diff = bars[i].close - bars[i - 1].close;
-        if (diff >= 0) avgGain += diff; else avgLoss -= diff;
-      }
-      avgGain /= pRsi; avgLoss /= pRsi;
-      for (let i = pRsi; i < bars.length; i++) {
-        if (i > pRsi) {
+    if (indConfig.rsi) {
+      const rsiData = [], pRsi = indConfig.rsiPeriod;
+      if (bars.length > pRsi) {
+        let avgGain = 0, avgLoss = 0;
+        for (let i = 1; i <= pRsi; i++) {
           const diff = bars[i].close - bars[i - 1].close;
-          avgGain = (avgGain * (pRsi - 1) + (diff > 0 ? diff : 0)) / pRsi;
-          avgLoss = (avgLoss * (pRsi - 1) + (diff < 0 ? -diff : 0)) / pRsi;
+          if (diff >= 0) avgGain += diff; else avgLoss -= diff;
         }
-        const rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
-        rsiData.push({ time: bars[i].time, value: 100 - (100 / (1 + rs)) });
-      }
-    }
-    rsiSeries.setData(indConfig.rsi ? rsiData : []);
-    rsiOBLine.applyOptions({ price: indConfig.rsiOB });
-    rsiOSLine.applyOptions({ price: indConfig.rsiOS });
-    document.getElementById('labelRSI').textContent = `RSI (${pRsi})`;
-
-    const macdLine = [], sigLine = [], histData = [];
-    const f = indConfig.macdFast, s = indConfig.macdSlow, sig = indConfig.macdSig;
-    if (bars.length > s + sig) {
-      const kF = 2 / (f + 1), kS = 2 / (s + 1), kSig = 2 / (sig + 1);
-      let eF = bars[0].close, eS = bars[0].close;
-      const rawMacd = [];
-      for (let i = 0; i < bars.length; i++) {
-        eF = bars[i].close * kF + eF * (1 - kF);
-        eS = bars[i].close * kS + eS * (1 - kS);
-        rawMacd.push({ time: bars[i].time, val: eF - eS });
-      }
-      let eSig = rawMacd[s].val;
-      for (let i = s; i < rawMacd.length; i++) {
-        eSig = rawMacd[i].val * kSig + eSig * (1 - kSig);
-        const hVal = rawMacd[i].val - eSig;
-        macdLine.push({ time: rawMacd[i].time, value: rawMacd[i].val });
-        sigLine.push({ time: rawMacd[i].time, value: eSig });
-        histData.push({ time: rawMacd[i].time, value: hVal, color: hVal >= 0 ? '#089981' : '#f23645' });
-      }
-    }
-    macdLineSeries.setData(indConfig.macd ? macdLine : []);
-    macdSigSeries.setData(indConfig.macd ? sigLine : []);
-    macdHistSeries.setData(indConfig.macd ? histData : []);
-    document.getElementById('labelMACD').textContent = `MACD (${f}, ${s}, ${sig})`;
-
-    const kData = [], dData = [];
-    const pK = indConfig.stochK, pD = indConfig.stochD, sm = indConfig.stochSmooth;
-    if (bars.length > pK + sm + pD) {
-      const rawK = [];
-      for (let i = pK - 1; i < bars.length; i++) {
-        let hi = -Infinity, lo = Infinity;
-        for (let j = i - pK + 1; j <= i; j++) {
-          if (bars[j].high > hi) hi = bars[j].high;
-          if (bars[j].low < lo) lo = bars[j].low;
+        avgGain /= pRsi; avgLoss /= pRsi;
+        for (let i = pRsi; i < bars.length; i++) {
+          if (i > pRsi) {
+            const diff = bars[i].close - bars[i - 1].close;
+            avgGain = (avgGain * (pRsi - 1) + (diff > 0 ? diff : 0)) / pRsi;
+            avgLoss = (avgLoss * (pRsi - 1) + (diff < 0 ? -diff : 0)) / pRsi;
+          }
+          const rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
+          rsiData.push({ time: bars[i].time, value: 100 - (100 / (1 + rs)) });
         }
-        const k = hi === lo ? 50 : ((bars[i].close - lo) / (hi - lo)) * 100;
-        rawK.push({ time: bars[i].time, val: k });
       }
-      const smoothK = [];
-      for (let i = sm - 1; i < rawK.length; i++) {
-        let sum = 0;
-        for (let j = i - sm + 1; j <= i; j++) sum += rawK[j].val;
-        smoothK.push({ time: rawK[i].time, value: sum / sm });
-      }
-      for (let i = pD - 1; i < smoothK.length; i++) {
-        let sum = 0;
-        for (let j = i - pD + 1; j <= i; j++) sum += smoothK[j].value;
-        kData.push(smoothK[i]);
-        dData.push({ time: smoothK[i].time, value: sum / pD });
-      }
+      rsiSeries.setData(rsiData);
+      rsiOBLine.applyOptions({ price: indConfig.rsiOB });
+      rsiOSLine.applyOptions({ price: indConfig.rsiOS });
+      document.getElementById('labelRSI').textContent = `RSI (${pRsi})`;
+    } else {
+      rsiSeries.setData([]);
     }
-    stochKSeries.setData(indConfig.stoch ? kData : []);
-    stochDSeries.setData(indConfig.stoch ? dData : []);
-    document.getElementById('labelSTOCH').textContent = `Stochastic (${pK}, ${pD}, ${sm})`;
+
+    if (indConfig.macd) {
+      const macdLine = [], sigLine = [], histData = [];
+      const f = indConfig.macdFast, s = indConfig.macdSlow, sig = indConfig.macdSig;
+      if (bars.length > s + sig) {
+        const kF = 2 / (f + 1), kS = 2 / (s + 1), kSig = 2 / (sig + 1);
+        let eF = bars[0].close, eS = bars[0].close;
+        const rawMacd = [];
+        for (let i = 0; i < bars.length; i++) {
+          eF = bars[i].close * kF + eF * (1 - kF);
+          eS = bars[i].close * kS + eS * (1 - kS);
+          rawMacd.push({ time: bars[i].time, val: eF - eS });
+        }
+        let eSig = rawMacd[s].val;
+        for (let i = s; i < rawMacd.length; i++) {
+          eSig = rawMacd[i].val * kSig + eSig * (1 - kSig);
+          const hVal = rawMacd[i].val - eSig;
+          macdLine.push({ time: rawMacd[i].time, value: rawMacd[i].val });
+          sigLine.push({ time: rawMacd[i].time, value: eSig });
+          histData.push({ time: rawMacd[i].time, value: hVal, color: hVal >= 0 ? '#089981' : '#f23645' });
+        }
+      }
+      macdLineSeries.setData(macdLine);
+      macdSigSeries.setData(sigLine);
+      macdHistSeries.setData(histData);
+      document.getElementById('labelMACD').textContent = `MACD (${f}, ${s}, ${sig})`;
+    } else {
+      macdLineSeries.setData([]); macdSigSeries.setData([]); macdHistSeries.setData([]);
+    }
+
+    if (indConfig.stoch) {
+      const kData = [], dData = [];
+      const pK = indConfig.stochK, pD = indConfig.stochD, sm = indConfig.stochSmooth;
+      if (bars.length > pK + sm + pD) {
+        const rawK = [];
+        for (let i = pK - 1; i < bars.length; i++) {
+          let hi = -Infinity, lo = Infinity;
+          for (let j = i - pK + 1; j <= i; j++) {
+            if (bars[j].high > hi) hi = bars[j].high;
+            if (bars[j].low < lo) lo = bars[j].low;
+          }
+          rawK.push({ time: bars[i].time, val: hi === lo ? 50 : ((bars[i].close - lo) / (hi - lo)) * 100 });
+        }
+        const smoothK = [];
+        for (let i = sm - 1; i < rawK.length; i++) {
+          let sum = 0;
+          for (let j = i - sm + 1; j <= i; j++) sum += rawK[j].val;
+          smoothK.push({ time: rawK[i].time, value: sum / sm });
+        }
+        for (let i = pD - 1; i < smoothK.length; i++) {
+          let sum = 0;
+          for (let j = i - pD + 1; j <= i; j++) sum += smoothK[j].value;
+          kData.push(smoothK[i]);
+          dData.push({ time: smoothK[i].time, value: sum / pD });
+        }
+      }
+      stochKSeries.setData(kData);
+      stochDSeries.setData(dData);
+      document.getElementById('labelSTOCH').textContent = `Stochastic (${pK}, ${pD}, ${sm})`;
+    } else {
+      stochKSeries.setData([]); stochDSeries.setData([]);
+    }
 
     document.getElementById('paneRSI').classList.toggle('active', indConfig.rsi);
     document.getElementById('paneMACD').classList.toggle('active', indConfig.macd);
@@ -793,53 +862,93 @@
     resizeAllCharts();
   }
 
-  function rebuildAllCharts() {
+  // Ultra-Fast Windowed Slice (ไม่ค้างตอนสลับเป็น 1H / 4H / 1D)
+  function rebuildAllCharts(fitView = false) {
     if (m1Count === 0) return;
-    const tfSec = timeframeMin * 60;
-    const maxVisibleBars = 450;
-    const needed1m = Math.min(current1mIndex + 1, maxVisibleBars * timeframeMin + timeframeMin);
-    const start1m = Math.max(0, current1mIndex + 1 - needed1m);
+    const curT = m1Time[current1mIndex];
+    const maxVisibleBars = 360;
 
-    const grouped = [];
-    let bucket = null, bucketStart = -1;
-
-    for (let i = start1m; i <= current1mIndex; i++) {
-      const t = m1Time[i];
-      const bStart = Math.floor(t / tfSec) * tfSec;
-      if (bStart !== bucketStart) {
-        if (bucket) grouped.push(bucket);
-        bucketStart = bStart;
-        bucket = { time: bStart, open: m1Open[i], high: m1High[i], low: m1Low[i], close: m1Close[i], volume: m1Vol[i] };
-      } else {
-        if (m1High[i] > bucket.high) bucket.high = m1High[i];
-        if (m1Low[i] < bucket.low) bucket.low = m1Low[i];
-        bucket.close = m1Close[i];
-        bucket.volume += m1Vol[i];
+    if (timeframeMin === 1) {
+      const start1m = Math.max(0, current1mIndex + 1 - maxVisibleBars);
+      const arr = [];
+      for (let i = start1m; i <= current1mIndex; i++) {
+        arr.push({ time: m1Time[i], open: m1Open[i], high: m1High[i], low: m1Low[i], close: m1Close[i], volume: m1Vol[i] });
       }
-    }
-    if (bucket) grouped.push(bucket);
+      visibleCandles = arr;
+    } else {
+      const cached = tfAggregatedCache[timeframeMin] || [];
+      const tfSec = timeframeMin * 60;
+      const curBucketStart = Math.floor(curT / tfSec) * tfSec;
 
-    visibleCandles = grouped;
+      // Binary search หาแท่งปัจจุบันใน Cache
+      let lo = 0, hi = cached.length - 1;
+      while (lo < hi) {
+        const mid = (lo + hi + 1) >> 1;
+        if (cached[mid].time <= curBucketStart) lo = mid; else hi = mid - 1;
+      }
+
+      const startIdx = Math.max(0, lo - maxVisibleBars + 1);
+      const slice = cached.slice(startIdx, lo + 1).map(b => ({ ...b }));
+
+      // อัปเดตแท่งล่าสุดให้ตรงกับนาทีปัจจุบัน (Partial Candle แบบ Real-time)
+      if (slice.length > 0) {
+        const lastBar = slice[slice.length - 1];
+        // ย้อนสแกนเฉพาะแท่ง 1m ภายในคาบปัจจุบัน (สูงสุดไม่เกิน timeframeMin แท่ง)
+        let firstM1InBucket = current1mIndex;
+        while (firstM1InBucket > 0 && Math.floor(m1Time[firstM1InBucket - 1] / tfSec) * tfSec === curBucketStart) {
+          firstM1InBucket--;
+        }
+        let hiP = m1High[firstM1InBucket], loP = m1Low[firstM1InBucket], volSum = 0;
+        for (let k = firstM1InBucket; k <= current1mIndex; k++) {
+          if (m1High[k] > hiP) hiP = m1High[k];
+          if (m1Low[k] < loP) loP = m1Low[k];
+          volSum += m1Vol[k];
+        }
+        lastBar.high = hiP;
+        lastBar.low = loP;
+        lastBar.close = m1Close[current1mIndex];
+        lastBar.volume = volSum;
+      }
+      visibleCandles = slice;
+    }
+
     candleSeries.setData(visibleCandles);
     document.getElementById('progressSlider').value = current1mIndex;
 
     updateTradeMarkers();
     calcIndicators(visibleCandles);
 
-    const last = visibleCandles[visibleCandles.length - 1];
-    if (last) {
-      const chg = last.close - last.open;
-      const pct = ((chg / last.open) * 100).toFixed(2);
-      const col = chg >= 0 ? '#089981' : '#f23645';
-      document.getElementById('ohlcLegend').innerHTML = `
-        <div style="font-weight:bold;">XAUUSD • ${timeframeMin >= 60 ? (timeframeMin / 60) + 'H' : timeframeMin + 'm'} [${activeProfileId}]</div>
-        <div style="color:${col}; font-family:monospace; font-weight:bold;">
-          O:${last.open.toFixed(3)} H:${last.high.toFixed(3)} L:${last.low.toFixed(3)} C:${last.close.toFixed(3)} (${chg >= 0 ? '+' : ''}${pct}%)
-        </div>
-      `;
-      document.getElementById('barTimeText').textContent = formatUTC(last.time);
+    if (visibleCandles.length) {
+      const last = visibleCandles[visibleCandles.length - 1];
+      updateOHLCLegend(last);
+      document.getElementById('cursorTimeText').textContent = formatUTC(last.time);
     }
-    renderOverlay();
+
+    if (fitView) autoFitGraph();
+    scheduleOverlayRender();
+  }
+
+  function autoFitGraph() {
+    mainChart.priceScale('right').applyOptions({ autoScale: true });
+    mainChart.timeScale().applyOptions({ rightOffset: 15 });
+    const total = visibleCandles.length;
+    if (total > 10) {
+      mainChart.timeScale().setVisibleLogicalRange({ from: Math.max(0, total - 55), to: total + 12 });
+    }
+    scheduleOverlayRender();
+  }
+
+  function updateOHLCLegend(bar) {
+    if (!bar) return;
+    const chg = bar.close - bar.open;
+    const pct = ((chg / bar.open) * 100).toFixed(2);
+    const col = chg >= 0 ? '#089981' : '#f23645';
+    document.getElementById('ohlcLegend').innerHTML = `
+      <div style="font-weight:bold;">XAUUSD • ${timeframeMin >= 60 ? (timeframeMin / 60) + 'H' : timeframeMin + 'm'} [${activeProfileId}]</div>
+      <div style="color:${col}; font-family:monospace; font-weight:bold;">
+        O:${bar.open.toFixed(3)} H:${bar.high.toFixed(3)} L:${bar.low.toFixed(3)} C:${bar.close.toFixed(3)} (${chg >= 0 ? '+' : ''}${pct}%)
+      </div>
+    `;
   }
 
   function formatUTC(sec) {
@@ -883,9 +992,7 @@
     candleSeries.setMarkers(markers);
   }
 
-  // =========================================================================
-  // Favorite Toolbar & Toggle On/Off Logic (กดครั้งที่ 2 ยกเลิก กดอีกทีใช้งานต่อ)
-  // =========================================================================
+  // Favorite Toolbar
   function renderFavoriteToolbar() {
     const container = document.getElementById('favButtonsContainer');
     container.innerHTML = favoriteToolIds.map(id => {
@@ -897,7 +1004,6 @@
     container.querySelectorAll('.tool-btn').forEach(btn => {
       btn.onclick = () => {
         const clickedTool = btn.dataset.tool;
-        // กดครั้งที่สอง = ยกเลิกการใช้งาน (กลับเป็น Cursor), กดอีกที = ใช้งานต่อ
         if (selectedTool === clickedTool && clickedTool !== 'cursor') {
           setTool('cursor');
         } else {
@@ -911,14 +1017,13 @@
     selectedTool = t;
     pendingFirstPoint = null;
     activeDragDraw = null;
+    magBox.classList.remove('active');
     renderFavoriteToolbar();
     updatePointHint();
 
-    // เปิด Overlay รับสัมผัสเฉพาะตอนกำลังสร้างวัตถุใหม่หรือตอนมีวัตถุถูกเลือกอยู่
-    // ถ้าเป็น Cursor และไม่ได้เลือกวัตถุใดๆ จะปล่อยให้ TradingView รับนิ้วซูมอิน-เอ้าท์ เลื่อนซ้าย-ขวาได้เต็มที่
     const needOverlay = (selectedTool !== 'cursor') || (selectedDrawingIdx >= 0);
     overlayCanvas.classList.toggle('interactive', needOverlay);
-    renderOverlay();
+    scheduleOverlayRender();
   }
 
   function updatePointHint() {
@@ -934,10 +1039,10 @@
       hint.textContent = `แตะ 1 จุดบนกราฟเพื่อวาง ${meta.name}`;
       hint.classList.add('visible');
     } else if (!pendingFirstPoint) {
-      hint.textContent = `แตะจุดที่ 1 (จุดเริ่มต้น) ของ ${meta.name}`;
+      hint.textContent = `แตะจุดที่ 1 ของ ${meta.name}`;
       hint.classList.add('visible');
     } else {
-      hint.textContent = `แตะจุดที่ 2 (จุดสิ้นสุด) เพื่อสร้าง ${meta.name}`;
+      hint.textContent = `แตะจุดที่ 2 เพื่อสร้าง ${meta.name}`;
       hint.classList.add('visible');
     }
   }
@@ -1002,8 +1107,18 @@
   favHandle.addEventListener('pointerup', () => { isDraggingToolbar = false; });
 
   // =========================================================================
-  // Coordinate Helpers & Overlay Rendering (กรองตาม Timeframe Visibility)
+  // Smooth 60fps Overlay Rendering + Magnifier Loupe (แว่นขยายเล็งปลายไส้เทียน)
   // =========================================================================
+  let rafScheduled = false;
+  function scheduleOverlayRender() {
+    if (rafScheduled) return;
+    rafScheduled = true;
+    requestAnimationFrame(() => {
+      rafScheduled = false;
+      renderOverlay();
+    });
+  }
+
   function timeToX(ts) {
     const coord = mainChart.timeScale().timeToCoordinate(ts);
     if (coord !== null) return coord;
@@ -1033,6 +1148,54 @@
     oCtx.beginPath(); oCtx.arc(x, y, 5.5, 0, Math.PI * 2); oCtx.fill(); oCtx.stroke();
   }
 
+  // วาดแว่นขยายซูม 2.5x รอบจุดที่กำลังลากมุมกล่อง/เส้น + โชว์เส้นแนวนอนและเวลา
+  function renderMagnifier(targetX, targetY, targetPrice, targetTime) {
+    magBox.classList.add('active');
+    const size = 116;
+    const zoom = 2.4;
+    mCtx.clearRect(0, 0, size, size);
+    mCtx.fillStyle = isLightTheme ? '#ffffff' : '#131722';
+    mCtx.fillRect(0, 0, size, size);
+
+    // คัดลอกภาพกราฟและแท่งเทียนรอบจุดที่ชี้จาก TradingView Canvas
+    const tvCanvases = mainPane.querySelectorAll('canvas');
+    const dpr = window.devicePixelRatio || 1;
+    const srcW = size / zoom;
+    const srcH = size / zoom;
+    const sx = (targetX - srcW / 2) * dpr;
+    const sy = (targetY - srcH / 2) * dpr;
+
+    tvCanvases.forEach(c => {
+      if (c !== overlayCanvas && c.width > 0 && c.height > 0) {
+        try {
+          mCtx.drawImage(c, sx, sy, srcW * dpr, srcH * dpr, 0, 0, size, size);
+        } catch (e) {}
+      }
+    });
+
+    // เส้นกากบาทเล็งปลายไส้เทียนตรงกลางแว่นขยาย
+    const mid = size / 2;
+    mCtx.strokeStyle = '#2962ff';
+    mCtx.lineWidth = 1;
+    mCtx.setLineDash([3, 2]);
+    mCtx.beginPath();
+    mCtx.moveTo(0, mid); mCtx.lineTo(size, mid);
+    mCtx.moveTo(mid, 0); mCtx.lineTo(mid, size);
+    mCtx.stroke();
+    mCtx.setLineDash([]);
+
+    // ป้ายบอกราคาและเวลาด้านล่างแว่นขยาย
+    mCtx.fillStyle = 'rgba(41, 98, 255, 0.92)';
+    mCtx.fillRect(0, size - 24, size, 24);
+    mCtx.fillStyle = '#fff';
+    mCtx.font = 'bold 9px monospace';
+    mCtx.textAlign = 'center';
+    mCtx.fillText(targetPrice.toFixed(3), mid, size - 13);
+    mCtx.fillText(formatUTC(targetTime).split(' ')[1], mid, size - 3);
+  }
+
+  let activeSnapCrosshair = null; // {x, y, price, time} ตอนกำลังลากแก้ไขมุม
+
   function renderOverlay() {
     const rect = mainPane.getBoundingClientRect();
     const W = rect.width - 66;
@@ -1042,17 +1205,13 @@
     oCtx.save();
     oCtx.beginPath(); oCtx.rect(0, 0, W, H); oCtx.clip();
 
-    // วาดหมุดจุดที่ 1 หากกำลังอยู่ในขั้นตอนมาร์คจุดทีละส่วน
     if (pendingFirstPoint) {
-      const px = timeToX(pendingFirstPoint.t);
-      const py = priceToY(pendingFirstPoint.p);
-      drawDot(px, py, '#2962ff', '#ffffff');
+      drawDot(timeToX(pendingFirstPoint.t), priceToY(pendingFirstPoint.p), '#2962ff', '#ffffff');
     }
 
     const listToDraw = activeDragDraw ? [...drawings, activeDragDraw] : drawings;
 
     listToDraw.forEach((d, idx) => {
-      // ตรวจสอบว่าวัตถุนี้ถูกตั้งค่าให้แสดงใน Timeframe ปัจจุบันหรือไม่
       const visTFs = d.visibleTFs || ALL_TFS;
       if (d !== activeDragDraw && !visTFs.includes(timeframeMin)) return;
 
@@ -1080,21 +1239,14 @@
         const dx = x2 - x1, dy = y2 - y1;
         oCtx.beginPath(); oCtx.moveTo(x1, y1);
         if (Math.abs(dx) < 1) oCtx.lineTo(x1, dy >= 0 ? H : 0);
-        else {
-          const targetX = dx > 0 ? W : 0;
-          oCtx.lineTo(targetX, y1 + (dy / dx) * (targetX - x1));
-        }
+        else { const targetX = dx > 0 ? W : 0; oCtx.lineTo(targetX, y1 + (dy / dx) * (targetX - x1)); }
         oCtx.stroke();
         if (isSelected) { drawDot(x1, y1); drawDot(x2, y2); }
       } else if (d.tool === 'extline') {
         const dx = x2 - x1, dy = y2 - y1;
         oCtx.beginPath();
         if (Math.abs(dx) < 1) { oCtx.moveTo(x1, 0); oCtx.lineTo(x1, H); }
-        else {
-          const slope = dy / dx;
-          oCtx.moveTo(0, y1 - slope * x1);
-          oCtx.lineTo(W, y1 + slope * (W - x1));
-        }
+        else { const slope = dy / dx; oCtx.moveTo(0, y1 - slope * x1); oCtx.lineTo(W, y1 + slope * (W - x1)); }
         oCtx.stroke();
         if (isSelected) { drawDot(x1, y1); drawDot(x2, y2); }
       } else if (d.tool === 'regression' || d.tool === 'channel') {
@@ -1166,7 +1318,7 @@
         oCtx.fillStyle = '#fff'; oCtx.font = 'bold 9px sans-serif';
         oCtx.fillText(`TP: +$${tpMoney} (${calcLot}L)`, left + 7, yTP - 5);
 
-        oCtx.fillStyle = '#1e222d'; oCtx.fillRect(left + 4, yEntry - 8, Math.min(w - 8, 115), 16);
+        oCtx.fillStyle = '#1e222d'; oCtx.fillRect(left + 4, yEntry - 8, Math.min(w - 8, 120), 16);
         oCtx.fillStyle = '#fff'; oCtx.fillText(`RR 1:${rr} @ ${formatUTC(d.t1).split(' ')[1]}`, left + 8, yEntry + 3);
 
         oCtx.fillStyle = '#f23645'; oCtx.fillRect(left + 4, ySL + 1, Math.min(w - 8, 125), 14);
@@ -1180,12 +1332,28 @@
         }
       }
     });
+
+    // วาดเส้นกากบาทแนวขวางและแนวตั้งเวลาลากมุมแก้ไข (Crosshair Guide)
+    if (activeSnapCrosshair) {
+      oCtx.setLineDash([3, 3]);
+      oCtx.strokeStyle = '#2962ff';
+      oCtx.lineWidth = 1;
+      oCtx.beginPath();
+      oCtx.moveTo(0, activeSnapCrosshair.y); oCtx.lineTo(W, activeSnapCrosshair.y);
+      oCtx.moveTo(activeSnapCrosshair.x, 0); oCtx.lineTo(activeSnapCrosshair.x, H);
+      oCtx.stroke();
+      oCtx.setLineDash([]);
+    }
     oCtx.restore();
+
+    if (activeSnapCrosshair) {
+      renderMagnifier(activeSnapCrosshair.x, activeSnapCrosshair.y, activeSnapCrosshair.price, activeSnapCrosshair.time);
+    } else {
+      magBox.classList.remove('active');
+    }
   }
 
-  // =========================================================================
-  // Hit Testing & Tap Selection (กดข้างนอกวัตถุ -> ปลดล็อกซูม/เลื่อนทันที)
-  // =========================================================================
+  // Hit Testing & Tap Selection
   function distToSegment(px, py, x1, y1, x2, y2) {
     const l2 = (x2 - x1) ** 2 + (y2 - y1) ** 2;
     if (l2 === 0) return Math.hypot(px - x1, py - y1);
@@ -1216,6 +1384,8 @@
       } else if (d.tool === 'box') {
         if (Math.hypot(pos.x - x1, pos.y - y1) < 18) return { idx: i, part: 'p1' };
         if (Math.hypot(pos.x - x2, pos.y - y2) < 18) return { idx: i, part: 'p2' };
+        if (Math.hypot(pos.x - x1, pos.y - y2) < 18) return { idx: i, part: 'p1x_p2y' };
+        if (Math.hypot(pos.x - x2, pos.y - y1) < 18) return { idx: i, part: 'p2x_p1y' };
         if (pos.x >= Math.min(x1, x2) && pos.x <= Math.max(x1, x2) && pos.y >= Math.min(y1, y2) && pos.y <= Math.max(y1, y2)) return { idx: i, part: 'moveBoth' };
       } else if (d.tool === 'highlighter') {
         const pts = d.points || [];
@@ -1229,7 +1399,6 @@
     return null;
   }
 
-  // รับการแตะบนกราฟหลักเมื่ออยู่ในโหมด Cursor เพื่อเลือกวัตถุที่วาดไว้
   mainChart.subscribeClick(param => {
     if (selectedTool !== 'cursor' || !param.point) return;
     const hit = hitTestDrawing(param.point);
@@ -1237,7 +1406,7 @@
       selectedDrawingIdx = hit.idx;
       updateSelectionBar();
       overlayCanvas.classList.add('interactive');
-      renderOverlay();
+      scheduleOverlayRender();
     }
   });
 
@@ -1251,7 +1420,6 @@
       document.getElementById('drawColorPicker').value = d.color || '#eab308';
       document.getElementById('drawWidthSelect').value = String(d.width || 2);
 
-      // อัปเดตชิป Timeframe Visibility
       const visTFs = d.visibleTFs || ALL_TFS;
       document.querySelectorAll('#tfVisGroup .tf-vis-chip').forEach(chip => {
         chip.classList.toggle('on', visTFs.includes(Number(chip.dataset.vtf)));
@@ -1265,7 +1433,7 @@
   }
 
   // =========================================================================
-  // Point-by-Point & Drag Pointer Handling
+  // Zero-Delay Pointer Handling + Magnifier Zoom on Corner Drag
   // =========================================================================
   let editingTarget = null, lastPos = { x: 0, y: 0 }, pointerDownPos = { x: 0, y: 0 };
 
@@ -1275,7 +1443,6 @@
     lastPos = pos;
     pointerDownPos = pos;
 
-    // 1. โหมด Cut Bar Replay
     if (selectedTool === 'cut') {
       const targetTs = xToTime(pos.x);
       let lo = 0, hi = m1Count - 1;
@@ -1288,25 +1455,23 @@
       return;
     }
 
-    // 2. โหมด Cursor (กำลังเลือกวัตถุอยู่): เช็กว่าจับวัตถุอยู่หรือไม่ ถ้าแตะข้างนอกให้ปลดล็อกไปซูม/เลื่อนกราฟได้ทันที
     if (selectedTool === 'cursor') {
       const hit = hitTestDrawing(pos);
       if (hit) {
         selectedDrawingIdx = hit.idx;
         editingTarget = hit;
         updateSelectionBar();
-        renderOverlay();
+        overlayCanvas.setPointerCapture(e.pointerId);
+        scheduleOverlayRender();
       } else {
-        // แตะพื้นที่ว่างข้างนอกกล่อง/เส้น -> ยกเลิกการเลือกและคืนสิทธิ์ซูมอิน-เอ้าท์ เลื่อนซ้าย-ขวาให้กราฟทันที!
         selectedDrawingIdx = -1;
         updateSelectionBar();
         overlayCanvas.classList.remove('interactive');
-        renderOverlay();
+        scheduleOverlayRender();
       }
       return;
     }
 
-    // 3. โหมดสร้างเครื่องมือใหม่ (รองรับทั้งวางจุดเดียว, มาร์ค 2 จุดทีละส่วน, และลากต่อเนื่อง)
     const meta = ALL_TOOLS.find(x => x.id === selectedTool);
     const tNow = xToTime(pos.x), pNow = yToPrice(pos.y);
 
@@ -1329,28 +1494,26 @@
       setTool('cursor');
       updateSelectionBar();
       overlayCanvas.classList.add('interactive');
-      renderOverlay();
+      scheduleOverlayRender();
       saveCurrentProfile();
       return;
     }
 
-    // เครื่องมือ 2 จุด (Rectangle, Trendline, Fib, Ray, Channel)
     if (selectedTool === 'highlighter') {
       activeDragDraw = {
         tool: 'highlighter', t1: tNow, t2: tNow, p1: pNow, p2: pNow,
         color: meta.defaultColor, width: meta.defaultWidth, visibleTFs: [...ALL_TFS],
         points: [{ t: tNow, p: pNow }]
       };
+      overlayCanvas.setPointerCapture(e.pointerId);
       return;
     }
 
     if (!pendingFirstPoint) {
-      // แตะจุดที่ 1: ปักหมุดเริ่มต้น
       pendingFirstPoint = { t: tNow, p: pNow };
       updatePointHint();
-      renderOverlay();
+      scheduleOverlayRender();
     } else {
-      // แตะจุดที่ 2: สร้างกล่อง/เส้น เชื่อมระหว่างจุดที่ 1 และจุดที่ 2 ทันที
       const newObj = {
         tool: selectedTool,
         t1: pendingFirstPoint.t, t2: tNow,
@@ -1366,7 +1529,7 @@
       setTool('cursor');
       updateSelectionBar();
       overlayCanvas.classList.add('interactive');
-      renderOverlay();
+      scheduleOverlayRender();
       saveCurrentProfile();
     }
   });
@@ -1377,17 +1540,23 @@
     const dx = pos.x - lastPos.x, dy = pos.y - lastPos.y;
     lastPos = pos;
 
-    // แก้ไข/เคลื่อนย้ายวัตถุที่เลือก
     if (editingTarget) {
       const d = drawings[editingTarget.idx];
       const barSpacing = mainChart.timeScale().options().barSpacing || 6;
       const dTime = Math.round((dx / barSpacing) * (timeframeMin * 60));
       const pNow = yToPrice(pos.y), dPrice = pNow - yToPrice(pos.y - dy);
+      const tNow = xToTime(pos.x);
+
+      // แสดงแว่นขยาย + เส้นกากบาทเล็งปลายไส้เทียนเมื่อลากมุมกล่อง/จุดจับ
+      const isCornerOrHandle = ['p1', 'p2', 'p1x_p2y', 'p2x_p1y', 'tp', 'sl', 'entry'].includes(editingTarget.part);
+      activeSnapCrosshair = isCornerOrHandle ? { x: pos.x, y: pos.y, price: pNow, time: tNow } : null;
 
       if (editingTarget.part === 'hlineMove') { d.p1 = pNow; d.p2 = pNow; }
-      else if (editingTarget.part === 'vlineMove') { d.t1 = xToTime(pos.x); d.t2 = d.t1; }
-      else if (editingTarget.part === 'p1') { d.t1 = xToTime(pos.x); d.p1 = pNow; }
-      else if (editingTarget.part === 'p2') { d.t2 = xToTime(pos.x); d.p2 = pNow; }
+      else if (editingTarget.part === 'vlineMove') { d.t1 = tNow; d.t2 = tNow; }
+      else if (editingTarget.part === 'p1') { d.t1 = tNow; d.p1 = pNow; }
+      else if (editingTarget.part === 'p2') { d.t2 = tNow; d.p2 = pNow; }
+      else if (editingTarget.part === 'p1x_p2y') { d.t1 = tNow; d.p2 = pNow; }
+      else if (editingTarget.part === 'p2x_p1y') { d.t2 = tNow; d.p1 = pNow; }
       else if (editingTarget.part === 'moveBoth') { d.t1 += dTime; d.t2 += dTime; d.p1 += dPrice; d.p2 += dPrice; }
       else if (editingTarget.part === 'moveHighlight' && d.points) {
         d.points.forEach(pt => { pt.t += dTime; pt.p += dPrice; });
@@ -1395,32 +1564,36 @@
       else if (editingTarget.part === 'tp') { d.p2 = pNow; }
       else if (editingTarget.part === 'sl') { d.p1 = pNow; }
       else if (editingTarget.part === 'entry') { const s = pNow - d.midP; d.midP = pNow; d.p1 += s; d.p2 += s; }
-      else if (editingTarget.part === 'resizeRight') { d.t2 = Math.max(d.t1 + timeframeMin * 180, xToTime(pos.x)); }
+      else if (editingTarget.part === 'resizeRight') { d.t2 = Math.max(d.t1 + timeframeMin * 180, tNow); }
       else if (editingTarget.part === 'moveRR') { d.t1 += dTime; d.t2 += dTime; d.p1 += dPrice; d.p2 += dPrice; d.midP += dPrice; }
-      renderOverlay();
+
+      document.getElementById('cursorTimeText').textContent = `📍 ${formatUTC(tNow)}`;
+      scheduleOverlayRender();
       return;
     }
 
-    // ถ้าผู้ใช้ใช้วิธีลากนิ้วยาว (Drag) หลังแตะจุดที่ 1 ให้แสดงพรีวิวทันที
-    if (pendingFirstPoint && Math.hypot(pos.x - pointerDownPos.x, pos.y - pointerDownPos.y) > 12) {
+    if (pendingFirstPoint && Math.hypot(pos.x - pointerDownPos.x, pos.y - pointerDownPos.y) > 10) {
       const meta = ALL_TOOLS.find(x => x.id === selectedTool);
+      const tNow = xToTime(pos.x), pNow = yToPrice(pos.y);
+      activeSnapCrosshair = { x: pos.x, y: pos.y, price: pNow, time: tNow };
       activeDragDraw = {
         tool: selectedTool,
-        t1: pendingFirstPoint.t, t2: xToTime(pos.x),
-        p1: pendingFirstPoint.p, p2: yToPrice(pos.y),
+        t1: pendingFirstPoint.t, t2: tNow,
+        p1: pendingFirstPoint.p, p2: pNow,
         midP: pendingFirstPoint.p,
         color: meta ? meta.defaultColor : '#eab308',
         width: meta ? meta.defaultWidth : 2,
         visibleTFs: [...ALL_TFS]
       };
-      renderOverlay();
+      scheduleOverlayRender();
     } else if (activeDragDraw && activeDragDraw.tool === 'highlighter') {
       activeDragDraw.points.push({ t: xToTime(pos.x), p: yToPrice(pos.y) });
-      renderOverlay();
+      scheduleOverlayRender();
     }
   });
 
   window.addEventListener('pointerup', () => {
+    activeSnapCrosshair = null;
     if (activeDragDraw) {
       drawings.push(activeDragDraw);
       activeDragDraw = null;
@@ -1429,15 +1602,18 @@
       setTool('cursor');
       updateSelectionBar();
       overlayCanvas.classList.add('interactive');
-      renderOverlay();
+      scheduleOverlayRender();
       saveCurrentProfile();
     }
-    if (editingTarget) saveCurrentProfile();
+    if (editingTarget) {
+      scheduleOverlayRender();
+      saveCurrentProfile();
+    }
     editingTarget = null;
   });
 
   // =========================================================================
-  // Order Price Lines & Time-Locked Simulation Engine
+  // Order Price Lines & Simulation Engine (ต้องถึงเวลาที่กำหนด + ราคาวิ่งมาแตะจุดเข้าจริงเท่านั้น)
   // =========================================================================
   function clearAllPriceLines() {
     orders.forEach(o => {
@@ -1453,7 +1629,7 @@
     if (order.tpLine) candleSeries.removePriceLine(order.tpLine);
 
     const isBuy = order.type.includes('BUY');
-    const timeTag = (!order.triggered && order.activateTime) ? ` [${formatUTC(order.activateTime).split(' ')[1]}]` : '';
+    const timeTag = (!order.triggered && order.activateTime) ? ` [>=${formatUTC(order.activateTime).split(' ')[1]}]` : '';
     order.entryLine = candleSeries.createPriceLine({
       price: order.entry, color: isBuy ? '#2962ff' : '#9c27b0', lineWidth: 2,
       lineStyle: order.triggered ? 0 : 2, axisLabelVisible: true,
@@ -1482,30 +1658,19 @@
     for (let m = 1; m <= stepMinutes; m++) {
       const idx = current1mIndex + m;
       if (idx >= m1Count) break;
-      const bHigh = m1High[idx], bLow = m1Low[idx], bClose = m1Close[idx], bTime = m1Time[idx];
+      const bHigh = m1High[idx], bLow = m1Low[idx], bTime = m1Time[idx];
 
       const remaining = [];
       for (const o of orders) {
-        // กฎสำคัญ: ออเดอร์จะเริ่มทำงานเฉพาะเมื่อเวลาแท่งเทียน >= activateTime ที่มาร์คไว้เท่านั้น!
+        // เงื่อนไข: 1) เวลาต้อง >= activateTime ที่มาร์คไว้ AND 2) แท่งเทียนต้องวิ่งมาแตะราคา o.entry จริง!
         if (!o.triggered) {
           const timeReached = !o.activateTime || (bTime >= o.activateTime);
-          if (timeReached) {
-            if (o.type === 'BUY' || o.type === 'SELL') {
-              // Market order ที่ตั้งเวลาล่วงหน้าจากกล่อง RR -> เปิดทันทีเมื่อถึงเวลาที่มาร์ค
-              o.triggered = true;
-              o.entry = bClose;
-              o.entryTime = bTime;
-              syncOrderPriceLines(o);
-            } else if (
-              (o.type === 'BUY LIMIT' && bLow <= o.entry) ||
-              (o.type === 'SELL LIMIT' && bHigh >= o.entry) ||
-              (o.type === 'BUY STOP' && bHigh >= o.entry) ||
-              (o.type === 'SELL STOP' && bLow <= o.entry)
-            ) {
-              o.triggered = true;
-              o.entryTime = bTime;
-              syncOrderPriceLines(o);
-            }
+          const priceTouched = (bLow <= o.entry && bHigh >= o.entry);
+
+          if (timeReached && priceTouched) {
+            o.triggered = true;
+            o.entryTime = bTime;
+            syncOrderPriceLines(o);
           }
         }
 
@@ -1535,7 +1700,7 @@
     }
 
     current1mIndex += stepMinutes;
-    rebuildAllCharts();
+    rebuildAllCharts(false);
     updateUI();
     saveCurrentProfile();
   }
@@ -1581,7 +1746,7 @@
       list.innerHTML = orders.map(o => {
         const isBuy = o.type.includes('BUY');
         const pnl = o.triggered ? (isBuy ? curPrice - o.entry : o.entry - curPrice) * 100 * o.lot : 0;
-        const waitTxt = o.activateTime ? `⏳ รอเวลา ${formatUTC(o.activateTime).split(' ')[1]}` : 'PENDING';
+        const waitTxt = o.activateTime ? `⏳ รอแตะราคาหลัง ${formatUTC(o.activateTime).split(' ')[1]}` : 'PENDING';
         return `<div class="order-row">
           <div><b style="color:${isBuy ? 'var(--blue)' : 'var(--purple)'}">${o.type}</b> ${o.lot.toFixed(2)} @ ${o.entry.toFixed(3)}</div>
           <div>${o.triggered ? `<b style="color:${pnl >= 0 ? 'var(--green)' : 'var(--red)'}">${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}</b>` : `<span style="color:var(--yellow)">${waitTxt}</span>`}</div>
@@ -1615,7 +1780,7 @@
     if (indConfig.rsi) { const r = document.getElementById('paneRSI').getBoundingClientRect(); chartRSI.resize(r.width, r.height); }
     if (indConfig.macd) { const r = document.getElementById('paneMACD').getBoundingClientRect(); chartMACD.resize(r.width, r.height); }
     if (indConfig.stoch) { const r = document.getElementById('paneSTOCH').getBoundingClientRect(); chartSTOCH.resize(r.width, r.height); }
-    renderOverlay();
+    scheduleOverlayRender();
   }
 
   function syncIndicatorModalInputs() {
@@ -1635,9 +1800,11 @@
   }
 
   // Event Listeners
+  document.getElementById('autoGraphBtn').onclick = () => autoFitGraph();
+
   document.getElementById('profileSelect').onchange = e => switchProfile(e.target.value);
   document.getElementById('addProfileBtn').onclick = () => {
-    const name = prompt('ตั้งชื่อเทคนิค / โปรไฟล์ใหม่ (เช่น Strategy C):');
+    const name = prompt('ตั้งชื่อเทคนิค / โปรไฟล์ใหม่:');
     if (name && name.trim()) {
       const cleanName = name.trim();
       profiles[cleanName] = createEmptyProfileState();
@@ -1646,9 +1813,8 @@
     }
   };
 
-  // ปุ่ม Reset Trade (ล้างประวัติการเทรดทั้งหมดและคืนทุนเริ่มต้น)
   document.getElementById('resetTradesBtn').onclick = () => {
-    if (!confirm(`ล้างประวัติการเทรดและออเดอร์ทั้งหมดของ [${activeProfileId}] เพื่อเริ่มใหม่ใช่ไหม?`)) return;
+    if (!confirm(`ล้างประวัติการเทรดทั้งหมดของ [${activeProfileId}] เพื่อเริ่มใหม่ใช่ไหม?`)) return;
     stopPlay();
     clearAllPriceLines();
     balance = initialBalance;
@@ -1659,7 +1825,28 @@
     saveCurrentProfile();
   };
 
-  // สลับการแสดงผลของเส้น/กล่องแต่ละชิ้นตาม Timeframe
+  // Copy Selected Drawing (Rectangle, Trendline, Fib, RR ฯลฯ)
+  document.getElementById('copySelectedBtn').onclick = () => {
+    if (selectedDrawingIdx < 0 || !drawings[selectedDrawingIdx]) return;
+    const orig = drawings[selectedDrawingIdx];
+    const timeShift = timeframeMin * 60 * 6;
+    const priceShift = 1.5;
+    const cloned = JSON.parse(JSON.stringify(orig));
+    cloned.t1 += timeShift;
+    cloned.t2 += timeShift;
+    cloned.p1 += priceShift;
+    cloned.p2 += priceShift;
+    if (cloned.midP !== undefined) cloned.midP += priceShift;
+    if (cloned.points) {
+      cloned.points.forEach(pt => { pt.t += timeShift; pt.p += priceShift; });
+    }
+    drawings.push(cloned);
+    selectedDrawingIdx = drawings.length - 1;
+    updateSelectionBar();
+    scheduleOverlayRender();
+    saveCurrentProfile();
+  };
+
   document.querySelectorAll('#tfVisGroup .tf-vis-chip').forEach(chip => {
     chip.onclick = () => {
       if (selectedDrawingIdx < 0 || !drawings[selectedDrawingIdx]) return;
@@ -1672,12 +1859,12 @@
         d.visibleTFs.push(tfVal);
       }
       updateSelectionBar();
-      renderOverlay();
+      scheduleOverlayRender();
       saveCurrentProfile();
     };
   });
 
-  // เปิดออเดอร์จากกล่อง Long/Short RR โดยล็อกเวลาเกิดตามจุดที่มาร์ค (d.t1) เท่านั้น!
+  // เปิดออเดอร์จากกล่อง RR: รอให้ถึงเวลา d.t1 และราคาวิ่งมาแตะจุดเข้า d.midP จริงเท่านั้น!
   document.getElementById('execRRBtn').onclick = () => {
     if (selectedDrawingIdx < 0 || !drawings[selectedDrawingIdx] || m1Count === 0) return;
     const d = drawings[selectedDrawingIdx];
@@ -1691,27 +1878,20 @@
     const riskUsd = parseFloat(document.getElementById('riskDollarInput').value) || 100;
     const calcLot = riskDiff > 0 ? Math.max(0.01, +(riskUsd / (riskDiff * 100)).toFixed(2)) : lotSize;
 
-    // หากจุดมาร์คกล่อง (d.t1) อยู่ในอนาคต (เช่น ตอนนี้ 9:30 แต่วางกล่องที่ 9:35)
-    // ออเดอร์จะยังไม่เกิดจนกว่ากราฟจะรันไปถึง 9:35 จริงๆ เท่านั้น!
-    const isFutureTime = d.t1 > curTime;
-    let orderType = isBuy ? 'BUY' : 'SELL';
-    if (Math.abs(entry - curPrice) > 0.3) {
-      if (isBuy) orderType = entry < curPrice ? 'BUY LIMIT' : 'BUY STOP';
-      else orderType = entry > curPrice ? 'SELL LIMIT' : 'SELL STOP';
-    }
-
-    const triggeredNow = !isFutureTime && (orderType === 'BUY' || orderType === 'SELL');
+    let orderType = isBuy ? 'BUY LIMIT' : 'SELL LIMIT';
+    if (isBuy) orderType = entry <= curPrice ? 'BUY LIMIT' : 'BUY STOP';
+    else orderType = entry >= curPrice ? 'SELL LIMIT' : 'SELL STOP';
 
     const newOrder = {
       id: Date.now(),
       type: orderType,
-      triggered: triggeredNow,
-      activateTime: isFutureTime ? d.t1 : curTime,
+      triggered: false, // ยังไม่เปิดจนกว่าเวลาถึง d.t1 AND กราฟวิ่งมาแตะราคา entry จริง!
+      activateTime: Math.max(curTime, d.t1),
       entry,
       sl: d.p1,
       tp: d.p2,
       lot: calcLot,
-      entryTime: triggeredNow ? curTime : null,
+      entryTime: null,
       entryLine: null, slLine: null, tpLine: null
     };
     orders.push(newOrder);
@@ -1757,13 +1937,13 @@
   document.getElementById('drawColorPicker').oninput = e => {
     if (selectedDrawingIdx >= 0 && drawings[selectedDrawingIdx]) {
       drawings[selectedDrawingIdx].color = e.target.value;
-      renderOverlay(); saveCurrentProfile();
+      scheduleOverlayRender(); saveCurrentProfile();
     }
   };
   document.getElementById('drawWidthSelect').onchange = e => {
     if (selectedDrawingIdx >= 0 && drawings[selectedDrawingIdx]) {
       drawings[selectedDrawingIdx].width = Number(e.target.value);
-      renderOverlay(); saveCurrentProfile();
+      scheduleOverlayRender(); saveCurrentProfile();
     }
   };
 
@@ -1773,7 +1953,7 @@
       selectedDrawingIdx = -1;
       updateSelectionBar();
       overlayCanvas.classList.remove('interactive');
-      renderOverlay();
+      scheduleOverlayRender();
       saveCurrentProfile();
     }
   };
@@ -1781,7 +1961,7 @@
     selectedDrawingIdx = -1;
     updateSelectionBar();
     overlayCanvas.classList.remove('interactive');
-    renderOverlay();
+    scheduleOverlayRender();
   };
 
   document.getElementById('themeBtn').onclick = () => {
@@ -1800,7 +1980,7 @@
         if (m1Time[mid] < targetSec) lo = mid + 1; else hi = mid;
       }
       current1mIndex = Math.max(50, Math.min(m1Count - 1, lo));
-      rebuildAllCharts(); updateUI(); saveCurrentProfile();
+      rebuildAllCharts(true); updateUI(); saveCurrentProfile();
     }
   };
 
@@ -1819,18 +1999,18 @@
   };
   document.getElementById('progressSlider').oninput = e => {
     current1mIndex = Number(e.target.value);
-    rebuildAllCharts(); updateUI(); saveCurrentProfile();
+    rebuildAllCharts(false); updateUI(); saveCurrentProfile();
   };
 
   document.getElementById('lotMinus').onclick = () => {
     lotSize = Math.max(0.01, +(lotSize - 0.05).toFixed(2));
     document.getElementById('lotText').textContent = lotSize.toFixed(2);
-    renderOverlay(); saveCurrentProfile();
+    scheduleOverlayRender(); saveCurrentProfile();
   };
   document.getElementById('lotPlus').onclick = () => {
     lotSize = +(lotSize + 0.05).toFixed(2);
     document.getElementById('lotText').textContent = lotSize.toFixed(2);
-    renderOverlay(); saveCurrentProfile();
+    scheduleOverlayRender(); saveCurrentProfile();
   };
 
   document.querySelectorAll('#orderTypeGroup .btn').forEach(btn => {
@@ -1898,7 +2078,7 @@
     selectedDrawingIdx = -1;
     updateSelectionBar();
     overlayCanvas.classList.remove('interactive');
-    renderOverlay();
+    scheduleOverlayRender();
     saveCurrentProfile();
   };
 
@@ -1907,7 +2087,7 @@
       document.querySelectorAll('#tfGroup .btn[data-min]').forEach(x => x.classList.remove('active'));
       b.classList.add('active');
       timeframeMin = Number(b.dataset.min);
-      rebuildAllCharts(); saveCurrentProfile();
+      rebuildAllCharts(false); saveCurrentProfile();
     };
   });
 
@@ -1932,7 +2112,7 @@
     if (allRows.length > 50) {
       loadMasterRows(allRows);
       current1mIndex = Math.min(2500, m1Count - 1);
-      rebuildAllCharts(); updateUI(); saveCurrentProfile();
+      rebuildAllCharts(true); updateUI(); saveCurrentProfile();
     }
   };
 
