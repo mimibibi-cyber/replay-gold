@@ -13,7 +13,7 @@
       --bg: #131722;
       --panel: #1e222d;
       --panel2: #2a2e39;
-      --glass: rgba(30, 34, 45, 0.86);
+      --glass: rgba(30, 34, 45, 0.88);
       --border: #363a45;
       --text: #d1d4dc;
       --muted: #787b86;
@@ -27,7 +27,7 @@
       --bg: #ffffff;
       --panel: #f8fafc;
       --panel2: #e2e8f0;
-      --glass: rgba(248, 250, 252, 0.88);
+      --glass: rgba(248, 250, 252, 0.9);
       --border: #cbd5e1;
       --text: #131722;
       --muted: #64748b;
@@ -72,19 +72,18 @@
 
     /* Workspace */
     .workspace {
-      position: relative; flex: 1; display: flex; flex-direction: column; min-height: 240px; overflow: hidden;
+      position: relative; flex: 1; display: flex; flex-direction: column; min-height: 230px; overflow: hidden;
     }
     #mainChartPane {
       position: relative; flex: 1; width: 100%; min-height: 150px;
     }
-    /* Overlay รับเฉพาะ Event การแตะ/ลาก ไม่ได้ใช้วาดกราฟ (กราฟและกล่องวาดใน Native Render Loop ของ TradingView โดยตรง) */
     #gestureOverlay {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
       pointer-events: none; z-index: 10;
     }
     #gestureOverlay.interactive { pointer-events: auto; }
 
-    /* One-Click Trading Floating Header (TradingView Style) */
+    /* One-Click Trading Floating Header */
     .one-click-box {
       position: absolute; top: 38px; left: 8px; z-index: 16;
       display: flex; align-items: center; gap: 4px;
@@ -113,7 +112,7 @@
 
     /* Sub Indicator Panes */
     .ind-pane {
-      position: relative; height: 74px; width: 100%; border-top: 1px solid var(--border);
+      position: relative; height: 72px; width: 100%; border-top: 1px solid var(--border);
       display: none; flex-shrink: 0;
     }
     .ind-pane.active { display: block; }
@@ -203,10 +202,10 @@
 
     /* Replay Bar */
     .replay-bar {
-      display: flex; align-items: center; gap: 6px; padding: 5px 8px;
+      display: flex; align-items: center; gap: 5px; padding: 5px 8px;
       background: var(--panel); border-top: 1px solid var(--border);
     }
-    input[type="range"] { flex: 1; accent-color: var(--blue); }
+    input[type="range"] { flex: 1; accent-color: var(--blue); min-width: 50px; }
 
     /* Trade Panel */
     .trade-panel {
@@ -215,6 +214,10 @@
     }
     .order-types { display: flex; gap: 4px; overflow-x: auto; }
     .order-types::-webkit-scrollbar { display: none; }
+    .trade-inputs-row {
+      display: flex; align-items: center; gap: 6px; overflow-x: auto; font-size: 11px;
+    }
+    .trade-inputs-row::-webkit-scrollbar { display: none; }
     .trade-actions { display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap; }
     .lot-box {
       display: flex; align-items: center; gap: 4px; font-size: 11px;
@@ -245,7 +248,7 @@
 </head>
 <body>
 
-  <!-- Top Header (Zero Emojis - Pure Vector SVG) -->
+  <!-- Top Header -->
   <div class="tv-header">
     <div class="group">
       <span style="font-size:12px; font-weight:700; letter-spacing:0.4px;">XAUUSD</span>
@@ -321,7 +324,7 @@
 
   <!-- Workspace -->
   <div class="workspace">
-    <!-- Contextual Edit Bar (Style, Copy, TF Visibility, Execute RR, Delete) -->
+    <!-- Contextual Edit Bar -->
     <div class="selection-bar" id="selectionBar">
       <span id="selectedObjLabel" style="font-weight:700;">Object</span>
       <div class="group" id="swatchGroup" style="gap:4px;">
@@ -367,7 +370,7 @@
     <!-- Point-by-Point Guidance Pill -->
     <div class="point-hint" id="pointHint">Select Point 1</div>
 
-    <!-- Draggable Floating Favorite Toolbar (Pure Minimal SVG) -->
+    <!-- Draggable Floating Favorite Toolbar -->
     <div class="fav-toolbar" id="favToolbar">
       <div class="fav-drag-handle" id="favDragHandle">
         <svg width="14" height="10" viewBox="0 0 24 12" fill="currentColor"><circle cx="8" cy="3" r="1.5"/><circle cx="16" cy="3" r="1.5"/><circle cx="8" cy="9" r="1.5"/><circle cx="16" cy="9" r="1.5"/></svg>
@@ -384,7 +387,6 @@
     <!-- Main Chart Pane -->
     <div id="mainChartPane">
       <div class="ohlc-legend" id="ohlcLegend">XAUUSD • HistData Real M1</div>
-      <!-- One-Click Trading Buttons -->
       <div class="one-click-box">
         <button class="oc-btn oc-sell" id="ocSellBtn"><span>SELL</span><span id="ocBidText">--</span></button>
         <span class="oc-spread">0.25</span>
@@ -399,18 +401,37 @@
     <div class="ind-pane" id="paneSTOCH"><div class="ind-label" id="labelSTOCH" style="color:#f59e0b;">Stochastic (14, 3, 3)</div></div>
   </div>
 
-  <!-- Replay Bar -->
+  <!-- Replay Bar: Play/Pause, Step Backward (-1), Step Size (1m..1D), Step Forward (+1) -->
   <div class="replay-bar">
-    <button class="btn btn-green" id="playBtn" style="width:64px;">
+    <button class="btn btn-green" id="playBtn" style="width:60px;">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
       <span>Play</span>
     </button>
-    <button class="btn btn-blue" id="stepBtn">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
-      <span>+1</span>
+
+    <!-- ปุ่มถอยหลัง -1 (Minimal SVG) -->
+    <button class="btn" id="stepBackBtn" title="Step Backward">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="5" x2="5" y2="19"/><polygon points="19 4 9 12 19 20 19 4"/></svg>
+      <span>-1</span>
     </button>
+
+    <!-- ตัวเลือกขนาดการก้าวกระโดด (1m, 5m, 15m, 1H, 4H, 1D) -->
+    <select id="stepUnitSelect" title="Step Interval">
+      <option value="1" selected>1m</option>
+      <option value="5">5m</option>
+      <option value="15">15m</option>
+      <option value="60">1H</option>
+      <option value="240">4H</option>
+      <option value="1440">1D</option>
+    </select>
+
+    <!-- ปุ่มเดินหน้า +1 (Minimal SVG) -->
+    <button class="btn btn-blue" id="stepBtn" title="Step Forward">
+      <span>+1</span>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+    </button>
+
     <input type="range" id="progressSlider" min="50" max="10000" value="500" />
-    <span id="cursorTimeText" style="font-size:10px; color:var(--text); min-width:94px; text-align:right; font-family:monospace;">--</span>
+    <span id="cursorTimeText" style="font-size:10px; color:var(--text); min-width:88px; text-align:right; font-family:monospace;">--</span>
     <select id="speedSelect">
       <option value="800">0.5x</option>
       <option value="250" selected>1x</option>
@@ -419,7 +440,7 @@
     </select>
   </div>
 
-  <!-- Trade Panel -->
+  <!-- Trade Panel (กำหนด Entry / SL / TP ได้ตั้งแต่ตอน Place และลากปรับบนกราฟได้) -->
   <div class="trade-panel">
     <div class="order-types" id="orderTypeGroup">
       <button class="btn active" data-type="BUY">BUY</button>
@@ -429,15 +450,24 @@
       <button class="btn" data-type="BUY STOP">BUY STOP</button>
       <button class="btn" data-type="SELL STOP">SELL STOP</button>
     </div>
+    <div class="trade-inputs-row">
+      <span style="color:var(--muted);">Entry:</span>
+      <input type="number" id="orderEntryInput" placeholder="Auto" step="0.01" style="width:66px; padding:2px 4px; font-size:10px;" />
+      <span style="color:var(--red);">SL:</span>
+      <input type="number" id="orderSLInput" placeholder="Auto" step="0.01" style="width:66px; padding:2px 4px; font-size:10px;" />
+      <span style="color:var(--green);">TP:</span>
+      <input type="number" id="orderTPInput" placeholder="Auto" step="0.01" style="width:66px; padding:2px 4px; font-size:10px;" />
+      <button class="btn" id="clearPriceInputsBtn" style="padding:2px 5px; font-size:10px;" title="Reset Entry/SL/TP to Auto">Auto</button>
+    </div>
     <div class="trade-actions">
       <div class="lot-box">
         <button id="lotMinus">-</button>
         <span>Lot: <b id="lotText">0.10</b></span>
         <button id="lotPlus">+</button>
         <span style="color:var(--muted);">| Risk($):</span>
-        <input type="number" id="riskDollarInput" value="100" style="width:46px; padding:1px 3px; font-size:10px;" />
+        <input type="number" id="riskDollarInput" value="100" style="width:44px; padding:1px 3px; font-size:10px;" />
         <span style="color:var(--muted);">RR:</span>
-        <input type="number" id="rrTargetInput" value="2.0" step="0.5" style="width:36px; padding:1px 3px; font-size:10px;" />
+        <input type="number" id="rrTargetInput" value="2.0" step="0.5" style="width:34px; padding:1px 3px; font-size:10px;" />
       </div>
       <div style="display:flex; gap:5px;">
         <button class="btn btn-blue" id="placeOrderBtn">Place BUY</button>
@@ -520,10 +550,9 @@
     '202604.csv', '202605.csv', '202606.csv', '202607.csv',
     '202608.csv', '202609.csv', '202610.csv', '202611.csv'
   ];
-  const PROFILES_STORAGE_KEY = 'tv_replay_profiles_v5';
+  const PROFILES_STORAGE_KEY = 'tv_replay_profiles_v6';
   const ALL_TFS = [1, 5, 15, 60, 240, 1440];
 
-  // Pure Minimalist Vector SVG Icons (Zero Emojis)
   const SVG_ICONS = {
     cursor: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v18M3 12h18"/></svg>',
     cut: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 4v16"/><path d="M8 9l-3 3 3 3"/><path d="M16 9l3 3-3 3"/></svg>',
@@ -628,8 +657,7 @@
   });
 
   // =========================================================================
-  // NATIVE SERIES PRIMITIVE PLUGIN (วาดกล่องสี่เหลี่ยม/เส้น ใน Render Loop เดียวกับกราฟ)
-  // ซูมเข้า-ออกและเลื่อนกราฟได้สมูท 0ms Delay ในทุก Timeframe!
+  // NATIVE SERIES PRIMITIVE PLUGIN (วาดทั้ง Drawings และ Interactive Order Tags)
   // =========================================================================
   let drawings = [];
   let selectedDrawingIdx = -1;
@@ -639,6 +667,7 @@
   let timeframeMin = 1;
   let visibleCandles = [];
   let isLightTheme = false;
+  let orders = [];
 
   function timeToX(ts) {
     const coord = mainChart.timeScale().timeToCoordinate(ts);
@@ -669,19 +698,63 @@
     ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
   }
 
+  // วาดป้ายแท็กออเดอร์แบบลากขึ้น-ลงได้พร้อมปุ่ม × สำหรับปิด/ยกเลิกออเดอร์บนกราฟโดยตรง
+  function drawInteractiveOrderTag(ctx, W, price, text, color, dashed, showCloseBtn) {
+    const y = Math.round(priceToY(price)) + 0.5;
+    if (y < -16 || y > 2000) return null;
+
+    if (dashed) ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.font = '600 10px -apple-system, BlinkMacSystemFont, sans-serif';
+    const textW = ctx.measureText(text).width;
+    const closeW = showCloseBtn ? 20 : 0;
+    const pillW = textW + 14 + closeW;
+    const pillH = 18;
+    const pillX = 6;
+    const pillY = y - pillH / 2;
+
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.roundRect(pillX, pillY, pillW, pillH, 4);
+    ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, pillX + 7, y + 0.5);
+
+    if (showCloseBtn) {
+      // เส้นแบ่งปุ่มปิด ×
+      const closeX = pillX + textW + 12;
+      ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(closeX, pillY + 3); ctx.lineTo(closeX, pillY + pillH - 3); ctx.stroke();
+
+      // วาดเครื่องหมาย × ด้วยเวกเตอร์คมชัด
+      const cx = closeX + 10, cy = y;
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(cx - 3, cy - 3); ctx.lineTo(cx + 3, cy + 3);
+      ctx.moveTo(cx + 3, cy - 3); ctx.lineTo(cx - 3, cy + 3);
+      ctx.stroke();
+
+      return { pillRect: { x: pillX, y: pillY, w: pillW, h: pillH }, closeRect: { x: closeX, y: pillY, w: 22, h: pillH } };
+    }
+
+    return { pillRect: { x: pillX, y: pillY, w: pillW, h: pillH }, closeRect: null };
+  }
+
+  let orderTagHitboxes = []; // เก็บพิกัดป้าย Entry / TP / SL / ปุ่มปิด × เพื่อตรวจจับการสัมผัส
+
   class NativeDrawingsPrimitive {
-    constructor() {
-      this._requestUpdate = null;
-    }
-    attached({ requestUpdate }) {
-      this._requestUpdate = requestUpdate;
-    }
-    detached() {
-      this._requestUpdate = null;
-    }
-    requestRedraw() {
-      if (this._requestUpdate) this._requestUpdate();
-    }
+    constructor() { this._requestUpdate = null; }
+    attached({ requestUpdate }) { this._requestUpdate = requestUpdate; }
+    detached() { this._requestUpdate = null; }
+    requestRedraw() { if (this._requestUpdate) this._requestUpdate(); }
     paneViews() {
       return [{
         zOrder: () => 'top',
@@ -823,6 +896,37 @@
                 }
               });
 
+              // วาดป้ายออเดอร์บนกราฟ (Entry / TP / SL) ที่จับลากขึ้น-ลงและกดปุ่ม × ปิดออเดอร์ได้โดยตรง
+              orderTagHitboxes = [];
+              const curClose = m1Count > 0 ? m1Close[current1mIndex] : 0;
+
+              orders.forEach((o, oIdx) => {
+                const isBuy = o.type.includes('BUY');
+                const entryColor = isBuy ? '#2962ff' : '#9c27b0';
+                let entryLabel = `${o.type} ${o.lot.toFixed(2)}`;
+                if (o.triggered) {
+                  const pnl = (isBuy ? curClose - o.entry : o.entry - curClose) * 100 * o.lot;
+                  entryLabel += ` (${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)})`;
+                } else if (o.activateTime) {
+                  entryLabel += ` [>=${formatUTC(o.activateTime).split(' ')[1]}]`;
+                }
+
+                const eBox = drawInteractiveOrderTag(ctx, W, o.entry, entryLabel, entryColor, !o.triggered, true);
+                if (eBox) orderTagHitboxes.push({ orderIdx: oIdx, field: 'entry', ...eBox });
+
+                if (o.sl) {
+                  const loss = Math.abs(o.entry - o.sl) * 100 * o.lot;
+                  const slBox = drawInteractiveOrderTag(ctx, W, o.sl, `SL -$${loss.toFixed(0)}`, '#f23645', true, false);
+                  if (slBox) orderTagHitboxes.push({ orderIdx: oIdx, field: 'sl', ...slBox });
+                }
+
+                if (o.tp) {
+                  const gain = Math.abs(o.tp - o.entry) * 100 * o.lot;
+                  const tpBox = drawInteractiveOrderTag(ctx, W, o.tp, `TP +$${gain.toFixed(0)}`, '#089981', true, false);
+                  if (tpBox) orderTagHitboxes.push({ orderIdx: oIdx, field: 'tp', ...tpBox });
+                }
+              });
+
               if (activeSnapCrosshair) {
                 ctx.setLineDash([3, 3]);
                 ctx.strokeStyle = '#2962ff';
@@ -869,7 +973,6 @@
   let balance = 10000;
   let lotSize = 0.10;
   let selectedOrderType = 'BUY';
-  let orders = [];
   let history = [];
   let selectedTool = 'cursor';
 
@@ -1020,7 +1123,6 @@
 
   function switchProfile(profileId) {
     stopPlay();
-    clearAllPriceLines();
     activeProfileId = profileId;
     const st = profiles[profileId] || createEmptyProfileState();
 
@@ -1031,6 +1133,7 @@
     lotSize = st.lotSize || 0.10;
     history = st.history || [];
     drawings = (st.drawings || []).map(d => ({ ...d, visibleTFs: d.visibleTFs || [...ALL_TFS] }));
+    orders = st.orders || [];
     selectedDrawingIdx = -1;
     pendingFirstPoint = null;
     updateSelectionBar();
@@ -1039,9 +1142,6 @@
     document.getElementById('initBalInput').value = initialBalance;
     document.getElementById('lotText').textContent = lotSize.toFixed(2);
     document.querySelectorAll('#tfGroup .btn[data-min]').forEach(b => b.classList.toggle('active', Number(b.dataset.min) === timeframeMin));
-
-    orders = (st.orders || []).map(o => ({ ...o, entryLine: null, slLine: null, tpLine: null }));
-    orders.forEach(o => syncOrderPriceLines(o));
 
     rebuildAllCharts(true);
     updateUI();
@@ -1407,7 +1507,7 @@
   });
   favHandle.addEventListener('pointerup', () => { isDraggingToolbar = false; });
 
-  // Magnifier Zoom Loupe Renderer
+  // Magnifier Zoom Loupe
   function renderMagnifier(targetX, targetY, targetPrice, targetTime) {
     magBox.classList.add('active');
     const size = 112;
@@ -1450,12 +1550,28 @@
     mCtx.fillText(formatUTC(targetTime).split(' ')[1], mid, size - 3);
   }
 
-  // Hit Testing
+  // Hit Testing (Drawings + Order Tags on Chart)
   function distToSegment(px, py, x1, y1, x2, y2) {
     const l2 = (x2 - x1) ** 2 + (y2 - y1) ** 2;
     if (l2 === 0) return Math.hypot(px - x1, py - y1);
     let t = Math.max(0, Math.min(1, ((px - x1) * (x2 - x1) + (py - y1) * (y2 - y1)) / l2));
     return Math.hypot(px - (x1 + t * (x2 - x1)), py - (y1 + t * (y2 - y1)));
+  }
+
+  function hitTestOrderTag(pos) {
+    for (let i = orderTagHitboxes.length - 1; i >= 0; i--) {
+      const hb = orderTagHitboxes[i];
+      if (hb.closeRect &&
+          pos.x >= hb.closeRect.x && pos.x <= hb.closeRect.x + hb.closeRect.w &&
+          pos.y >= hb.closeRect.y - 4 && pos.y <= hb.closeRect.y + hb.closeRect.h + 4) {
+        return { action: 'close', orderIdx: hb.orderIdx };
+      }
+      if (pos.x >= hb.pillRect.x && pos.x <= hb.pillRect.x + hb.pillRect.w &&
+          pos.y >= hb.pillRect.y - 4 && pos.y <= hb.pillRect.y + hb.pillRect.h + 4) {
+        return { action: 'drag', orderIdx: hb.orderIdx, field: hb.field };
+      }
+    }
+    return null;
   }
 
   function hitTestDrawing(pos) {
@@ -1496,8 +1612,43 @@
     return null;
   }
 
+  // ปิดหรือยกเลิกออเดอร์รายไม้ (ปิดได้ทันทีแม้ยังไม่ถึงเวลาหรือยังไม่ชน TP/SL)
+  function closeOrCancelSingleOrder(orderIdx) {
+    const o = orders[orderIdx];
+    if (!o || m1Count === 0) return;
+
+    if (o.triggered) {
+      const curPrice = m1Close[current1mIndex];
+      const curTime = m1Time[current1mIndex];
+      const isBuy = o.type.includes('BUY');
+      const pnl = (isBuy ? curPrice - o.entry : o.entry - curPrice) * 100 * o.lot;
+      balance += pnl;
+      history.unshift({
+        type: o.type, entry: o.entry, exit: curPrice, pnl,
+        reason: 'Manual Close', entryTime: o.entryTime, exitTime: curTime
+      });
+      updateTradeMarkers();
+    }
+    orders.splice(orderIdx, 1);
+    drawingsPrimitive.requestRedraw();
+    updateUI();
+    saveCurrentProfile();
+  }
+
+  // รับการคลิก/แตะบนกราฟเมื่ออยู่ในโหมด Cursor เพื่อจับป้ายออเดอร์ (TP/SL/Entry/×) หรือเลือกเส้นวาด
   mainChart.subscribeClick(param => {
     if (selectedTool !== 'cursor' || !param.point) return;
+
+    const orderHit = hitTestOrderTag(param.point);
+    if (orderHit) {
+      if (orderHit.action === 'close') {
+        closeOrCancelSingleOrder(orderHit.orderIdx);
+      } else {
+        gestureOverlay.classList.add('interactive');
+      }
+      return;
+    }
+
     const hit = hitTestDrawing(param.point);
     if (hit) {
       selectedDrawingIdx = hit.idx;
@@ -1533,9 +1684,9 @@
   }
 
   // =========================================================================
-  // Gesture Overlay Pointer Handling (Native Primitive Redraw = 0ms Lag)
+  // Pointer Handling (ลากเส้น Entry / TP / SL, ปิดออเดอร์บนกราฟ และวาดเครื่องมือ)
   // =========================================================================
-  let editingTarget = null, lastPos = { x: 0, y: 0 }, pointerDownPos = { x: 0, y: 0 };
+  let editingTarget = null, draggingOrderTarget = null, lastPos = { x: 0, y: 0 }, pointerDownPos = { x: 0, y: 0 };
 
   gestureOverlay.addEventListener('pointerdown', e => {
     const rect = gestureOverlay.getBoundingClientRect();
@@ -1556,6 +1707,23 @@
     }
 
     if (selectedTool === 'cursor') {
+      // 1. เช็กการกดปุ่มปิด × หรือการจับลากป้าย Entry / TP / SL บนกราฟก่อน
+      const orderHit = hitTestOrderTag(pos);
+      if (orderHit) {
+        if (orderHit.action === 'close') {
+          closeOrCancelSingleOrder(orderHit.orderIdx);
+          if (orders.length === 0 && selectedDrawingIdx < 0) gestureOverlay.classList.remove('interactive');
+        } else if (orderHit.action === 'drag') {
+          const o = orders[orderHit.orderIdx];
+          // ย้าย Entry ได้เฉพาะออเดอร์ที่ยังไม่ Triggered ส่วน TP/SL ย้ายได้ตลอดเวลา
+          if (orderHit.field === 'entry' && o.triggered) return;
+          draggingOrderTarget = { orderIdx: orderHit.orderIdx, field: orderHit.field };
+          gestureOverlay.setPointerCapture(e.pointerId);
+        }
+        return;
+      }
+
+      // 2. เช็กการจับจุดแก้ไขของ Drawings
       const hit = hitTestDrawing(pos);
       if (hit) {
         selectedDrawingIdx = hit.idx;
@@ -1566,6 +1734,7 @@
       } else {
         selectedDrawingIdx = -1;
         updateSelectionBar();
+        // คง overlay ไว้เฉพาะตอนที่มีออเดอร์ให้จับลากบนกราฟ หรือปิดเมื่อแตะพื้นที่ว่างเพื่อเลื่อน/ซูมกราฟ
         gestureOverlay.classList.remove('interactive');
         drawingsPrimitive.requestRedraw();
       }
@@ -1640,6 +1809,20 @@
     const dx = pos.x - lastPos.x, dy = pos.y - lastPos.y;
     lastPos = pos;
 
+    // ลากเส้น Entry / SL / TP ของออเดอร์บนกราฟโดยตรง
+    if (draggingOrderTarget) {
+      const o = orders[draggingOrderTarget.orderIdx];
+      if (o) {
+        const newPrice = yToPrice(pos.y);
+        o[draggingOrderTarget.field] = newPrice;
+        activeSnapCrosshair = { x: pos.x, y: pos.y, price: newPrice, time: m1Time[current1mIndex] };
+        drawingsPrimitive.requestRedraw();
+        renderMagnifier(pos.x, pos.y, newPrice, m1Time[current1mIndex]);
+        updateUI();
+      }
+      return;
+    }
+
     if (editingTarget) {
       const d = drawings[editingTarget.idx];
       const barSpacing = mainChart.timeScale().options().barSpacing || 6;
@@ -1697,6 +1880,11 @@
   window.addEventListener('pointerup', () => {
     activeSnapCrosshair = null;
     magBox.classList.remove('active');
+    if (draggingOrderTarget) {
+      draggingOrderTarget = null;
+      drawingsPrimitive.requestRedraw();
+      saveCurrentProfile();
+    }
     if (activeDragDraw) {
       drawings.push(activeDragDraw);
       activeDragDraw = null;
@@ -1716,46 +1904,10 @@
   });
 
   // =========================================================================
-  // Order Price Lines & Simulation Engine
+  // Simulation Engine (+1 / -1 Step with Custom Step Interval 1m..1D)
   // =========================================================================
-  function clearAllPriceLines() {
-    orders.forEach(o => {
-      if (o.entryLine) candleSeries.removePriceLine(o.entryLine);
-      if (o.slLine) candleSeries.removePriceLine(o.slLine);
-      if (o.tpLine) candleSeries.removePriceLine(o.tpLine);
-    });
-  }
-
-  function syncOrderPriceLines(order) {
-    if (order.entryLine) candleSeries.removePriceLine(order.entryLine);
-    if (order.slLine) candleSeries.removePriceLine(order.slLine);
-    if (order.tpLine) candleSeries.removePriceLine(order.tpLine);
-
-    const isBuy = order.type.includes('BUY');
-    const timeTag = (!order.triggered && order.activateTime) ? ` [>=${formatUTC(order.activateTime).split(' ')[1]}]` : '';
-    order.entryLine = candleSeries.createPriceLine({
-      price: order.entry, color: isBuy ? '#2962ff' : '#9c27b0', lineWidth: 2,
-      lineStyle: order.triggered ? 0 : 2, axisLabelVisible: true,
-      title: `${order.type} ${order.lot.toFixed(2)}${timeTag}`,
-    });
-    if (order.sl) {
-      const loss = Math.abs(order.entry - order.sl) * 100 * order.lot;
-      order.slLine = candleSeries.createPriceLine({
-        price: order.sl, color: '#f23645', lineWidth: 1, lineStyle: 2, axisLabelVisible: true,
-        title: `SL -$${loss.toFixed(0)}`,
-      });
-    }
-    if (order.tp) {
-      const gain = Math.abs(order.tp - order.entry) * 100 * order.lot;
-      order.tpLine = candleSeries.createPriceLine({
-        price: order.tp, color: '#089981', lineWidth: 1, lineStyle: 2, axisLabelVisible: true,
-        title: `TP +$${gain.toFixed(0)}`,
-      });
-    }
-  }
-
-  function stepForward() {
-    const stepMinutes = Math.max(1, timeframeMin);
+  function stepForward(customMinutes = null) {
+    const stepMinutes = customMinutes || Number(document.getElementById('stepUnitSelect').value) || 1;
     if (current1mIndex + stepMinutes >= m1Count) { stopPlay(); return; }
 
     for (let m = 1; m <= stepMinutes; m++) {
@@ -1772,7 +1924,6 @@
           if (timeReached && priceTouched) {
             o.triggered = true;
             o.entryTime = bTime;
-            syncOrderPriceLines(o);
           }
         }
 
@@ -1789,9 +1940,6 @@
           if (exitP !== null) {
             const pnl = (isBuy ? exitP - o.entry : o.entry - exitP) * 100 * o.lot;
             balance += pnl;
-            if (o.entryLine) candleSeries.removePriceLine(o.entryLine);
-            if (o.slLine) candleSeries.removePriceLine(o.slLine);
-            if (o.tpLine) candleSeries.removePriceLine(o.tpLine);
             history.unshift({ type: o.type, entry: o.entry, exit: exitP, pnl, reason, entryTime: o.entryTime, exitTime: bTime });
             continue;
           }
@@ -1807,13 +1955,22 @@
     saveCurrentProfile();
   }
 
+  function stepBackward() {
+    stopPlay();
+    const stepMinutes = Number(document.getElementById('stepUnitSelect').value) || 1;
+    current1mIndex = Math.max(30, current1mIndex - stepMinutes);
+    rebuildAllCharts(false);
+    updateUI();
+    saveCurrentProfile();
+  }
+
   function startPlay() {
     if (isPlaying) return;
     isPlaying = true;
     const btn = document.getElementById('playBtn');
     btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg><span>Pause</span>';
     btn.className = 'btn btn-orange';
-    playTimer = setInterval(stepForward, speedMs);
+    playTimer = setInterval(() => stepForward(), speedMs);
   }
   function stopPlay() {
     isPlaying = false;
@@ -1847,15 +2004,25 @@
 
     const list = document.getElementById('listArea');
     if (activeTab === 'active') {
-      list.innerHTML = orders.map(o => {
+      list.innerHTML = orders.map((o, idx) => {
         const isBuy = o.type.includes('BUY');
         const pnl = o.triggered ? (isBuy ? curPrice - o.entry : o.entry - curPrice) * 100 * o.lot : 0;
         const waitTxt = o.activateTime ? `WAIT >= ${formatUTC(o.activateTime).split(' ')[1]}` : 'PENDING';
         return `<div class="order-row">
-          <div><b style="color:${isBuy ? 'var(--blue)' : 'var(--purple)'}">${o.type}</b> ${o.lot.toFixed(2)} @ ${o.entry.toFixed(3)}</div>
-          <div>${o.triggered ? `<b style="color:${pnl >= 0 ? 'var(--green)' : 'var(--red)'}">${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}</b>` : `<span style="color:var(--yellow); font-weight:600;">${waitTxt}</span>`}</div>
+          <div>
+            <b style="color:${isBuy ? 'var(--blue)' : 'var(--purple)'}">${o.type}</b> ${o.lot.toFixed(2)} @ ${o.entry.toFixed(3)}
+            <div style="font-size:10px; color:var(--muted);">SL: ${o.sl ? o.sl.toFixed(2) : '-'} | TP: ${o.tp ? o.tp.toFixed(2) : '-'}</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:6px;">
+            ${o.triggered ? `<b style="color:${pnl >= 0 ? 'var(--green)' : 'var(--red)'}">${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}</b>` : `<span style="color:var(--yellow); font-weight:600;">${waitTxt}</span>`}
+            <button class="btn btn-red" data-close-order="${idx}" style="padding:2px 6px; font-size:10px;">${o.triggered ? 'Close' : 'Cancel'}</button>
+          </div>
         </div>`;
       }).join('') || '<div style="color:var(--muted);text-align:center;margin-top:14px;">No active orders</div>';
+
+      list.querySelectorAll('[data-close-order]').forEach(btn => {
+        btn.onclick = () => closeOrCancelSingleOrder(Number(btn.dataset.closeOrder));
+      });
     } else {
       list.innerHTML = history.map(h => `
         <div class="order-row">
@@ -1915,16 +2082,15 @@
   document.getElementById('resetTradesBtn').onclick = () => {
     if (!confirm(`Reset all trades and balance for [${activeProfileId}]?`)) return;
     stopPlay();
-    clearAllPriceLines();
     balance = initialBalance;
     orders = [];
     history = [];
     updateTradeMarkers();
+    drawingsPrimitive.requestRedraw();
     updateUI();
     saveCurrentProfile();
   };
 
-  // Swatch Color Picker
   document.querySelectorAll('#swatchGroup .swatch').forEach(sw => {
     sw.onclick = () => {
       if (selectedDrawingIdx >= 0 && drawings[selectedDrawingIdx]) {
@@ -1936,7 +2102,6 @@
     };
   });
 
-  // Copy Selected Object
   document.getElementById('copySelectedBtn').onclick = () => {
     if (selectedDrawingIdx < 0 || !drawings[selectedDrawingIdx]) return;
     const orig = drawings[selectedDrawingIdx];
@@ -1990,14 +2155,13 @@
     if (isBuy) orderType = entry <= curPrice ? 'BUY LIMIT' : 'BUY STOP';
     else orderType = entry >= curPrice ? 'SELL LIMIT' : 'SELL STOP';
 
-    const newOrder = {
+    orders.push({
       id: Date.now(), type: orderType, triggered: false,
       activateTime: Math.max(curTime, d.t1),
-      entry, sl: d.p1, tp: d.p2, lot: calcLot,
-      entryTime: null, entryLine: null, slLine: null, tpLine: null
-    };
-    orders.push(newOrder);
-    syncOrderPriceLines(newOrder);
+      entry, sl: d.p1, tp: d.p2, lot: calcLot, entryTime: null
+    });
+    gestureOverlay.classList.add('interactive');
+    drawingsPrimitive.requestRedraw();
     updateUI();
     saveCurrentProfile();
   };
@@ -2010,21 +2174,30 @@
     const rr = parseFloat(document.getElementById('rrTargetInput').value) || 2.0;
     const slDist = 5.0, tpDist = slDist * rr;
 
-    const newOrder = {
+    const customSL = parseFloat(document.getElementById('orderSLInput').value);
+    const customTP = parseFloat(document.getElementById('orderTPInput').value);
+
+    orders.push({
       id: Date.now(), type: isBuy ? 'BUY' : 'SELL', triggered: true,
       activateTime: curTime, entry,
-      sl: isBuy ? entry - slDist : entry + slDist,
-      tp: isBuy ? entry + tpDist : entry - tpDist,
-      lot: lotSize, entryTime: curTime, entryLine: null, slLine: null, tpLine: null
-    };
-    orders.push(newOrder);
-    syncOrderPriceLines(newOrder);
+      sl: !isNaN(customSL) ? customSL : (isBuy ? entry - slDist : entry + slDist),
+      tp: !isNaN(customTP) ? customTP : (isBuy ? entry + tpDist : entry - tpDist),
+      lot: lotSize, entryTime: curTime
+    });
+    gestureOverlay.classList.add('interactive');
+    drawingsPrimitive.requestRedraw();
     updateUI();
     saveCurrentProfile();
   }
 
   document.getElementById('ocBuyBtn').onclick = () => placeInstantMarketOrder(true);
   document.getElementById('ocSellBtn').onclick = () => placeInstantMarketOrder(false);
+
+  document.getElementById('clearPriceInputsBtn').onclick = () => {
+    document.getElementById('orderEntryInput').value = '';
+    document.getElementById('orderSLInput').value = '';
+    document.getElementById('orderTPInput').value = '';
+  };
 
   document.getElementById('openAllToolsBtn').onclick = () => {
     renderAllToolsModal();
@@ -2113,6 +2286,7 @@
 
   document.getElementById('playBtn').onclick = () => isPlaying ? stopPlay() : startPlay();
   document.getElementById('stepBtn').onclick = () => { stopPlay(); stepForward(); };
+  document.getElementById('stepBackBtn').onclick = () => stepBackward();
   document.getElementById('speedSelect').onchange = e => {
     speedMs = Number(e.target.value);
     if (isPlaying) { stopPlay(); startPlay(); }
@@ -2151,28 +2325,36 @@
     const isBuy = selectedOrderType.includes('BUY');
     let entry = price, triggered = false;
 
-    if (selectedOrderType === 'BUY') { entry = price + 0.25; triggered = true; }
-    else if (selectedOrderType === 'SELL') { entry = price; triggered = true; }
-    else if (selectedOrderType === 'BUY LIMIT') entry = price - 3.5;
-    else if (selectedOrderType === 'SELL LIMIT') entry = price + 3.5;
-    else if (selectedOrderType === 'BUY STOP') entry = price + 3.5;
-    else if (selectedOrderType === 'SELL STOP') entry = price - 3.5;
+    const customEntry = parseFloat(document.getElementById('orderEntryInput').value);
+    const customSL = parseFloat(document.getElementById('orderSLInput').value);
+    const customTP = parseFloat(document.getElementById('orderTPInput').value);
+
+    if (!isNaN(customEntry)) {
+      entry = customEntry;
+      triggered = (selectedOrderType === 'BUY' || selectedOrderType === 'SELL');
+    } else {
+      if (selectedOrderType === 'BUY') { entry = price + 0.25; triggered = true; }
+      else if (selectedOrderType === 'SELL') { entry = price; triggered = true; }
+      else if (selectedOrderType === 'BUY LIMIT') entry = price - 3.5;
+      else if (selectedOrderType === 'SELL LIMIT') entry = price + 3.5;
+      else if (selectedOrderType === 'BUY STOP') entry = price + 3.5;
+      else if (selectedOrderType === 'SELL STOP') entry = price - 3.5;
+    }
 
     const rr = parseFloat(document.getElementById('rrTargetInput').value) || 2.0;
     const slDist = 5.0, tpDist = slDist * rr;
 
-    const newOrder = {
+    orders.push({
       id: Date.now(), type: selectedOrderType, triggered,
       activateTime: curTime,
       entry,
-      sl: isBuy ? entry - slDist : entry + slDist,
-      tp: isBuy ? entry + tpDist : entry - tpDist,
+      sl: !isNaN(customSL) ? customSL : (isBuy ? entry - slDist : entry + slDist),
+      tp: !isNaN(customTP) ? customTP : (isBuy ? entry + tpDist : entry - tpDist),
       lot: lotSize,
-      entryTime: triggered ? curTime : null,
-      entryLine: null, slLine: null, tpLine: null
-    };
-    orders.push(newOrder);
-    syncOrderPriceLines(newOrder);
+      entryTime: triggered ? curTime : null
+    });
+    gestureOverlay.classList.add('interactive');
+    drawingsPrimitive.requestRedraw();
     updateUI(); saveCurrentProfile();
   };
 
@@ -2184,13 +2366,12 @@
       const isBuy = o.type.includes('BUY');
       const pnl = (isBuy ? cur - o.entry : o.entry - cur) * 100 * o.lot;
       balance += pnl;
-      if (o.entryLine) candleSeries.removePriceLine(o.entryLine);
-      if (o.slLine) candleSeries.removePriceLine(o.slLine);
-      if (o.tpLine) candleSeries.removePriceLine(o.tpLine);
       history.unshift({ type: o.type, entry: o.entry, exit: cur, pnl, reason: 'Manual', entryTime: o.entryTime, exitTime: curT });
       return false;
     });
-    updateTradeMarkers(); updateUI(); saveCurrentProfile();
+    updateTradeMarkers();
+    drawingsPrimitive.requestRedraw();
+    updateUI(); saveCurrentProfile();
   };
 
   document.getElementById('undoDrawBtn').onclick = () => {
