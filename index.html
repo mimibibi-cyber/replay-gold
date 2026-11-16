@@ -6,13 +6,14 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="TV Replay Pro" />
-  <title>TradingView & FXReplay Pro (Apr–Nov 2026)</title>
+  <title>Pro Charting & Replay Engine</title>
   <script src="https://unpkg.com/lightweight-charts@4.2.1/dist/lightweight-charts.standalone.production.js"></script>
   <style>
     :root {
       --bg: #131722;
       --panel: #1e222d;
       --panel2: #2a2e39;
+      --glass: rgba(30, 34, 45, 0.86);
       --border: #363a45;
       --text: #d1d4dc;
       --muted: #787b86;
@@ -26,6 +27,7 @@
       --bg: #ffffff;
       --panel: #f8fafc;
       --panel2: #e2e8f0;
+      --glass: rgba(248, 250, 252, 0.88);
       --border: #cbd5e1;
       --text: #131722;
       --muted: #64748b;
@@ -34,34 +36,36 @@
     body {
       margin: 0; padding: 0;
       background: var(--bg); color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Trebuchet MS", Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
       display: flex; flex-direction: column; height: 100dvh; overflow: hidden;
     }
 
     /* Header */
     .tv-header {
       display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px;
-      padding: 4px 8px; background: var(--panel); border-bottom: 1px solid var(--border);
-      padding-top: max(4px, env(safe-area-inset-top));
+      padding: 5px 8px; background: var(--panel); border-bottom: 1px solid var(--border);
+      padding-top: max(5px, env(safe-area-inset-top));
     }
     .group { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
     .btn, select, input[type="date"], input[type="number"] {
       background: var(--panel2); color: var(--text); border: 1px solid var(--border);
-      padding: 4px 6px; border-radius: 4px; font-size: 11px; font-weight: 600;
+      padding: 4px 7px; border-radius: 5px; font-size: 11px; font-weight: 500;
+      display: inline-flex; align-items: center; justify-content: center; gap: 4px;
     }
-    .btn { cursor: pointer; border: none; }
-    .btn:hover { opacity: 0.9; }
+    .btn { cursor: pointer; border: none; transition: background 0.15s, transform 0.1s; }
+    .btn:active { transform: scale(0.96); }
+    .btn:hover { opacity: 0.92; }
     .btn.active { background: var(--blue); color: #fff; }
     .btn-green { background: var(--green); color: #fff; }
     .btn-red { background: var(--red); color: #fff; }
     .btn-blue { background: var(--blue); color: #fff; }
-    .btn-orange { background: #f97316; color: #fff; }
+    .btn-orange { background: #ea580c; color: #fff; }
 
     /* Subbar */
     .tv-subbar {
       display: flex; justify-content: space-between; align-items: center;
       padding: 4px 8px; background: var(--bg); border-bottom: 1px solid var(--border);
-      font-size: 11px; overflow-x: auto; gap: 8px; flex-shrink: 0;
+      font-size: 11px; overflow-x: auto; gap: 10px; flex-shrink: 0;
     }
     .tv-subbar::-webkit-scrollbar { display: none; }
     .stat { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
@@ -73,18 +77,35 @@
     #mainChartPane {
       position: relative; flex: 1; width: 100%; min-height: 150px;
     }
-    #overlayCanvas {
+    /* Overlay รับเฉพาะ Event การแตะ/ลาก ไม่ได้ใช้วาดกราฟ (กราฟและกล่องวาดใน Native Render Loop ของ TradingView โดยตรง) */
+    #gestureOverlay {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
       pointer-events: none; z-index: 10;
     }
-    #overlayCanvas.interactive { pointer-events: auto; }
+    #gestureOverlay.interactive { pointer-events: auto; }
 
-    /* Magnifier Zoom Loupe (แว่นขยายตอนลากมุมกล่อง/เส้น) */
+    /* One-Click Trading Floating Header (TradingView Style) */
+    .one-click-box {
+      position: absolute; top: 38px; left: 8px; z-index: 16;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .oc-btn {
+      padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700;
+      cursor: pointer; border: 1px solid transparent; display: flex; flex-direction: column; align-items: center;
+      min-width: 66px; line-height: 1.15;
+    }
+    .oc-sell { background: rgba(242, 54, 69, 0.14); border-color: var(--red); color: var(--red); }
+    .oc-sell:active { background: var(--red); color: #fff; }
+    .oc-buy { background: rgba(41, 98, 255, 0.14); border-color: var(--blue); color: var(--blue); }
+    .oc-buy:active { background: var(--blue); color: #fff; }
+    .oc-spread { font-size: 10px; color: var(--muted); font-family: monospace; padding: 0 2px; }
+
+    /* Magnifier Zoom Loupe */
     .magnifier-box {
-      position: absolute; top: 44px; left: 10px;
-      width: 116px; height: 116px; border-radius: 50%;
-      border: 2.5px solid var(--blue); background: var(--bg);
-      box-shadow: 0 6px 20px rgba(0,0,0,0.55); z-index: 40;
+      position: absolute; top: 82px; left: 10px;
+      width: 112px; height: 112px; border-radius: 50%;
+      border: 2px solid var(--blue); background: var(--bg);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5); z-index: 40;
       display: none; overflow: hidden; pointer-events: none;
     }
     .magnifier-box.active { display: block; }
@@ -98,65 +119,72 @@
     .ind-pane.active { display: block; }
     .ind-label {
       position: absolute; top: 3px; left: 6px; z-index: 12; font-size: 10px;
-      font-weight: bold; pointer-events: none; background: rgba(19,23,34,0.75); padding: 1px 4px; border-radius: 3px;
+      font-weight: 600; pointer-events: none; background: var(--glass); padding: 1px 5px; border-radius: 3px;
     }
-    body.light-theme .ind-label { background: rgba(255,255,255,0.85); }
 
-    /* Draggable Floating Favorite Toolbar */
+    /* Minimal Glassmorphism Floating Favorite Toolbar */
     .fav-toolbar {
-      position: absolute; right: 74px; top: 16px;
-      background: var(--panel); border: 1px solid var(--border);
-      border-radius: 8px; padding: 3px; display: flex; flex-direction: column; gap: 3px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.35); z-index: 30; touch-action: none;
+      position: absolute; right: 74px; top: 14px;
+      background: var(--glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 10px; padding: 4px; display: flex; flex-direction: column; gap: 3px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.32); z-index: 30; touch-action: none;
     }
     .fav-drag-handle {
-      text-align: center; font-size: 10px; color: var(--muted); cursor: grab;
-      padding: 2px 0; border-bottom: 1px solid var(--border); letter-spacing: 2px;
+      display: flex; justify-content: center; align-items: center; color: var(--muted); cursor: grab;
+      padding: 3px 0; border-bottom: 1px solid var(--border);
     }
     .tool-btn {
-      width: 30px; height: 28px; border-radius: 5px; border: none;
-      background: transparent; color: var(--text); font-size: 13px;
+      width: 32px; height: 30px; border-radius: 6px; border: none;
+      background: transparent; color: var(--text);
       display: flex; align-items: center; justify-content: center; cursor: pointer;
+      transition: background 0.15s, color 0.15s;
     }
     .tool-btn:hover { background: var(--panel2); }
     .tool-btn.active { background: var(--blue); color: #fff; }
 
-    /* Floating Style, Copy, Multi-TF & RR Action Bar */
+    /* Contextual Floating Edit Pill */
     .selection-bar {
-      position: absolute; top: 8px; left: 8px; right: 112px;
-      background: var(--panel); border: 1px solid var(--border);
-      padding: 5px 8px; border-radius: 8px; display: none; align-items: center; gap: 5px;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.45); z-index: 35; font-size: 11px; flex-wrap: wrap;
+      position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+      background: var(--glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      padding: 5px 9px; border-radius: 10px; display: none; align-items: center; gap: 6px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4); z-index: 35; font-size: 11px; flex-wrap: wrap;
     }
     .selection-bar.visible { display: flex; }
+    .swatch {
+      width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.3);
+      cursor: pointer; padding: 0;
+    }
+    .swatch.active { transform: scale(1.2); border-color: #fff; }
     .tf-vis-chip {
-      padding: 2px 4px; border-radius: 3px; font-size: 9px; font-weight: bold;
+      padding: 2px 5px; border-radius: 4px; font-size: 9px; font-weight: 600;
       background: var(--panel2); color: var(--muted); border: 1px solid var(--border); cursor: pointer;
     }
     .tf-vis-chip.on { background: var(--blue); color: #fff; border-color: var(--blue); }
 
     .point-hint {
       position: absolute; bottom: 26px; left: 50%; transform: translateX(-50%);
-      background: rgba(41, 98, 255, 0.92); color: #fff; padding: 4px 12px;
-      border-radius: 16px; font-size: 11px; font-weight: bold; z-index: 28;
-      display: none; pointer-events: none;
+      background: var(--blue); color: #fff; padding: 4px 12px;
+      border-radius: 16px; font-size: 11px; font-weight: 600; z-index: 28;
+      display: none; pointer-events: none; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
     .point-hint.visible { display: block; }
 
     .ohlc-legend {
       position: absolute; top: 6px; left: 8px; pointer-events: none; z-index: 15;
-      font-size: 11px; line-height: 1.35;
+      font-size: 11px; line-height: 1.3;
     }
 
     /* Modals */
     .modal-backdrop {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100;
+      position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 100;
       display: none; align-items: center; justify-content: center; padding: 12px;
     }
     .modal-backdrop.open { display: flex; }
     .modal-card {
-      background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
-      width: 100%; max-width: 380px; max-height: 82dvh; overflow-y: auto; padding: 12px;
+      background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+      width: 100%; max-width: 380px; max-height: 82dvh; overflow-y: auto; padding: 14px;
     }
     .modal-header {
       display: flex; justify-content: space-between; align-items: center;
@@ -164,13 +192,13 @@
     }
     .tool-grid-item {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 7px 8px; border-bottom: 1px solid var(--border); font-size: 12px;
+      padding: 8px 6px; border-bottom: 1px solid var(--border); font-size: 12px;
     }
     .ind-setting-box {
-      background: var(--panel2); padding: 8px; border-radius: 6px; margin-bottom: 8px; font-size: 11px;
+      background: var(--panel2); padding: 9px; border-radius: 8px; margin-bottom: 8px; font-size: 11px;
     }
     .ind-setting-row {
-      display: flex; justify-content: space-between; align-items: center; margin-top: 5px; gap: 6px;
+      display: flex; justify-content: space-between; align-items: center; margin-top: 6px; gap: 6px;
     }
 
     /* Replay Bar */
@@ -190,11 +218,11 @@
     .trade-actions { display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap; }
     .lot-box {
       display: flex; align-items: center; gap: 4px; font-size: 11px;
-      background: var(--panel2); padding: 3px 6px; border-radius: 4px;
+      background: var(--panel2); padding: 3px 6px; border-radius: 5px;
     }
     .lot-box button {
       background: #475569; color: #fff; border: none; width: 20px; height: 20px;
-      border-radius: 3px; font-weight: bold; cursor: pointer;
+      border-radius: 4px; font-weight: bold; cursor: pointer;
     }
 
     /* Bottom Sheet */
@@ -204,23 +232,23 @@
     }
     .tabs { display: flex; background: var(--panel); }
     .tab {
-      flex: 1; text-align: center; padding: 4px; font-size: 11px;
-      font-weight: bold; color: var(--muted); cursor: pointer;
+      flex: 1; text-align: center; padding: 5px; font-size: 11px;
+      font-weight: 600; color: var(--muted); cursor: pointer;
     }
     .tab.active { color: var(--text); border-bottom: 2px solid var(--blue); }
     .list-area { flex: 1; overflow-y: auto; padding: 4px 8px; font-size: 11px; }
     .order-row {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 4px 0; border-bottom: 1px solid var(--border);
+      padding: 5px 0; border-bottom: 1px solid var(--border);
     }
   </style>
 </head>
 <body>
 
-  <!-- Top Header -->
+  <!-- Top Header (Zero Emojis - Pure Vector SVG) -->
   <div class="tv-header">
     <div class="group">
-      <b style="font-size:12px; color:#eab308;">XAUUSD</b>
+      <span style="font-size:12px; font-weight:700; letter-spacing:0.4px;">XAUUSD</span>
 
       <div class="group" id="tfGroup">
         <button class="btn active" data-min="1">1m</button>
@@ -233,13 +261,26 @@
     </div>
 
     <div class="group">
-      <button class="btn btn-green" id="autoGraphBtn" title="จัดขนาดกราฟให้อยู่ในมุมมองที่เหมาะสม">📐 Auto Graph</button>
-      <button class="btn btn-blue" id="openIndModalBtn">📊 Ind</button>
-      <button class="btn active" id="toggleMarkersBtn" title="เปิด/ปิดลูกศรจุดเข้า-ออก">🏹</button>
-      <button class="btn" id="themeBtn" title="สลับสีพื้นหลัง">🌓</button>
+      <button class="btn" id="autoGraphBtn" title="Auto Fit Graph">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+        <span>Auto</span>
+      </button>
+      <button class="btn" id="openIndModalBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 17l6-6 4 4 8-8"/><path d="M17 7h4v4"/></svg>
+        <span>Indicators</span>
+      </button>
+      <button class="btn active" id="toggleMarkersBtn" title="Toggle Trade History Markers">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+        <span>Markers</span>
+      </button>
+      <button class="btn" id="themeBtn" title="Toggle Light/Dark Theme">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      </button>
       <input type="date" id="startDateInput" min="2026-04-01" max="2026-11-30" value="2026-11-01" />
-      <label class="btn" style="background:#334155; color:#fff;">
-        📂 +CSV <input type="file" id="csvInput" accept=".csv,.txt" multiple hidden />
+      <label class="btn btn-blue" style="cursor:pointer;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <span>CSV</span>
+        <input type="file" id="csvInput" accept=".csv,.txt" multiple hidden />
       </label>
     </div>
   </div>
@@ -248,45 +289,59 @@
   <div class="tv-subbar">
     <div class="stat">
       <span style="color:var(--muted);">ID:</span>
-      <select id="profileSelect" style="max-width:100px;"></select>
-      <button class="btn btn-green" id="addProfileBtn">+ID</button>
+      <select id="profileSelect" style="max-width:110px;"></select>
+      <button class="btn" id="addProfileBtn" title="New Profile">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
     </div>
     <div class="stat">
-      <span style="color:var(--muted);">ทุน:</span>
-      <input type="number" id="initBalInput" value="10000" style="width:54px; padding:2px 4px;" />
-      <button class="btn btn-blue" id="applyBalBtn" style="padding:2px 5px;">Set</button>
+      <span style="color:var(--muted);">Capital:</span>
+      <input type="number" id="initBalInput" value="10000" style="width:56px; padding:2px 4px;" />
+      <button class="btn btn-blue" id="applyBalBtn" style="padding:2px 6px;">Set</button>
     </div>
     <div class="stat">
-      <span style="color:var(--muted);">Bal:</span>
+      <span style="color:var(--muted);">Balance:</span>
       <b id="balText">$10000.00</b>
     </div>
     <div class="stat">
-      <span style="color:var(--muted);">Eq:</span>
+      <span style="color:var(--muted);">Equity:</span>
       <b id="eqText" style="color:var(--green);">$10000.00</b>
     </div>
     <div class="stat">
-      <span style="color:var(--muted);">Win:</span>
+      <span style="color:var(--muted);">WinRate:</span>
       <b id="winRateText">0%</b>
     </div>
     <div class="stat">
-      <button class="btn btn-red" id="resetTradesBtn" style="padding:2px 6px;">🗑 Reset Trade</button>
+      <button class="btn btn-red" id="resetTradesBtn" style="padding:2px 7px;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        <span>Reset</span>
+      </button>
     </div>
   </div>
 
   <!-- Workspace -->
   <div class="workspace">
-    <!-- Floating Style, Copy, Multi-TF & RR Action Bar -->
+    <!-- Contextual Edit Bar (Style, Copy, TF Visibility, Execute RR, Delete) -->
     <div class="selection-bar" id="selectionBar">
-      <span id="selectedObjLabel" style="font-weight:bold;">Tool</span>
-      <input type="color" id="drawColorPicker" value="#eab308" style="width:20px; height:20px; border:none; background:none; padding:0; cursor:pointer;" />
-      <select id="drawWidthSelect" style="padding:2px 3px; font-size:10px;">
+      <span id="selectedObjLabel" style="font-weight:700;">Object</span>
+      <div class="group" id="swatchGroup" style="gap:4px;">
+        <button class="swatch" data-col="#eab308" style="background:#eab308;"></button>
+        <button class="swatch" data-col="#2962ff" style="background:#2962ff;"></button>
+        <button class="swatch" data-col="#089981" style="background:#089981;"></button>
+        <button class="swatch" data-col="#f23645" style="background:#f23645;"></button>
+        <button class="swatch" data-col="#d1d4dc" style="background:#d1d4dc;"></button>
+      </div>
+      <select id="drawWidthSelect" style="padding:2px 4px; font-size:10px;">
         <option value="1">1px</option>
         <option value="2" selected>2px</option>
         <option value="3">3px</option>
         <option value="5">5px</option>
         <option value="8">8px</option>
       </select>
-      <button class="btn btn-blue" id="copySelectedBtn" style="padding:2px 6px;" title="คัดลอกวัตถุนี้">📋 Copy</button>
+      <button class="btn" id="copySelectedBtn" title="Duplicate Object">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span>Copy</span>
+      </button>
       <div class="group" id="tfVisGroup" style="gap:2px;">
         <span class="tf-vis-chip on" data-vtf="1">1m</span>
         <span class="tf-vis-chip on" data-vtf="5">5m</span>
@@ -295,31 +350,47 @@
         <span class="tf-vis-chip on" data-vtf="240">4H</span>
         <span class="tf-vis-chip on" data-vtf="1440">1D</span>
       </div>
-      <button class="btn btn-green" id="execRRBtn" style="display:none; padding:2px 6px;">⚡ เปิดออเดอร์ (รอแตะราคา)</button>
-      <button class="btn btn-red" id="deleteSelectedBtn" style="padding:2px 6px;">🗑</button>
-      <button class="btn" id="deselectBtn" style="padding:2px 5px;">✕</button>
+      <button class="btn btn-green" id="execRRBtn" style="display:none; padding:2px 7px;">Execute Order</button>
+      <button class="btn btn-red" id="deleteSelectedBtn" style="padding:2px 6px;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      </button>
+      <button class="btn" id="deselectBtn" style="padding:2px 6px;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
 
-    <!-- Magnifier Zoom Loupe (แว่นขยายตอนลากมุมกล่อง/เส้น) -->
+    <!-- Magnifier Zoom Loupe -->
     <div class="magnifier-box" id="magnifierBox">
-      <canvas id="magCanvas" width="116" height="116"></canvas>
+      <canvas id="magCanvas" width="112" height="112"></canvas>
     </div>
 
-    <!-- Point-by-Point Guidance Banner -->
-    <div class="point-hint" id="pointHint">แตะจุดที่ 1 บนกราฟเพื่อปักหมุด</div>
+    <!-- Point-by-Point Guidance Pill -->
+    <div class="point-hint" id="pointHint">Select Point 1</div>
 
-    <!-- Draggable Floating Favorite Toolbar -->
+    <!-- Draggable Floating Favorite Toolbar (Pure Minimal SVG) -->
     <div class="fav-toolbar" id="favToolbar">
-      <div class="fav-drag-handle" id="favDragHandle">⋮⋮</div>
+      <div class="fav-drag-handle" id="favDragHandle">
+        <svg width="14" height="10" viewBox="0 0 24 12" fill="currentColor"><circle cx="8" cy="3" r="1.5"/><circle cx="16" cy="3" r="1.5"/><circle cx="8" cy="9" r="1.5"/><circle cx="16" cy="9" r="1.5"/></svg>
+      </div>
       <div id="favButtonsContainer" style="display:flex; flex-direction:column; gap:3px;"></div>
-      <button class="tool-btn" id="openAllToolsBtn" style="border-top:1px solid var(--border); margin-top:2px;" title="เครื่องมือทั้งหมด">🧰</button>
-      <button class="tool-btn" id="undoDrawBtn" title="Undo">↩️</button>
+      <button class="tool-btn" id="openAllToolsBtn" style="border-top:1px solid var(--border); margin-top:2px;" title="All Drawing Tools">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+      </button>
+      <button class="tool-btn" id="undoDrawBtn" title="Undo">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+      </button>
     </div>
 
     <!-- Main Chart Pane -->
     <div id="mainChartPane">
-      <div class="ohlc-legend" id="ohlcLegend">XAUUSD • HistData Real M1 (Apr–Nov 2026)</div>
-      <canvas id="overlayCanvas"></canvas>
+      <div class="ohlc-legend" id="ohlcLegend">XAUUSD • HistData Real M1</div>
+      <!-- One-Click Trading Buttons -->
+      <div class="one-click-box">
+        <button class="oc-btn oc-sell" id="ocSellBtn"><span>SELL</span><span id="ocBidText">--</span></button>
+        <span class="oc-spread">0.25</span>
+        <button class="oc-btn oc-buy" id="ocBuyBtn"><span>BUY</span><span id="ocAskText">--</span></button>
+      </div>
+      <div id="gestureOverlay"></div>
     </div>
 
     <!-- Sub Indicator Panes -->
@@ -328,12 +399,18 @@
     <div class="ind-pane" id="paneSTOCH"><div class="ind-label" id="labelSTOCH" style="color:#f59e0b;">Stochastic (14, 3, 3)</div></div>
   </div>
 
-  <!-- Replay Bar (แสดงเวลาทั้งแท่งปัจจุบันและเวลาที่ Cursor ชี้อยู่ด้านล่าง) -->
+  <!-- Replay Bar -->
   <div class="replay-bar">
-    <button class="btn btn-green" id="playBtn" style="width:60px;">▶ Play</button>
-    <button class="btn btn-blue" id="stepBtn">⏭ +1</button>
+    <button class="btn btn-green" id="playBtn" style="width:64px;">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      <span>Play</span>
+    </button>
+    <button class="btn btn-blue" id="stepBtn">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+      <span>+1</span>
+    </button>
     <input type="range" id="progressSlider" min="50" max="10000" value="500" />
-    <span id="cursorTimeText" style="font-size:10px; color:var(--yellow); min-width:95px; text-align:right; font-family:monospace;">--</span>
+    <span id="cursorTimeText" style="font-size:10px; color:var(--text); min-width:94px; text-align:right; font-family:monospace;">--</span>
     <select id="speedSelect">
       <option value="800">0.5x</option>
       <option value="250" selected>1x</option>
@@ -357,7 +434,7 @@
         <button id="lotMinus">-</button>
         <span>Lot: <b id="lotText">0.10</b></span>
         <button id="lotPlus">+</button>
-        <span style="color:var(--muted);">| เสี่ยง($):</span>
+        <span style="color:var(--muted);">| Risk($):</span>
         <input type="number" id="riskDollarInput" value="100" style="width:46px; padding:1px 3px; font-size:10px;" />
         <span style="color:var(--muted);">RR:</span>
         <input type="number" id="rrTargetInput" value="2.0" step="0.5" style="width:36px; padding:1px 3px; font-size:10px;" />
@@ -382,8 +459,10 @@
   <div class="modal-backdrop" id="allToolsModal">
     <div class="modal-card">
       <div class="modal-header">
-        <b>🧰 เครื่องมือทั้งหมด (กด ★ เพื่อปักหมุด Favorite)</b>
-        <button class="btn" id="closeToolsModalBtn">✕</button>
+        <b>Drawing Tools (Star to pin to Favorites)</b>
+        <button class="btn" id="closeToolsModalBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
       </div>
       <div id="allToolsList"></div>
     </div>
@@ -393,14 +472,16 @@
   <div class="modal-backdrop" id="indModal">
     <div class="modal-card">
       <div class="modal-header">
-        <b>📊 ตั้งค่า Indicators</b>
-        <button class="btn" id="closeIndModalBtn">✕</button>
+        <b>Indicators Configuration</b>
+        <button class="btn" id="closeIndModalBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
       </div>
       <div class="ind-setting-box">
         <label><input type="checkbox" id="chkVol" /> <b>Volume</b></label>
       </div>
       <div class="ind-setting-box">
-        <label><input type="checkbox" id="chkRSI" /> <b>RSI</b></label>
+        <label><input type="checkbox" id="chkRSI" /> <b>Relative Strength Index (RSI)</b></label>
         <div class="ind-setting-row">
           <span>Period: <input type="number" id="rsiPeriod" value="14" style="width:45px;" /></span>
           <span>OB: <input type="number" id="rsiOB" value="70" style="width:42px;" /></span>
@@ -423,42 +504,58 @@
           <span>Smooth: <input type="number" id="stochSmooth" value="3" style="width:42px;" /></span>
         </div>
       </div>
-      <button class="btn btn-blue" id="applyIndBtn" style="width:100%; padding:8px; margin-top:4px;">บันทึกและแสดงผล</button>
+      <button class="btn btn-blue" id="applyIndBtn" style="width:100%; padding:8px; margin-top:4px;">Apply Indicators</button>
     </div>
   </div>
 
 <script>
 (() => {
   const mainPane = document.getElementById('mainChartPane');
-  const overlayCanvas = document.getElementById('overlayCanvas');
-  const oCtx = overlayCanvas.getContext('2d');
+  const gestureOverlay = document.getElementById('gestureOverlay');
   const magBox = document.getElementById('magnifierBox');
   const magCanvas = document.getElementById('magCanvas');
   const mCtx = magCanvas.getContext('2d');
 
-  // โหลดฐานข้อมูลจริงครบทั้ง 8 เดือน (เม.ย. – พ.ย. 2026)
   const GITHUB_DATA_FILES = [
     '202604.csv', '202605.csv', '202606.csv', '202607.csv',
     '202608.csv', '202609.csv', '202610.csv', '202611.csv'
   ];
-  const PROFILES_STORAGE_KEY = 'tv_replay_profiles_v4';
+  const PROFILES_STORAGE_KEY = 'tv_replay_profiles_v5';
   const ALL_TFS = [1, 5, 15, 60, 240, 1440];
 
+  // Pure Minimalist Vector SVG Icons (Zero Emojis)
+  const SVG_ICONS = {
+    cursor: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v18M3 12h18"/></svg>',
+    cut: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 4v16"/><path d="M8 9l-3 3 3 3"/><path d="M16 9l3 3-3 3"/></svg>',
+    fib: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/><circle cx="7" cy="6" r="1.5" fill="currentColor"/><circle cx="17" cy="18" r="1.5" fill="currentColor"/></svg>',
+    trend: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="6" cy="18" r="2"/><circle cx="18" cy="6" r="2"/><path d="M7.5 16.5L16.5 7.5"/></svg>',
+    hline: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="2"/><path d="M3 12h7M14 12h7"/></svg>',
+    vline: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="2"/><path d="M12 3v7M12 14v7"/></svg>',
+    highlighter: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M15.5 4.5l4 4L9 19H5v-4L15.5 4.5z"/><path d="M13 7l4 4"/></svg>',
+    box: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="6" width="14" height="12" rx="1"/><circle cx="5" cy="6" r="1.5" fill="currentColor"/><circle cx="19" cy="18" r="1.5" fill="currentColor"/></svg>',
+    long: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="16" height="8" stroke="#089981"/><rect x="4" y="12" width="16" height="8" stroke="#f23645"/></svg>',
+    short: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="16" height="8" stroke="#f23645"/><rect x="4" y="12" width="16" height="8" stroke="#089981"/></svg>',
+    ray: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="6" cy="18" r="2"/><path d="M7.5 16.5L20 4"/></svg>',
+    extline: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="15" r="1.8"/><circle cx="15" cy="9" r="1.8"/><path d="M4 20L20 4"/></svg>',
+    regression: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 16L16 4" stroke-dasharray="2 2"/><path d="M6 18L18 6"/><path d="M8 20L20 8" stroke-dasharray="2 2"/></svg>',
+    channel: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 15L15 4M9 20L20 9"/><circle cx="9.5" cy="9.5" r="1.5"/></svg>'
+  };
+
   const ALL_TOOLS = [
-    { id: 'cursor', name: 'Cursor (เลื่อน/ซูมกราฟ)', icon: '👆', defaultFav: true, defaultColor: '#ffffff', defaultWidth: 2, onePoint: true },
-    { id: 'cut', name: 'Bar Replay Cut (ตัดกราฟ)', icon: '✂️', defaultFav: true, defaultColor: '#2962ff', defaultWidth: 2, onePoint: true },
-    { id: 'fib', name: 'Fibonacci Retracement (f)', icon: '📐', defaultFav: true, defaultColor: '#f59e0b', defaultWidth: 1, onePoint: false },
-    { id: 'trend', name: 'Trend Line (f)', icon: '📈', defaultFav: true, defaultColor: '#eab308', defaultWidth: 2, onePoint: false },
-    { id: 'hline', name: 'Horizontal Line (f)', icon: '➖', defaultFav: true, defaultColor: '#06b6d4', defaultWidth: 2, onePoint: true },
-    { id: 'vline', name: 'Vertical Line (f)', icon: '│', defaultFav: true, defaultColor: '#a855f7', defaultWidth: 2, onePoint: true },
-    { id: 'highlighter', name: 'Highlighter (f)', icon: '🖍️', defaultFav: true, defaultColor: '#facc15', defaultWidth: 8, onePoint: false },
-    { id: 'box', name: 'Rectangle (f)', icon: '⬜', defaultFav: true, defaultColor: '#3b82f6', defaultWidth: 2, onePoint: false },
-    { id: 'long', name: 'Long Position (RR)', icon: '🟩', defaultFav: true, defaultColor: '#089981', defaultWidth: 2, onePoint: true },
-    { id: 'short', name: 'Short Position (RR)', icon: '🟥', defaultFav: true, defaultColor: '#f23645', defaultWidth: 2, onePoint: true },
-    { id: 'ray', name: 'Ray (เส้นรังสี)', icon: '↗️', defaultFav: false, defaultColor: '#f97316', defaultWidth: 2, onePoint: false },
-    { id: 'extline', name: 'Extended Line (เส้นยาว)', icon: '📏', defaultFav: false, defaultColor: '#ec4899', defaultWidth: 2, onePoint: false },
-    { id: 'regression', name: 'Regression Trend', icon: '📊', defaultFav: false, defaultColor: '#8b5cf6', defaultWidth: 2, onePoint: false },
-    { id: 'channel', name: 'Parallel Channel', icon: '🛤️', defaultFav: false, defaultColor: '#14b8a6', defaultWidth: 2, onePoint: false }
+    { id: 'cursor', name: 'Crosshair / Select', defaultFav: true, defaultColor: '#ffffff', defaultWidth: 2, onePoint: true },
+    { id: 'cut', name: 'Bar Replay Cut', defaultFav: true, defaultColor: '#2962ff', defaultWidth: 2, onePoint: true },
+    { id: 'fib', name: 'Fib Retracement (f)', defaultFav: true, defaultColor: '#f59e0b', defaultWidth: 1, onePoint: false },
+    { id: 'trend', name: 'Trend Line (f)', defaultFav: true, defaultColor: '#eab308', defaultWidth: 2, onePoint: false },
+    { id: 'hline', name: 'Horizontal Line (f)', defaultFav: true, defaultColor: '#06b6d4', defaultWidth: 2, onePoint: true },
+    { id: 'vline', name: 'Vertical Line (f)', defaultFav: true, defaultColor: '#a855f7', defaultWidth: 2, onePoint: true },
+    { id: 'highlighter', name: 'Highlighter (f)', defaultFav: true, defaultColor: '#eab308', defaultWidth: 8, onePoint: false },
+    { id: 'box', name: 'Rectangle (f)', defaultFav: true, defaultColor: '#2962ff', defaultWidth: 2, onePoint: false },
+    { id: 'long', name: 'Long Position (RR)', defaultFav: true, defaultColor: '#089981', defaultWidth: 2, onePoint: true },
+    { id: 'short', name: 'Short Position (RR)', defaultFav: true, defaultColor: '#f23645', defaultWidth: 2, onePoint: true },
+    { id: 'ray', name: 'Ray', defaultFav: false, defaultColor: '#f97316', defaultWidth: 2, onePoint: false },
+    { id: 'extline', name: 'Extended Line', defaultFav: false, defaultColor: '#ec4899', defaultWidth: 2, onePoint: false },
+    { id: 'regression', name: 'Regression Trend', defaultFav: false, defaultColor: '#8b5cf6', defaultWidth: 2, onePoint: false },
+    { id: 'channel', name: 'Parallel Channel', defaultFav: false, defaultColor: '#14b8a6', defaultWidth: 2, onePoint: false }
   ];
 
   let favoriteToolIds = ALL_TOOLS.filter(t => t.defaultFav).map(t => t.id);
@@ -515,14 +612,12 @@
       isSyncingRange = true;
       allCharts.forEach(dst => { if (dst !== src) dst.timeScale().setVisibleLogicalRange(range); });
       isSyncingRange = false;
-      scheduleOverlayRender();
     });
   });
 
-  // แสดงเวลาและราคาตรงแถบด้านล่างตลอดเวลาที่มีการชี้ Cursor บนกราฟ
   mainChart.subscribeCrosshairMove(param => {
     if (param && param.time) {
-      document.getElementById('cursorTimeText').textContent = `📍 ${formatUTC(param.time)}`;
+      document.getElementById('cursorTimeText').textContent = formatUTC(param.time);
       const barData = param.seriesData.get(candleSeries);
       if (barData) updateOHLCLegend(barData);
     } else if (visibleCandles.length) {
@@ -532,19 +627,232 @@
     }
   });
 
-  // Master Data & Fast Cache
+  // =========================================================================
+  // NATIVE SERIES PRIMITIVE PLUGIN (วาดกล่องสี่เหลี่ยม/เส้น ใน Render Loop เดียวกับกราฟ)
+  // ซูมเข้า-ออกและเลื่อนกราฟได้สมูท 0ms Delay ในทุก Timeframe!
+  // =========================================================================
+  let drawings = [];
+  let selectedDrawingIdx = -1;
+  let pendingFirstPoint = null;
+  let activeDragDraw = null;
+  let activeSnapCrosshair = null;
+  let timeframeMin = 1;
+  let visibleCandles = [];
+  let isLightTheme = false;
+
+  function timeToX(ts) {
+    const coord = mainChart.timeScale().timeToCoordinate(ts);
+    if (coord !== null) return coord;
+    if (!visibleCandles.length) return 0;
+    const lastBar = visibleCandles[visibleCandles.length - 1];
+    const lastX = mainChart.timeScale().timeToCoordinate(lastBar.time) || 0;
+    const diffBars = (ts - lastBar.time) / (timeframeMin * 60);
+    const barSpacing = mainChart.timeScale().options().barSpacing || 6;
+    return lastX + diffBars * barSpacing;
+  }
+
+  function xToTime(x) {
+    const t = mainChart.timeScale().coordinateToTime(x);
+    if (t !== null) return t;
+    if (!visibleCandles.length) return Math.floor(Date.now() / 1000);
+    const lastBar = visibleCandles[visibleCandles.length - 1];
+    const lastX = mainChart.timeScale().timeToCoordinate(lastBar.time) || 0;
+    const barSpacing = mainChart.timeScale().options().barSpacing || 6;
+    return lastBar.time + Math.round((x - lastX) / barSpacing) * (timeframeMin * 60);
+  }
+
+  function priceToY(p) { return candleSeries.priceToCoordinate(p) ?? 0; }
+  function yToPrice(y) { return candleSeries.coordinateToPrice(y) ?? 0; }
+
+  function drawControlDot(ctx, x, y, fill = '#ffffff', stroke = '#2962ff') {
+    ctx.fillStyle = fill; ctx.strokeStyle = stroke; ctx.lineWidth = 1.8;
+    ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  }
+
+  class NativeDrawingsPrimitive {
+    constructor() {
+      this._requestUpdate = null;
+    }
+    attached({ requestUpdate }) {
+      this._requestUpdate = requestUpdate;
+    }
+    detached() {
+      this._requestUpdate = null;
+    }
+    requestRedraw() {
+      if (this._requestUpdate) this._requestUpdate();
+    }
+    paneViews() {
+      return [{
+        zOrder: () => 'top',
+        renderer: () => ({
+          draw: (target) => {
+            target.useMediaCoordinateSpace(scope => {
+              const ctx = scope.context;
+              const W = scope.mediaSize.width;
+              const H = scope.mediaSize.height;
+
+              if (pendingFirstPoint) {
+                drawControlDot(ctx, timeToX(pendingFirstPoint.t), priceToY(pendingFirstPoint.p), '#2962ff', '#ffffff');
+              }
+
+              const listToDraw = activeDragDraw ? [...drawings, activeDragDraw] : drawings;
+
+              listToDraw.forEach((d, idx) => {
+                const visTFs = d.visibleTFs || ALL_TFS;
+                if (d !== activeDragDraw && !visTFs.includes(timeframeMin)) return;
+
+                const isSelected = (idx === selectedDrawingIdx) || (d === activeDragDraw);
+                const x1 = timeToX(d.t1), x2 = timeToX(d.t2);
+                const y1 = priceToY(d.p1), y2 = priceToY(d.p2);
+                const col = d.color || '#eab308';
+                const lw = d.width || 2;
+
+                ctx.strokeStyle = col;
+                ctx.lineWidth = lw;
+
+                if (d.tool === 'hline') {
+                  ctx.beginPath(); ctx.moveTo(0, y2); ctx.lineTo(W, y2); ctx.stroke();
+                  ctx.fillStyle = col; ctx.font = 'bold 10px monospace';
+                  ctx.fillText(d.p2.toFixed(3), 8, y2 - 4);
+                  if (isSelected) { drawControlDot(ctx, W * 0.35, y2); drawControlDot(ctx, W * 0.65, y2); }
+                } else if (d.tool === 'vline') {
+                  ctx.beginPath(); ctx.moveTo(x2, 0); ctx.lineTo(x2, H); ctx.stroke();
+                  if (isSelected) { drawControlDot(ctx, x2, H * 0.35); drawControlDot(ctx, x2, H * 0.65); }
+                } else if (d.tool === 'trend') {
+                  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+                  if (isSelected) { drawControlDot(ctx, x1, y1); drawControlDot(ctx, x2, y2); }
+                } else if (d.tool === 'ray') {
+                  const dx = x2 - x1, dy = y2 - y1;
+                  ctx.beginPath(); ctx.moveTo(x1, y1);
+                  if (Math.abs(dx) < 1) ctx.lineTo(x1, dy >= 0 ? H : 0);
+                  else { const targetX = dx > 0 ? W : 0; ctx.lineTo(targetX, y1 + (dy / dx) * (targetX - x1)); }
+                  ctx.stroke();
+                  if (isSelected) { drawControlDot(ctx, x1, y1); drawControlDot(ctx, x2, y2); }
+                } else if (d.tool === 'extline') {
+                  const dx = x2 - x1, dy = y2 - y1;
+                  ctx.beginPath();
+                  if (Math.abs(dx) < 1) { ctx.moveTo(x1, 0); ctx.lineTo(x1, H); }
+                  else { const slope = dy / dx; ctx.moveTo(0, y1 - slope * x1); ctx.lineTo(W, y1 + slope * (W - x1)); }
+                  ctx.stroke();
+                  if (isSelected) { drawControlDot(ctx, x1, y1); drawControlDot(ctx, x2, y2); }
+                } else if (d.tool === 'regression' || d.tool === 'channel') {
+                  const offsetPx = d.tool === 'channel' ? 35 : 25;
+                  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+                  ctx.setLineDash([4, 4]);
+                  ctx.beginPath(); ctx.moveTo(x1, y1 - offsetPx); ctx.lineTo(x2, y2 - offsetPx); ctx.stroke();
+                  ctx.beginPath(); ctx.moveTo(x1, y1 + offsetPx); ctx.lineTo(x2, y2 + offsetPx); ctx.stroke();
+                  ctx.setLineDash([]);
+                  ctx.fillStyle = col + '22';
+                  ctx.beginPath();
+                  ctx.moveTo(x1, y1 - offsetPx); ctx.lineTo(x2, y2 - offsetPx);
+                  ctx.lineTo(x2, y2 + offsetPx); ctx.lineTo(x1, y1 + offsetPx);
+                  ctx.closePath(); ctx.fill();
+                  if (isSelected) { drawControlDot(ctx, x1, y1); drawControlDot(ctx, x2, y2); }
+                } else if (d.tool === 'highlighter') {
+                  const pts = d.points || [{ t: d.t1, p: d.p1 }, { t: d.t2, p: d.p2 }];
+                  if (pts.length > 1) {
+                    ctx.strokeStyle = col + '77';
+                    ctx.lineWidth = Math.max(6, lw * 3);
+                    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+                    ctx.beginPath();
+                    ctx.moveTo(timeToX(pts[0].t), priceToY(pts[0].p));
+                    pts.slice(1).forEach(pt => ctx.lineTo(timeToX(pt.t), priceToY(pt.p)));
+                    ctx.stroke();
+                  }
+                } else if (d.tool === 'box') {
+                  const left = Math.min(x1, x2), top = Math.min(y1, y2);
+                  const w = Math.abs(x2 - x1), h = Math.abs(y2 - y1);
+                  ctx.fillStyle = col + '26';
+                  ctx.fillRect(left, top, w, h);
+                  ctx.strokeRect(left, top, w, h);
+                  if (isSelected) {
+                    drawControlDot(ctx, x1, y1); drawControlDot(ctx, x2, y2);
+                    drawControlDot(ctx, x1, y2); drawControlDot(ctx, x2, y1);
+                  }
+                } else if (d.tool === 'fib') {
+                  const levels = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];
+                  const left = Math.min(x1, x2), width = Math.max(70, Math.abs(x2 - x1));
+                  levels.forEach(lvl => {
+                    const p = d.p1 + (d.p2 - d.p1) * lvl;
+                    const y = priceToY(p);
+                    ctx.strokeStyle = (lvl === 0.618 || lvl === 0.5) ? '#f59e0b' : col;
+                    ctx.lineWidth = 1;
+                    ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(left + width, y); ctx.stroke();
+                    ctx.fillStyle = isLightTheme ? '#1e293b' : '#d1d4dc'; ctx.font = '9px monospace';
+                    ctx.fillText(`${lvl} (${p.toFixed(2)})`, left + 3, y - 2);
+                  });
+                  if (isSelected) { drawControlDot(ctx, x1, y1); drawControlDot(ctx, x2, y2); }
+                } else if (d.tool === 'long' || d.tool === 'short') {
+                  const yEntry = priceToY(d.midP), ySL = priceToY(d.p1), yTP = priceToY(d.p2);
+                  const left = x1, right = Math.max(x1 + 75, x2), w = right - left;
+
+                  ctx.fillStyle = 'rgba(8, 153, 129, 0.26)';
+                  ctx.fillRect(left, Math.min(yEntry, yTP), w, Math.abs(yTP - yEntry));
+                  ctx.strokeStyle = '#089981'; ctx.lineWidth = 1.2;
+                  ctx.strokeRect(left, Math.min(yEntry, yTP), w, Math.abs(yTP - yEntry));
+
+                  ctx.fillStyle = 'rgba(242, 54, 69, 0.26)';
+                  ctx.fillRect(left, Math.min(yEntry, ySL), w, Math.abs(ySL - yEntry));
+                  ctx.strokeStyle = '#f23645'; ctx.lineWidth = 1.2;
+                  ctx.strokeRect(left, Math.min(yEntry, ySL), w, Math.abs(ySL - yEntry));
+
+                  const riskDiff = Math.abs(d.midP - d.p1), rewardDiff = Math.abs(d.p2 - d.midP);
+                  const rr = riskDiff > 0 ? (rewardDiff / riskDiff).toFixed(2) : '0.00';
+                  const riskUsd = parseFloat(document.getElementById('riskDollarInput').value) || 100;
+                  const calcLot = riskDiff > 0 ? Math.max(0.01, +(riskUsd / (riskDiff * 100)).toFixed(2)) : lotSize;
+                  const tpMoney = (rewardDiff * 100 * calcLot).toFixed(0);
+                  const slMoney = (riskDiff * 100 * calcLot).toFixed(0);
+
+                  ctx.fillStyle = '#089981'; ctx.fillRect(left + 4, yTP - 15, Math.min(w - 8, 125), 14);
+                  ctx.fillStyle = '#fff'; ctx.font = 'bold 9px sans-serif';
+                  ctx.fillText(`TP: +$${tpMoney} (${calcLot}L)`, left + 7, yTP - 5);
+
+                  ctx.fillStyle = '#1e222d'; ctx.fillRect(left + 4, yEntry - 8, Math.min(w - 8, 120), 16);
+                  ctx.fillStyle = '#fff'; ctx.fillText(`RR 1:${rr} @ ${formatUTC(d.t1).split(' ')[1]}`, left + 8, yEntry + 3);
+
+                  ctx.fillStyle = '#f23645'; ctx.fillRect(left + 4, ySL + 1, Math.min(w - 8, 125), 14);
+                  ctx.fillStyle = '#fff'; ctx.fillText(`SL: -$${slMoney}`, left + 7, ySL + 11);
+
+                  if (isSelected) {
+                    drawControlDot(ctx, left + w / 2, yTP, '#089981', '#ffffff');
+                    drawControlDot(ctx, left + w / 2, ySL, '#f23645', '#ffffff');
+                    drawControlDot(ctx, left, yEntry, '#2962ff', '#ffffff');
+                    drawControlDot(ctx, right, yEntry, '#ffffff', '#2962ff');
+                  }
+                }
+              });
+
+              if (activeSnapCrosshair) {
+                ctx.setLineDash([3, 3]);
+                ctx.strokeStyle = '#2962ff';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(0, activeSnapCrosshair.y); ctx.lineTo(W, activeSnapCrosshair.y);
+                ctx.moveTo(activeSnapCrosshair.x, 0); ctx.lineTo(activeSnapCrosshair.x, H);
+                ctx.stroke();
+                ctx.setLineDash([]);
+              }
+            });
+          }
+        })
+      }];
+    }
+  }
+
+  const drawingsPrimitive = new NativeDrawingsPrimitive();
+  candleSeries.attachPrimitive(drawingsPrimitive);
+
+  // =========================================================================
+  // Master Data & Pre-Aggregated Timeframe Cache
+  // =========================================================================
   let m1Count = 0;
   let m1Time = null, m1Open = null, m1High = null, m1Low = null, m1Close = null, m1Vol = null;
-  // แคชข้อมูลที่รวมเป็น 5m, 15m, 1H, 4H, 1D ไว้ล่วงหน้า เพื่อสลับ Timeframe ทันทีโดยไม่ค้าง!
   let tfAggregatedCache = {};
 
   let profiles = {};
   let activeProfileId = 'Strategy A (SMC)';
-
-  let timeframeMin = 1;
   let current1mIndex = 1500;
-  let visibleCandles = [];
-  let isLightTheme = false;
   let showTradeMarkers = true;
 
   let indConfig = {
@@ -563,12 +871,7 @@
   let selectedOrderType = 'BUY';
   let orders = [];
   let history = [];
-
   let selectedTool = 'cursor';
-  let drawings = [];
-  let selectedDrawingIdx = -1;
-  let pendingFirstPoint = null;
-  let activeDragDraw = null;
 
   function parseHistDataCSV(text) {
     const lines = text.split(/\r?\n/);
@@ -619,7 +922,6 @@
       m1Vol[i] = unique[i].v;
     }
 
-    // สร้าง Pre-aggregated Cache สำหรับ 5m, 15m, 1H, 4H, 1D ล่วงหน้าครั้งเดียว (เปลี่ยน TF ลื่น 0ms)
     tfAggregatedCache = {};
     [5, 15, 60, 240, 1440].forEach(tf => {
       const tfSec = tf * 60;
@@ -630,13 +932,12 @@
         if (bStart !== bucketStart) {
           if (bucket) bars.push(bucket);
           bucketStart = bStart;
-          bucket = { time: bStart, open: m1Open[i], high: m1High[i], low: m1Low[i], close: m1Close[i], volume: m1Vol[i], endM1Idx: i };
+          bucket = { time: bStart, open: m1Open[i], high: m1High[i], low: m1Low[i], close: m1Close[i], volume: m1Vol[i] };
         } else {
           if (m1High[i] > bucket.high) bucket.high = m1High[i];
           if (m1Low[i] < bucket.low) bucket.low = m1Low[i];
           bucket.close = m1Close[i];
           bucket.volume += m1Vol[i];
-          bucket.endM1Idx = i;
         }
       }
       if (bucket) bars.push(bucket);
@@ -661,7 +962,6 @@
     switchProfile(activeProfileId);
   }
 
-  // Profile Manager
   function loadProfilesFromStorage() {
     try {
       const raw = localStorage.getItem(PROFILES_STORAGE_KEY);
@@ -862,7 +1162,6 @@
     resizeAllCharts();
   }
 
-  // Ultra-Fast Windowed Slice (ไม่ค้างตอนสลับเป็น 1H / 4H / 1D)
   function rebuildAllCharts(fitView = false) {
     if (m1Count === 0) return;
     const curT = m1Time[current1mIndex];
@@ -880,7 +1179,6 @@
       const tfSec = timeframeMin * 60;
       const curBucketStart = Math.floor(curT / tfSec) * tfSec;
 
-      // Binary search หาแท่งปัจจุบันใน Cache
       let lo = 0, hi = cached.length - 1;
       while (lo < hi) {
         const mid = (lo + hi + 1) >> 1;
@@ -890,10 +1188,8 @@
       const startIdx = Math.max(0, lo - maxVisibleBars + 1);
       const slice = cached.slice(startIdx, lo + 1).map(b => ({ ...b }));
 
-      // อัปเดตแท่งล่าสุดให้ตรงกับนาทีปัจจุบัน (Partial Candle แบบ Real-time)
       if (slice.length > 0) {
         const lastBar = slice[slice.length - 1];
-        // ย้อนสแกนเฉพาะแท่ง 1m ภายในคาบปัจจุบัน (สูงสุดไม่เกิน timeframeMin แท่ง)
         let firstM1InBucket = current1mIndex;
         while (firstM1InBucket > 0 && Math.floor(m1Time[firstM1InBucket - 1] / tfSec) * tfSec === curBucketStart) {
           firstM1InBucket--;
@@ -922,10 +1218,12 @@
       const last = visibleCandles[visibleCandles.length - 1];
       updateOHLCLegend(last);
       document.getElementById('cursorTimeText').textContent = formatUTC(last.time);
+      document.getElementById('ocBidText').textContent = last.close.toFixed(2);
+      document.getElementById('ocAskText').textContent = (last.close + 0.25).toFixed(2);
     }
 
     if (fitView) autoFitGraph();
-    scheduleOverlayRender();
+    drawingsPrimitive.requestRedraw();
   }
 
   function autoFitGraph() {
@@ -935,7 +1233,7 @@
     if (total > 10) {
       mainChart.timeScale().setVisibleLogicalRange({ from: Math.max(0, total - 55), to: total + 12 });
     }
-    scheduleOverlayRender();
+    drawingsPrimitive.requestRedraw();
   }
 
   function updateOHLCLegend(bar) {
@@ -944,8 +1242,8 @@
     const pct = ((chg / bar.open) * 100).toFixed(2);
     const col = chg >= 0 ? '#089981' : '#f23645';
     document.getElementById('ohlcLegend').innerHTML = `
-      <div style="font-weight:bold;">XAUUSD • ${timeframeMin >= 60 ? (timeframeMin / 60) + 'H' : timeframeMin + 'm'} [${activeProfileId}]</div>
-      <div style="color:${col}; font-family:monospace; font-weight:bold;">
+      <div style="font-weight:700;">XAUUSD • ${timeframeMin >= 60 ? (timeframeMin / 60) + 'H' : timeframeMin + 'm'} [${activeProfileId}]</div>
+      <div style="color:${col}; font-family:monospace; font-weight:600;">
         O:${bar.open.toFixed(3)} H:${bar.high.toFixed(3)} L:${bar.low.toFixed(3)} C:${bar.close.toFixed(3)} (${chg >= 0 ? '+' : ''}${pct}%)
       </div>
     `;
@@ -998,7 +1296,7 @@
     container.innerHTML = favoriteToolIds.map(id => {
       const t = ALL_TOOLS.find(x => x.id === id);
       if (!t) return '';
-      return `<button class="tool-btn ${selectedTool === t.id ? 'active' : ''}" data-tool="${t.id}" title="${t.name}">${t.icon}</button>`;
+      return `<button class="tool-btn ${selectedTool === t.id ? 'active' : ''}" data-tool="${t.id}" title="${t.name}">${SVG_ICONS[t.id] || ''}</button>`;
     }).join('');
 
     container.querySelectorAll('.tool-btn').forEach(btn => {
@@ -1017,13 +1315,14 @@
     selectedTool = t;
     pendingFirstPoint = null;
     activeDragDraw = null;
+    activeSnapCrosshair = null;
     magBox.classList.remove('active');
     renderFavoriteToolbar();
     updatePointHint();
 
     const needOverlay = (selectedTool !== 'cursor') || (selectedDrawingIdx >= 0);
-    overlayCanvas.classList.toggle('interactive', needOverlay);
-    scheduleOverlayRender();
+    gestureOverlay.classList.toggle('interactive', needOverlay);
+    drawingsPrimitive.requestRedraw();
   }
 
   function updatePointHint() {
@@ -1036,13 +1335,13 @@
     if (!meta) { hint.classList.remove('visible'); return; }
 
     if (meta.onePoint) {
-      hint.textContent = `แตะ 1 จุดบนกราฟเพื่อวาง ${meta.name}`;
+      hint.textContent = `Tap chart to place ${meta.name}`;
       hint.classList.add('visible');
     } else if (!pendingFirstPoint) {
-      hint.textContent = `แตะจุดที่ 1 ของ ${meta.name}`;
+      hint.textContent = `Tap Point 1 (${meta.name})`;
       hint.classList.add('visible');
     } else {
-      hint.textContent = `แตะจุดที่ 2 เพื่อสร้าง ${meta.name}`;
+      hint.textContent = `Tap Point 2 (${meta.name})`;
       hint.classList.add('visible');
     }
   }
@@ -1052,11 +1351,13 @@
     list.innerHTML = ALL_TOOLS.map(t => {
       const isFav = favoriteToolIds.includes(t.id);
       return `<div class="tool-grid-item">
-        <div style="display:flex; align-items:center; gap:8px; cursor:pointer; flex:1;" data-pick="${t.id}">
-          <span style="font-size:16px;">${t.icon}</span>
+        <div style="display:flex; align-items:center; gap:10px; cursor:pointer; flex:1;" data-pick="${t.id}">
+          <span style="display:flex; color:var(--text);">${SVG_ICONS[t.id] || ''}</span>
           <span>${t.name}</span>
         </div>
-        <button class="btn" data-fav="${t.id}" style="font-size:14px; color:${isFav ? '#f59e0b' : '#64748b'};">★</button>
+        <button class="btn" data-fav="${t.id}" style="color:${isFav ? '#f59e0b' : '#64748b'};">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="${isFav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.8"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </button>
       </div>`;
     }).join('');
 
@@ -1106,58 +1407,15 @@
   });
   favHandle.addEventListener('pointerup', () => { isDraggingToolbar = false; });
 
-  // =========================================================================
-  // Smooth 60fps Overlay Rendering + Magnifier Loupe (แว่นขยายเล็งปลายไส้เทียน)
-  // =========================================================================
-  let rafScheduled = false;
-  function scheduleOverlayRender() {
-    if (rafScheduled) return;
-    rafScheduled = true;
-    requestAnimationFrame(() => {
-      rafScheduled = false;
-      renderOverlay();
-    });
-  }
-
-  function timeToX(ts) {
-    const coord = mainChart.timeScale().timeToCoordinate(ts);
-    if (coord !== null) return coord;
-    if (!visibleCandles.length) return 0;
-    const lastBar = visibleCandles[visibleCandles.length - 1];
-    const lastX = mainChart.timeScale().timeToCoordinate(lastBar.time) || 0;
-    const diffBars = (ts - lastBar.time) / (timeframeMin * 60);
-    const barSpacing = mainChart.timeScale().options().barSpacing || 6;
-    return lastX + diffBars * barSpacing;
-  }
-
-  function xToTime(x) {
-    const t = mainChart.timeScale().coordinateToTime(x);
-    if (t !== null) return t;
-    if (!visibleCandles.length) return Math.floor(Date.now() / 1000);
-    const lastBar = visibleCandles[visibleCandles.length - 1];
-    const lastX = mainChart.timeScale().timeToCoordinate(lastBar.time) || 0;
-    const barSpacing = mainChart.timeScale().options().barSpacing || 6;
-    return lastBar.time + Math.round((x - lastX) / barSpacing) * (timeframeMin * 60);
-  }
-
-  function priceToY(p) { return candleSeries.priceToCoordinate(p) ?? 0; }
-  function yToPrice(y) { return candleSeries.coordinateToPrice(y) ?? 0; }
-
-  function drawDot(x, y, fill = '#ffffff', stroke = '#2962ff') {
-    oCtx.fillStyle = fill; oCtx.strokeStyle = stroke; oCtx.lineWidth = 1.8;
-    oCtx.beginPath(); oCtx.arc(x, y, 5.5, 0, Math.PI * 2); oCtx.fill(); oCtx.stroke();
-  }
-
-  // วาดแว่นขยายซูม 2.5x รอบจุดที่กำลังลากมุมกล่อง/เส้น + โชว์เส้นแนวนอนและเวลา
+  // Magnifier Zoom Loupe Renderer
   function renderMagnifier(targetX, targetY, targetPrice, targetTime) {
     magBox.classList.add('active');
-    const size = 116;
+    const size = 112;
     const zoom = 2.4;
     mCtx.clearRect(0, 0, size, size);
     mCtx.fillStyle = isLightTheme ? '#ffffff' : '#131722';
     mCtx.fillRect(0, 0, size, size);
 
-    // คัดลอกภาพกราฟและแท่งเทียนรอบจุดที่ชี้จาก TradingView Canvas
     const tvCanvases = mainPane.querySelectorAll('canvas');
     const dpr = window.devicePixelRatio || 1;
     const srcW = size / zoom;
@@ -1166,14 +1424,13 @@
     const sy = (targetY - srcH / 2) * dpr;
 
     tvCanvases.forEach(c => {
-      if (c !== overlayCanvas && c.width > 0 && c.height > 0) {
+      if (c.width > 0 && c.height > 0) {
         try {
           mCtx.drawImage(c, sx, sy, srcW * dpr, srcH * dpr, 0, 0, size, size);
         } catch (e) {}
       }
     });
 
-    // เส้นกากบาทเล็งปลายไส้เทียนตรงกลางแว่นขยาย
     const mid = size / 2;
     mCtx.strokeStyle = '#2962ff';
     mCtx.lineWidth = 1;
@@ -1184,7 +1441,6 @@
     mCtx.stroke();
     mCtx.setLineDash([]);
 
-    // ป้ายบอกราคาและเวลาด้านล่างแว่นขยาย
     mCtx.fillStyle = 'rgba(41, 98, 255, 0.92)';
     mCtx.fillRect(0, size - 24, size, 24);
     mCtx.fillStyle = '#fff';
@@ -1194,166 +1450,7 @@
     mCtx.fillText(formatUTC(targetTime).split(' ')[1], mid, size - 3);
   }
 
-  let activeSnapCrosshair = null; // {x, y, price, time} ตอนกำลังลากแก้ไขมุม
-
-  function renderOverlay() {
-    const rect = mainPane.getBoundingClientRect();
-    const W = rect.width - 66;
-    const H = rect.height - 22;
-    oCtx.clearRect(0, 0, rect.width, rect.height);
-
-    oCtx.save();
-    oCtx.beginPath(); oCtx.rect(0, 0, W, H); oCtx.clip();
-
-    if (pendingFirstPoint) {
-      drawDot(timeToX(pendingFirstPoint.t), priceToY(pendingFirstPoint.p), '#2962ff', '#ffffff');
-    }
-
-    const listToDraw = activeDragDraw ? [...drawings, activeDragDraw] : drawings;
-
-    listToDraw.forEach((d, idx) => {
-      const visTFs = d.visibleTFs || ALL_TFS;
-      if (d !== activeDragDraw && !visTFs.includes(timeframeMin)) return;
-
-      const isSelected = (idx === selectedDrawingIdx) || (d === activeDragDraw);
-      const x1 = timeToX(d.t1), x2 = timeToX(d.t2);
-      const y1 = priceToY(d.p1), y2 = priceToY(d.p2);
-      const col = d.color || '#eab308';
-      const lw = d.width || 2;
-
-      oCtx.strokeStyle = col;
-      oCtx.lineWidth = lw;
-
-      if (d.tool === 'hline') {
-        oCtx.beginPath(); oCtx.moveTo(0, y2); oCtx.lineTo(W, y2); oCtx.stroke();
-        oCtx.fillStyle = col; oCtx.font = 'bold 10px monospace';
-        oCtx.fillText(d.p2.toFixed(3), 8, y2 - 4);
-        if (isSelected) { drawDot(W * 0.35, y2); drawDot(W * 0.65, y2); }
-      } else if (d.tool === 'vline') {
-        oCtx.beginPath(); oCtx.moveTo(x2, 0); oCtx.lineTo(x2, H); oCtx.stroke();
-        if (isSelected) { drawDot(x2, H * 0.35); drawDot(x2, H * 0.65); }
-      } else if (d.tool === 'trend') {
-        oCtx.beginPath(); oCtx.moveTo(x1, y1); oCtx.lineTo(x2, y2); oCtx.stroke();
-        if (isSelected) { drawDot(x1, y1); drawDot(x2, y2); }
-      } else if (d.tool === 'ray') {
-        const dx = x2 - x1, dy = y2 - y1;
-        oCtx.beginPath(); oCtx.moveTo(x1, y1);
-        if (Math.abs(dx) < 1) oCtx.lineTo(x1, dy >= 0 ? H : 0);
-        else { const targetX = dx > 0 ? W : 0; oCtx.lineTo(targetX, y1 + (dy / dx) * (targetX - x1)); }
-        oCtx.stroke();
-        if (isSelected) { drawDot(x1, y1); drawDot(x2, y2); }
-      } else if (d.tool === 'extline') {
-        const dx = x2 - x1, dy = y2 - y1;
-        oCtx.beginPath();
-        if (Math.abs(dx) < 1) { oCtx.moveTo(x1, 0); oCtx.lineTo(x1, H); }
-        else { const slope = dy / dx; oCtx.moveTo(0, y1 - slope * x1); oCtx.lineTo(W, y1 + slope * (W - x1)); }
-        oCtx.stroke();
-        if (isSelected) { drawDot(x1, y1); drawDot(x2, y2); }
-      } else if (d.tool === 'regression' || d.tool === 'channel') {
-        const offsetPx = d.tool === 'channel' ? 35 : 25;
-        oCtx.beginPath(); oCtx.moveTo(x1, y1); oCtx.lineTo(x2, y2); oCtx.stroke();
-        oCtx.setLineDash([4, 4]);
-        oCtx.beginPath(); oCtx.moveTo(x1, y1 - offsetPx); oCtx.lineTo(x2, y2 - offsetPx); oCtx.stroke();
-        oCtx.beginPath(); oCtx.moveTo(x1, y1 + offsetPx); oCtx.lineTo(x2, y2 + offsetPx); oCtx.stroke();
-        oCtx.setLineDash([]);
-        oCtx.fillStyle = col + '22';
-        oCtx.beginPath();
-        oCtx.moveTo(x1, y1 - offsetPx); oCtx.lineTo(x2, y2 - offsetPx);
-        oCtx.lineTo(x2, y2 + offsetPx); oCtx.lineTo(x1, y1 + offsetPx);
-        oCtx.closePath(); oCtx.fill();
-        if (isSelected) { drawDot(x1, y1); drawDot(x2, y2); }
-      } else if (d.tool === 'highlighter') {
-        const pts = d.points || [{ t: d.t1, p: d.p1 }, { t: d.t2, p: d.p2 }];
-        if (pts.length > 1) {
-          oCtx.strokeStyle = col + '77';
-          oCtx.lineWidth = Math.max(6, lw * 3);
-          oCtx.lineCap = 'round'; oCtx.lineJoin = 'round';
-          oCtx.beginPath();
-          oCtx.moveTo(timeToX(pts[0].t), priceToY(pts[0].p));
-          pts.slice(1).forEach(pt => oCtx.lineTo(timeToX(pt.t), priceToY(pt.p)));
-          oCtx.stroke();
-        }
-      } else if (d.tool === 'box') {
-        const left = Math.min(x1, x2), top = Math.min(y1, y2);
-        const w = Math.abs(x2 - x1), h = Math.abs(y2 - y1);
-        oCtx.fillStyle = col + '28';
-        oCtx.fillRect(left, top, w, h);
-        oCtx.strokeRect(left, top, w, h);
-        if (isSelected) { drawDot(x1, y1); drawDot(x2, y2); drawDot(x1, y2); drawDot(x2, y1); }
-      } else if (d.tool === 'fib') {
-        const levels = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];
-        const left = Math.min(x1, x2), width = Math.max(70, Math.abs(x2 - x1));
-        levels.forEach(lvl => {
-          const p = d.p1 + (d.p2 - d.p1) * lvl;
-          const y = priceToY(p);
-          oCtx.strokeStyle = (lvl === 0.618 || lvl === 0.5) ? '#f59e0b' : col;
-          oCtx.lineWidth = 1;
-          oCtx.beginPath(); oCtx.moveTo(left, y); oCtx.lineTo(left + width, y); oCtx.stroke();
-          oCtx.fillStyle = isLightTheme ? '#1e293b' : '#d1d4dc'; oCtx.font = '9px monospace';
-          oCtx.fillText(`${lvl} (${p.toFixed(2)})`, left + 3, y - 2);
-        });
-        if (isSelected) { drawDot(x1, y1); drawDot(x2, y2); }
-      } else if (d.tool === 'long' || d.tool === 'short') {
-        const yEntry = priceToY(d.midP), ySL = priceToY(d.p1), yTP = priceToY(d.p2);
-        const left = x1, right = Math.max(x1 + 75, x2), w = right - left;
-
-        oCtx.fillStyle = 'rgba(8, 153, 129, 0.26)';
-        oCtx.fillRect(left, Math.min(yEntry, yTP), w, Math.abs(yTP - yEntry));
-        oCtx.strokeStyle = '#089981'; oCtx.lineWidth = 1.2;
-        oCtx.strokeRect(left, Math.min(yEntry, yTP), w, Math.abs(yTP - yEntry));
-
-        oCtx.fillStyle = 'rgba(242, 54, 69, 0.26)';
-        oCtx.fillRect(left, Math.min(yEntry, ySL), w, Math.abs(ySL - yEntry));
-        oCtx.strokeStyle = '#f23645'; oCtx.lineWidth = 1.2;
-        oCtx.strokeRect(left, Math.min(yEntry, ySL), w, Math.abs(ySL - yEntry));
-
-        const riskDiff = Math.abs(d.midP - d.p1), rewardDiff = Math.abs(d.p2 - d.midP);
-        const rr = riskDiff > 0 ? (rewardDiff / riskDiff).toFixed(2) : '0.00';
-        const riskUsd = parseFloat(document.getElementById('riskDollarInput').value) || 100;
-        const calcLot = riskDiff > 0 ? Math.max(0.01, +(riskUsd / (riskDiff * 100)).toFixed(2)) : lotSize;
-        const tpMoney = (rewardDiff * 100 * calcLot).toFixed(0);
-        const slMoney = (riskDiff * 100 * calcLot).toFixed(0);
-
-        oCtx.fillStyle = '#089981'; oCtx.fillRect(left + 4, yTP - 15, Math.min(w - 8, 125), 14);
-        oCtx.fillStyle = '#fff'; oCtx.font = 'bold 9px sans-serif';
-        oCtx.fillText(`TP: +$${tpMoney} (${calcLot}L)`, left + 7, yTP - 5);
-
-        oCtx.fillStyle = '#1e222d'; oCtx.fillRect(left + 4, yEntry - 8, Math.min(w - 8, 120), 16);
-        oCtx.fillStyle = '#fff'; oCtx.fillText(`RR 1:${rr} @ ${formatUTC(d.t1).split(' ')[1]}`, left + 8, yEntry + 3);
-
-        oCtx.fillStyle = '#f23645'; oCtx.fillRect(left + 4, ySL + 1, Math.min(w - 8, 125), 14);
-        oCtx.fillStyle = '#fff'; oCtx.fillText(`SL: -$${slMoney}`, left + 7, ySL + 11);
-
-        if (isSelected) {
-          drawDot(left + w / 2, yTP, '#089981', '#ffffff');
-          drawDot(left + w / 2, ySL, '#f23645', '#ffffff');
-          drawDot(left, yEntry, '#2962ff', '#ffffff');
-          drawDot(right, yEntry, '#ffffff', '#2962ff');
-        }
-      }
-    });
-
-    // วาดเส้นกากบาทแนวขวางและแนวตั้งเวลาลากมุมแก้ไข (Crosshair Guide)
-    if (activeSnapCrosshair) {
-      oCtx.setLineDash([3, 3]);
-      oCtx.strokeStyle = '#2962ff';
-      oCtx.lineWidth = 1;
-      oCtx.beginPath();
-      oCtx.moveTo(0, activeSnapCrosshair.y); oCtx.lineTo(W, activeSnapCrosshair.y);
-      oCtx.moveTo(activeSnapCrosshair.x, 0); oCtx.lineTo(activeSnapCrosshair.x, H);
-      oCtx.stroke();
-      oCtx.setLineDash([]);
-    }
-    oCtx.restore();
-
-    if (activeSnapCrosshair) {
-      renderMagnifier(activeSnapCrosshair.x, activeSnapCrosshair.y, activeSnapCrosshair.price, activeSnapCrosshair.time);
-    } else {
-      magBox.classList.remove('active');
-    }
-  }
-
-  // Hit Testing & Tap Selection
+  // Hit Testing
   function distToSegment(px, py, x1, y1, x2, y2) {
     const l2 = (x2 - x1) ** 2 + (y2 - y1) ** 2;
     if (l2 === 0) return Math.hypot(px - x1, py - y1);
@@ -1405,8 +1502,8 @@
     if (hit) {
       selectedDrawingIdx = hit.idx;
       updateSelectionBar();
-      overlayCanvas.classList.add('interactive');
-      scheduleOverlayRender();
+      gestureOverlay.classList.add('interactive');
+      drawingsPrimitive.requestRedraw();
     }
   });
 
@@ -1416,8 +1513,11 @@
     if (selectedDrawingIdx >= 0 && drawings[selectedDrawingIdx]) {
       const d = drawings[selectedDrawingIdx];
       const meta = ALL_TOOLS.find(x => x.id === d.tool);
-      document.getElementById('selectedObjLabel').textContent = meta ? meta.icon : 'Tool';
-      document.getElementById('drawColorPicker').value = d.color || '#eab308';
+      document.getElementById('selectedObjLabel').textContent = meta ? meta.name.split(' ')[0] : 'Object';
+
+      document.querySelectorAll('#swatchGroup .swatch').forEach(sw => {
+        sw.classList.toggle('active', sw.dataset.col === d.color);
+      });
       document.getElementById('drawWidthSelect').value = String(d.width || 2);
 
       const visTFs = d.visibleTFs || ALL_TFS;
@@ -1433,12 +1533,12 @@
   }
 
   // =========================================================================
-  // Zero-Delay Pointer Handling + Magnifier Zoom on Corner Drag
+  // Gesture Overlay Pointer Handling (Native Primitive Redraw = 0ms Lag)
   // =========================================================================
   let editingTarget = null, lastPos = { x: 0, y: 0 }, pointerDownPos = { x: 0, y: 0 };
 
-  overlayCanvas.addEventListener('pointerdown', e => {
-    const rect = overlayCanvas.getBoundingClientRect();
+  gestureOverlay.addEventListener('pointerdown', e => {
+    const rect = gestureOverlay.getBoundingClientRect();
     const pos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
     lastPos = pos;
     pointerDownPos = pos;
@@ -1461,13 +1561,13 @@
         selectedDrawingIdx = hit.idx;
         editingTarget = hit;
         updateSelectionBar();
-        overlayCanvas.setPointerCapture(e.pointerId);
-        scheduleOverlayRender();
+        gestureOverlay.setPointerCapture(e.pointerId);
+        drawingsPrimitive.requestRedraw();
       } else {
         selectedDrawingIdx = -1;
         updateSelectionBar();
-        overlayCanvas.classList.remove('interactive');
-        scheduleOverlayRender();
+        gestureOverlay.classList.remove('interactive');
+        drawingsPrimitive.requestRedraw();
       }
       return;
     }
@@ -1493,8 +1593,8 @@
       selectedDrawingIdx = drawings.length - 1;
       setTool('cursor');
       updateSelectionBar();
-      overlayCanvas.classList.add('interactive');
-      scheduleOverlayRender();
+      gestureOverlay.classList.add('interactive');
+      drawingsPrimitive.requestRedraw();
       saveCurrentProfile();
       return;
     }
@@ -1505,14 +1605,14 @@
         color: meta.defaultColor, width: meta.defaultWidth, visibleTFs: [...ALL_TFS],
         points: [{ t: tNow, p: pNow }]
       };
-      overlayCanvas.setPointerCapture(e.pointerId);
+      gestureOverlay.setPointerCapture(e.pointerId);
       return;
     }
 
     if (!pendingFirstPoint) {
       pendingFirstPoint = { t: tNow, p: pNow };
       updatePointHint();
-      scheduleOverlayRender();
+      drawingsPrimitive.requestRedraw();
     } else {
       const newObj = {
         tool: selectedTool,
@@ -1528,14 +1628,14 @@
       selectedDrawingIdx = drawings.length - 1;
       setTool('cursor');
       updateSelectionBar();
-      overlayCanvas.classList.add('interactive');
-      scheduleOverlayRender();
+      gestureOverlay.classList.add('interactive');
+      drawingsPrimitive.requestRedraw();
       saveCurrentProfile();
     }
   });
 
-  overlayCanvas.addEventListener('pointermove', e => {
-    const rect = overlayCanvas.getBoundingClientRect();
+  gestureOverlay.addEventListener('pointermove', e => {
+    const rect = gestureOverlay.getBoundingClientRect();
     const pos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
     const dx = pos.x - lastPos.x, dy = pos.y - lastPos.y;
     lastPos = pos;
@@ -1547,7 +1647,6 @@
       const pNow = yToPrice(pos.y), dPrice = pNow - yToPrice(pos.y - dy);
       const tNow = xToTime(pos.x);
 
-      // แสดงแว่นขยาย + เส้นกากบาทเล็งปลายไส้เทียนเมื่อลากมุมกล่อง/จุดจับ
       const isCornerOrHandle = ['p1', 'p2', 'p1x_p2y', 'p2x_p1y', 'tp', 'sl', 'entry'].includes(editingTarget.part);
       activeSnapCrosshair = isCornerOrHandle ? { x: pos.x, y: pos.y, price: pNow, time: tNow } : null;
 
@@ -1567,8 +1666,10 @@
       else if (editingTarget.part === 'resizeRight') { d.t2 = Math.max(d.t1 + timeframeMin * 180, tNow); }
       else if (editingTarget.part === 'moveRR') { d.t1 += dTime; d.t2 += dTime; d.p1 += dPrice; d.p2 += dPrice; d.midP += dPrice; }
 
-      document.getElementById('cursorTimeText').textContent = `📍 ${formatUTC(tNow)}`;
-      scheduleOverlayRender();
+      document.getElementById('cursorTimeText').textContent = formatUTC(tNow);
+      drawingsPrimitive.requestRedraw();
+      if (activeSnapCrosshair) renderMagnifier(activeSnapCrosshair.x, activeSnapCrosshair.y, activeSnapCrosshair.price, activeSnapCrosshair.time);
+      else magBox.classList.remove('active');
       return;
     }
 
@@ -1585,15 +1686,17 @@
         width: meta ? meta.defaultWidth : 2,
         visibleTFs: [...ALL_TFS]
       };
-      scheduleOverlayRender();
+      drawingsPrimitive.requestRedraw();
+      renderMagnifier(pos.x, pos.y, pNow, tNow);
     } else if (activeDragDraw && activeDragDraw.tool === 'highlighter') {
       activeDragDraw.points.push({ t: xToTime(pos.x), p: yToPrice(pos.y) });
-      scheduleOverlayRender();
+      drawingsPrimitive.requestRedraw();
     }
   });
 
   window.addEventListener('pointerup', () => {
     activeSnapCrosshair = null;
+    magBox.classList.remove('active');
     if (activeDragDraw) {
       drawings.push(activeDragDraw);
       activeDragDraw = null;
@@ -1601,19 +1704,19 @@
       selectedDrawingIdx = drawings.length - 1;
       setTool('cursor');
       updateSelectionBar();
-      overlayCanvas.classList.add('interactive');
-      scheduleOverlayRender();
+      gestureOverlay.classList.add('interactive');
+      drawingsPrimitive.requestRedraw();
       saveCurrentProfile();
     }
     if (editingTarget) {
-      scheduleOverlayRender();
+      drawingsPrimitive.requestRedraw();
       saveCurrentProfile();
     }
     editingTarget = null;
   });
 
   // =========================================================================
-  // Order Price Lines & Simulation Engine (ต้องถึงเวลาที่กำหนด + ราคาวิ่งมาแตะจุดเข้าจริงเท่านั้น)
+  // Order Price Lines & Simulation Engine
   // =========================================================================
   function clearAllPriceLines() {
     orders.forEach(o => {
@@ -1662,7 +1765,6 @@
 
       const remaining = [];
       for (const o of orders) {
-        // เงื่อนไข: 1) เวลาต้อง >= activateTime ที่มาร์คไว้ AND 2) แท่งเทียนต้องวิ่งมาแตะราคา o.entry จริง!
         if (!o.triggered) {
           const timeReached = !o.activateTime || (bTime >= o.activateTime);
           const priceTouched = (bLow <= o.entry && bHigh >= o.entry);
@@ -1709,14 +1811,16 @@
     if (isPlaying) return;
     isPlaying = true;
     const btn = document.getElementById('playBtn');
-    btn.textContent = '⏸ Pause'; btn.className = 'btn btn-orange';
+    btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg><span>Pause</span>';
+    btn.className = 'btn btn-orange';
     playTimer = setInterval(stepForward, speedMs);
   }
   function stopPlay() {
     isPlaying = false;
     clearInterval(playTimer);
     const btn = document.getElementById('playBtn');
-    btn.textContent = '▶ Play'; btn.className = 'btn btn-green';
+    btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg><span>Play</span>';
+    btn.className = 'btn btn-green';
   }
 
   let activeTab = 'active';
@@ -1746,19 +1850,19 @@
       list.innerHTML = orders.map(o => {
         const isBuy = o.type.includes('BUY');
         const pnl = o.triggered ? (isBuy ? curPrice - o.entry : o.entry - curPrice) * 100 * o.lot : 0;
-        const waitTxt = o.activateTime ? `⏳ รอแตะราคาหลัง ${formatUTC(o.activateTime).split(' ')[1]}` : 'PENDING';
+        const waitTxt = o.activateTime ? `WAIT >= ${formatUTC(o.activateTime).split(' ')[1]}` : 'PENDING';
         return `<div class="order-row">
           <div><b style="color:${isBuy ? 'var(--blue)' : 'var(--purple)'}">${o.type}</b> ${o.lot.toFixed(2)} @ ${o.entry.toFixed(3)}</div>
-          <div>${o.triggered ? `<b style="color:${pnl >= 0 ? 'var(--green)' : 'var(--red)'}">${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}</b>` : `<span style="color:var(--yellow)">${waitTxt}</span>`}</div>
+          <div>${o.triggered ? `<b style="color:${pnl >= 0 ? 'var(--green)' : 'var(--red)'}">${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}</b>` : `<span style="color:var(--yellow); font-weight:600;">${waitTxt}</span>`}</div>
         </div>`;
-      }).join('') || '<div style="color:var(--muted);text-align:center;margin-top:14px;">ไม่มีออเดอร์</div>';
+      }).join('') || '<div style="color:var(--muted);text-align:center;margin-top:14px;">No active orders</div>';
     } else {
       list.innerHTML = history.map(h => `
         <div class="order-row">
-          <div><b>${h.type}</b> (${h.reason}) ${h.entry.toFixed(3)} → ${h.exit.toFixed(3)}</div>
+          <div><b>${h.type}</b> (${h.reason}) ${h.entry.toFixed(3)} &rarr; ${h.exit.toFixed(3)}</div>
           <b style="color:${h.pnl >= 0 ? 'var(--green)' : 'var(--red)'}">${h.pnl >= 0 ? '+' : ''}$${h.pnl.toFixed(2)}</b>
         </div>
-      `).join('') || '<div style="color:var(--muted);text-align:center;margin-top:14px;">ยังไม่มีประวัติการปิดออเดอร์</div>';
+      `).join('') || '<div style="color:var(--muted);text-align:center;margin-top:14px;">No trade history</div>';
     }
   }
 
@@ -1772,15 +1876,10 @@
   function resizeAllCharts() {
     const mRect = mainPane.getBoundingClientRect();
     mainChart.resize(mRect.width, mRect.height);
-    const dpr = window.devicePixelRatio || 1;
-    overlayCanvas.width = mRect.width * dpr;
-    overlayCanvas.height = mRect.height * dpr;
-    oCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
     if (indConfig.rsi) { const r = document.getElementById('paneRSI').getBoundingClientRect(); chartRSI.resize(r.width, r.height); }
     if (indConfig.macd) { const r = document.getElementById('paneMACD').getBoundingClientRect(); chartMACD.resize(r.width, r.height); }
     if (indConfig.stoch) { const r = document.getElementById('paneSTOCH').getBoundingClientRect(); chartSTOCH.resize(r.width, r.height); }
-    scheduleOverlayRender();
+    drawingsPrimitive.requestRedraw();
   }
 
   function syncIndicatorModalInputs() {
@@ -1804,7 +1903,7 @@
 
   document.getElementById('profileSelect').onchange = e => switchProfile(e.target.value);
   document.getElementById('addProfileBtn').onclick = () => {
-    const name = prompt('ตั้งชื่อเทคนิค / โปรไฟล์ใหม่:');
+    const name = prompt('New Profile / Strategy Name:');
     if (name && name.trim()) {
       const cleanName = name.trim();
       profiles[cleanName] = createEmptyProfileState();
@@ -1814,7 +1913,7 @@
   };
 
   document.getElementById('resetTradesBtn').onclick = () => {
-    if (!confirm(`ล้างประวัติการเทรดทั้งหมดของ [${activeProfileId}] เพื่อเริ่มใหม่ใช่ไหม?`)) return;
+    if (!confirm(`Reset all trades and balance for [${activeProfileId}]?`)) return;
     stopPlay();
     clearAllPriceLines();
     balance = initialBalance;
@@ -1825,7 +1924,19 @@
     saveCurrentProfile();
   };
 
-  // Copy Selected Drawing (Rectangle, Trendline, Fib, RR ฯลฯ)
+  // Swatch Color Picker
+  document.querySelectorAll('#swatchGroup .swatch').forEach(sw => {
+    sw.onclick = () => {
+      if (selectedDrawingIdx >= 0 && drawings[selectedDrawingIdx]) {
+        drawings[selectedDrawingIdx].color = sw.dataset.col;
+        updateSelectionBar();
+        drawingsPrimitive.requestRedraw();
+        saveCurrentProfile();
+      }
+    };
+  });
+
+  // Copy Selected Object
   document.getElementById('copySelectedBtn').onclick = () => {
     if (selectedDrawingIdx < 0 || !drawings[selectedDrawingIdx]) return;
     const orig = drawings[selectedDrawingIdx];
@@ -1837,13 +1948,11 @@
     cloned.p1 += priceShift;
     cloned.p2 += priceShift;
     if (cloned.midP !== undefined) cloned.midP += priceShift;
-    if (cloned.points) {
-      cloned.points.forEach(pt => { pt.t += timeShift; pt.p += priceShift; });
-    }
+    if (cloned.points) cloned.points.forEach(pt => { pt.t += timeShift; pt.p += priceShift; });
     drawings.push(cloned);
     selectedDrawingIdx = drawings.length - 1;
     updateSelectionBar();
-    scheduleOverlayRender();
+    drawingsPrimitive.requestRedraw();
     saveCurrentProfile();
   };
 
@@ -1859,12 +1968,11 @@
         d.visibleTFs.push(tfVal);
       }
       updateSelectionBar();
-      scheduleOverlayRender();
+      drawingsPrimitive.requestRedraw();
       saveCurrentProfile();
     };
   });
 
-  // เปิดออเดอร์จากกล่อง RR: รอให้ถึงเวลา d.t1 และราคาวิ่งมาแตะจุดเข้า d.midP จริงเท่านั้น!
   document.getElementById('execRRBtn').onclick = () => {
     if (selectedDrawingIdx < 0 || !drawings[selectedDrawingIdx] || m1Count === 0) return;
     const d = drawings[selectedDrawingIdx];
@@ -1883,22 +1991,40 @@
     else orderType = entry >= curPrice ? 'SELL LIMIT' : 'SELL STOP';
 
     const newOrder = {
-      id: Date.now(),
-      type: orderType,
-      triggered: false, // ยังไม่เปิดจนกว่าเวลาถึง d.t1 AND กราฟวิ่งมาแตะราคา entry จริง!
+      id: Date.now(), type: orderType, triggered: false,
       activateTime: Math.max(curTime, d.t1),
-      entry,
-      sl: d.p1,
-      tp: d.p2,
-      lot: calcLot,
-      entryTime: null,
-      entryLine: null, slLine: null, tpLine: null
+      entry, sl: d.p1, tp: d.p2, lot: calcLot,
+      entryTime: null, entryLine: null, slLine: null, tpLine: null
     };
     orders.push(newOrder);
     syncOrderPriceLines(newOrder);
     updateUI();
     saveCurrentProfile();
   };
+
+  function placeInstantMarketOrder(isBuy) {
+    if (m1Count === 0) return;
+    const price = m1Close[current1mIndex];
+    const curTime = m1Time[current1mIndex];
+    const entry = isBuy ? price + 0.25 : price;
+    const rr = parseFloat(document.getElementById('rrTargetInput').value) || 2.0;
+    const slDist = 5.0, tpDist = slDist * rr;
+
+    const newOrder = {
+      id: Date.now(), type: isBuy ? 'BUY' : 'SELL', triggered: true,
+      activateTime: curTime, entry,
+      sl: isBuy ? entry - slDist : entry + slDist,
+      tp: isBuy ? entry + tpDist : entry - tpDist,
+      lot: lotSize, entryTime: curTime, entryLine: null, slLine: null, tpLine: null
+    };
+    orders.push(newOrder);
+    syncOrderPriceLines(newOrder);
+    updateUI();
+    saveCurrentProfile();
+  }
+
+  document.getElementById('ocBuyBtn').onclick = () => placeInstantMarketOrder(true);
+  document.getElementById('ocSellBtn').onclick = () => placeInstantMarketOrder(false);
 
   document.getElementById('openAllToolsBtn').onclick = () => {
     renderAllToolsModal();
@@ -1930,20 +2056,14 @@
 
   document.getElementById('toggleMarkersBtn').onclick = e => {
     showTradeMarkers = !showTradeMarkers;
-    e.target.classList.toggle('active', showTradeMarkers);
+    e.currentTarget.classList.toggle('active', showTradeMarkers);
     updateTradeMarkers();
   };
 
-  document.getElementById('drawColorPicker').oninput = e => {
-    if (selectedDrawingIdx >= 0 && drawings[selectedDrawingIdx]) {
-      drawings[selectedDrawingIdx].color = e.target.value;
-      scheduleOverlayRender(); saveCurrentProfile();
-    }
-  };
   document.getElementById('drawWidthSelect').onchange = e => {
     if (selectedDrawingIdx >= 0 && drawings[selectedDrawingIdx]) {
       drawings[selectedDrawingIdx].width = Number(e.target.value);
-      scheduleOverlayRender(); saveCurrentProfile();
+      drawingsPrimitive.requestRedraw(); saveCurrentProfile();
     }
   };
 
@@ -1952,16 +2072,16 @@
       drawings.splice(selectedDrawingIdx, 1);
       selectedDrawingIdx = -1;
       updateSelectionBar();
-      overlayCanvas.classList.remove('interactive');
-      scheduleOverlayRender();
+      gestureOverlay.classList.remove('interactive');
+      drawingsPrimitive.requestRedraw();
       saveCurrentProfile();
     }
   };
   document.getElementById('deselectBtn').onclick = () => {
     selectedDrawingIdx = -1;
     updateSelectionBar();
-    overlayCanvas.classList.remove('interactive');
-    scheduleOverlayRender();
+    gestureOverlay.classList.remove('interactive');
+    drawingsPrimitive.requestRedraw();
   };
 
   document.getElementById('themeBtn').onclick = () => {
@@ -2005,12 +2125,12 @@
   document.getElementById('lotMinus').onclick = () => {
     lotSize = Math.max(0.01, +(lotSize - 0.05).toFixed(2));
     document.getElementById('lotText').textContent = lotSize.toFixed(2);
-    scheduleOverlayRender(); saveCurrentProfile();
+    drawingsPrimitive.requestRedraw(); saveCurrentProfile();
   };
   document.getElementById('lotPlus').onclick = () => {
     lotSize = +(lotSize + 0.05).toFixed(2);
     document.getElementById('lotText').textContent = lotSize.toFixed(2);
-    scheduleOverlayRender(); saveCurrentProfile();
+    drawingsPrimitive.requestRedraw(); saveCurrentProfile();
   };
 
   document.querySelectorAll('#orderTypeGroup .btn').forEach(btn => {
@@ -2077,8 +2197,8 @@
     drawings.pop();
     selectedDrawingIdx = -1;
     updateSelectionBar();
-    overlayCanvas.classList.remove('interactive');
-    scheduleOverlayRender();
+    gestureOverlay.classList.remove('interactive');
+    drawingsPrimitive.requestRedraw();
     saveCurrentProfile();
   };
 
