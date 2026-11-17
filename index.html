@@ -112,7 +112,7 @@
 
     /* Sub Indicator Panes */
     .ind-pane {
-      position: relative; height: 72px; width: 100%; border-top: 1px solid var(--border);
+      position: relative; height: 70px; width: 100%; border-top: 1px solid var(--border);
       display: none; flex-shrink: 0;
     }
     .ind-pane.active { display: block; }
@@ -134,15 +134,16 @@
       padding: 3px 0; border-bottom: 1px solid var(--border);
     }
     .tool-btn {
-      width: 30px; height: 28px; border-radius: 6px; border: none;
+      width: 30px; height: 27px; border-radius: 6px; border: none;
       background: transparent; color: var(--text);
       display: flex; align-items: center; justify-content: center; cursor: pointer;
       transition: background 0.15s, color 0.15s;
     }
     .tool-btn:hover { background: var(--panel2); }
     .tool-btn.active { background: var(--blue); color: #fff; }
+    .tool-btn.warn-active { background: var(--yellow); color: #000; }
 
-    /* Contextual Floating Edit Pill (ย้ายมุมได้ + ซ่อน TF ตอนเลือก Long/Short) */
+    /* Contextual Floating Edit Pill */
     .selection-bar {
       position: absolute; top: 8px; left: 8px;
       background: var(--glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
@@ -152,10 +153,7 @@
       max-width: calc(100% - 115px);
     }
     .selection-bar.visible { display: flex; }
-    .selection-bar.bottom-pos {
-      top: auto;
-      bottom: 28px;
-    }
+    .selection-bar.bottom-pos { top: auto; bottom: 28px; }
     .swatch {
       width: 15px; height: 15px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.3);
       cursor: pointer; padding: 0;
@@ -205,12 +203,23 @@
       display: flex; justify-content: space-between; align-items: center; margin-top: 6px; gap: 6px;
     }
 
-    /* Replay Bar */
+    /* Clean Replay Bar (No Slider - Shows CSV Remaining Status) */
     .replay-bar {
-      display: flex; align-items: center; gap: 5px; padding: 5px 8px;
+      display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 5px 8px;
       background: var(--panel); border-top: 1px solid var(--border);
     }
-    input[type="range"] { flex: 1; accent-color: var(--blue); min-width: 45px; }
+    .csv-status-pill {
+      flex: 1; background: var(--panel2); border: 1px solid var(--border);
+      border-radius: 5px; padding: 4px 8px; font-size: 10px; font-family: monospace;
+      display: flex; align-items: center; justify-content: space-between; gap: 6px;
+      overflow: hidden; white-space: nowrap;
+    }
+    .csv-bar-track {
+      width: 48px; height: 5px; background: rgba(120,123,134,0.3); border-radius: 3px; overflow: hidden; flex-shrink: 0;
+    }
+    .csv-bar-fill {
+      height: 100%; background: var(--blue); width: 0%; transition: width 0.2s;
+    }
 
     /* Trade Panel */
     .trade-panel {
@@ -220,7 +229,7 @@
     .order-types { display: flex; gap: 4px; overflow-x: auto; }
     .order-types::-webkit-scrollbar { display: none; }
     .trade-inputs-row {
-      display: flex; align-items: center; gap: 6px; overflow-x: auto; font-size: 11px;
+      display: flex; align-items: center; gap: 5px; overflow-x: auto; font-size: 11px;
     }
     .trade-inputs-row::-webkit-scrollbar { display: none; }
     .trade-actions { display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap; }
@@ -268,7 +277,6 @@
       </div>
     </div>
 
-    <!-- Date & Compact Session Droplist (Asia, LDN, NY) -->
     <div class="group">
       <input type="date" id="startDateInput" min="2026-04-01" max="2026-11-30" value="2026-11-02" />
       <select id="sessionSelect" title="Jump to Market Open (TH Time)">
@@ -297,43 +305,49 @@
     </div>
   </div>
 
-  <!-- Subbar -->
+  <!-- Subbar (เพิ่ม Commission, Max DD และปุ่ม Export CSV) -->
   <div class="tv-subbar">
     <div class="stat">
       <span style="color:var(--muted);">ID:</span>
-      <select id="profileSelect" style="max-width:110px;"></select>
+      <select id="profileSelect" style="max-width:100px;"></select>
       <button class="btn" id="addProfileBtn" title="New Profile">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       </button>
     </div>
     <div class="stat">
-      <span style="color:var(--muted);">Capital:</span>
-      <input type="number" id="initBalInput" value="10000" style="width:56px; padding:2px 4px;" />
-      <button class="btn btn-blue" id="applyBalBtn" style="padding:2px 6px;">Set</button>
+      <span style="color:var(--muted);">Cap:</span>
+      <input type="number" id="initBalInput" value="10000" style="width:54px; padding:2px 4px;" />
+      <button class="btn btn-blue" id="applyBalBtn" style="padding:2px 5px;">Set</button>
     </div>
     <div class="stat">
-      <span style="color:var(--muted);">Balance:</span>
+      <span style="color:var(--muted);">Comm/L:</span>
+      <input type="number" id="commInput" value="7" step="0.5" style="width:38px; padding:2px 4px;" title="Commission per 1.00 Lot ($)" />
+    </div>
+    <div class="stat">
+      <span style="color:var(--muted);">Bal:</span>
       <b id="balText">$10000.00</b>
     </div>
     <div class="stat">
-      <span style="color:var(--muted);">Equity:</span>
+      <span style="color:var(--muted);">Eq:</span>
       <b id="eqText" style="color:var(--green);">$10000.00</b>
     </div>
     <div class="stat">
-      <span style="color:var(--muted);">WinRate:</span>
+      <span style="color:var(--muted);">Win:</span>
       <b id="winRateText">0%</b>
     </div>
     <div class="stat">
-      <button class="btn btn-red" id="resetTradesBtn" style="padding:2px 7px;">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-        <span>Reset</span>
-      </button>
+      <span style="color:var(--muted);">DD:</span>
+      <b id="maxDDText" style="color:var(--red);">0.0%</b>
+    </div>
+    <div class="stat">
+      <button class="btn" id="exportCsvBtn" style="padding:2px 6px;" title="Export Trade History CSV">Export</button>
+      <button class="btn btn-red" id="resetTradesBtn" style="padding:2px 6px;" title="Reset Trade History">Reset</button>
     </div>
   </div>
 
   <!-- Workspace -->
   <div class="workspace">
-    <!-- Contextual Edit Bar (ย้ายตำแหน่งบน/ล่างได้ + ซ่อน TF เมื่อเป็น Long/Short) -->
+    <!-- Contextual Edit Bar -->
     <div class="selection-bar" id="selectionBar">
       <button class="btn" id="toggleBarPosBtn" style="padding:2px 5px;" title="Move Toolbar Top/Bottom">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 10l5-5 5 5M7 14l5 5 5-5"/></svg>
@@ -353,7 +367,7 @@
         <option value="5">5px</option>
         <option value="8">8px</option>
       </select>
-      <button class="btn" id="copySelectedBtn" title="Duplicate">
+      <button class="btn" id="copySelectedBtn" title="Duplicate with exact angle & length">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
         <span>Copy</span>
       </button>
@@ -382,20 +396,26 @@
     <!-- Point-by-Point Guidance Pill -->
     <div class="point-hint" id="pointHint">Select Point 1</div>
 
-    <!-- Draggable Floating Favorite Toolbar + Clear All Drawings Button -->
+    <!-- Draggable Floating Favorite Toolbar (เพิ่ม Magnet Mode + Lock Drawings + Clear All) -->
     <div class="fav-toolbar" id="favToolbar">
       <div class="fav-drag-handle" id="favDragHandle">
         <svg width="14" height="10" viewBox="0 0 24 12" fill="currentColor"><circle cx="8" cy="3" r="1.5"/><circle cx="16" cy="3" r="1.5"/><circle cx="8" cy="9" r="1.5"/><circle cx="16" cy="9" r="1.5"/></svg>
       </div>
-      <div id="favButtonsContainer" style="display:flex; flex-direction:column; gap:3px;"></div>
-      <button class="tool-btn" id="openAllToolsBtn" style="border-top:1px solid var(--border); margin-top:2px;" title="All Drawing Tools">
+      <div id="favButtonsContainer" style="display:flex; flex-direction:column; gap:2px;"></div>
+      <button class="tool-btn" id="magnetBtn" style="border-top:1px solid var(--border); margin-top:2px;" title="Magnet Snap to High/Low">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 15v-5a6 6 0 1 1 12 0v5"/><path d="M6 15h4v4H6zM14 15h4v4h-4z"/></svg>
+      </button>
+      <button class="tool-btn" id="lockDrawBtn" title="Lock/Unlock Drawings">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      </button>
+      <button class="tool-btn" id="openAllToolsBtn" title="All Drawing Tools">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
       </button>
       <button class="tool-btn" id="undoDrawBtn" title="Undo Last Drawing">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
       </button>
       <button class="tool-btn" id="clearAllDrawingsBtn" style="color:var(--red);" title="Clear All Drawings">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
       </button>
     </div>
 
@@ -416,34 +436,40 @@
     <div class="ind-pane" id="paneSTOCH"><div class="ind-label" id="labelSTOCH" style="color:#f59e0b;">Stochastic (14, 3, 3)</div></div>
   </div>
 
-  <!-- Replay Bar -->
+  <!-- Minimal Replay Bar (ตัด Slider ออก เหลือเฉพาะปุ่มควบคุม + สถานะข้อมูล CSV คงเหลือ) -->
   <div class="replay-bar">
-    <button class="btn btn-green" id="playBtn" style="width:60px;">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-      <span>Play</span>
-    </button>
+    <div class="group" style="gap:4px;">
+      <button class="btn btn-green" id="playBtn" style="width:58px;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        <span>Play</span>
+      </button>
 
-    <button class="btn" id="stepBackBtn" title="Step Backward">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="5" x2="5" y2="19"/><polygon points="19 4 9 12 19 20 19 4"/></svg>
-      <span>-1</span>
-    </button>
+      <button class="btn" id="stepBackBtn" title="Step Backward">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="5" x2="5" y2="19"/><polygon points="19 4 9 12 19 20 19 4"/></svg>
+        <span>-1</span>
+      </button>
 
-    <select id="stepUnitSelect" title="Step Interval">
-      <option value="1" selected>1m</option>
-      <option value="5">5m</option>
-      <option value="15">15m</option>
-      <option value="60">1H</option>
-      <option value="240">4H</option>
-      <option value="1440">1D</option>
-    </select>
+      <select id="stepUnitSelect" title="Step Interval">
+        <option value="1" selected>1m</option>
+        <option value="5">5m</option>
+        <option value="15">15m</option>
+        <option value="60">1H</option>
+        <option value="240">4H</option>
+        <option value="1440">1D</option>
+      </select>
 
-    <button class="btn btn-blue" id="stepBtn" title="Step Forward">
-      <span>+1</span>
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
-    </button>
+      <button class="btn btn-blue" id="stepBtn" title="Step Forward">
+        <span>+1</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+      </button>
+    </div>
 
-    <input type="range" id="progressSlider" min="50" max="10000" value="500" />
-    <span id="cursorTimeText" style="font-size:10px; color:var(--text); min-width:96px; text-align:right; font-family:monospace;">--</span>
+    <!-- แถบสถานะข้อมูล CSV คงเหลือ (แทนที่ Slider) -->
+    <div class="csv-status-pill" id="csvStatusPill" title="Remaining CSV Data">
+      <span id="csvStatusText">Loading CSV...</span>
+      <div class="csv-bar-track"><div class="csv-bar-fill" id="csvBarFill"></div></div>
+    </div>
+
     <select id="speedSelect">
       <option value="800">0.5x</option>
       <option value="250" selected>1x</option>
@@ -464,11 +490,11 @@
     </div>
     <div class="trade-inputs-row">
       <span style="color:var(--muted);">Entry:</span>
-      <input type="number" id="orderEntryInput" placeholder="Auto" step="0.01" style="width:66px; padding:2px 4px; font-size:10px;" />
+      <input type="number" id="orderEntryInput" placeholder="Auto" step="0.01" style="width:64px; padding:2px 4px; font-size:10px;" />
       <span style="color:var(--red);">SL:</span>
-      <input type="number" id="orderSLInput" placeholder="Auto" step="0.01" style="width:66px; padding:2px 4px; font-size:10px;" />
+      <input type="number" id="orderSLInput" placeholder="Auto" step="0.01" style="width:64px; padding:2px 4px; font-size:10px;" />
       <span style="color:var(--green);">TP:</span>
-      <input type="number" id="orderTPInput" placeholder="Auto" step="0.01" style="width:66px; padding:2px 4px; font-size:10px;" />
+      <input type="number" id="orderTPInput" placeholder="Auto" step="0.01" style="width:64px; padding:2px 4px; font-size:10px;" />
       <button class="btn" id="clearPriceInputsBtn" style="padding:2px 5px; font-size:10px;">Auto</button>
     </div>
     <div class="trade-actions">
@@ -562,7 +588,9 @@
     '202604.csv', '202605.csv', '202606.csv', '202607.csv',
     '202608.csv', '202609.csv', '202610.csv', '202611.csv'
   ];
-  const PROFILES_STORAGE_KEY = 'tv_replay_profiles_v8';
+  const PROFILES_STORAGE_KEY = 'tv_replay_profiles_v9';
+  const IDB_NAME = 'TVReplayMasterDB_v1';
+  const IDB_STORE = 'csv_cache';
   const ALL_TFS = [1, 5, 15, 60, 240, 1440];
 
   const SVG_ICONS = {
@@ -581,7 +609,6 @@
     channel: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 15L15 4M9 20L20 9"/><circle cx="14.5" cy="14.5" r="1.8" fill="currentColor"/></svg>'
   };
 
-  // รวม Parallel Channel (ปรับความกว้างได้จริง) และตัด Regression Trend ออก
   const ALL_TOOLS = [
     { id: 'cursor', name: 'Crosshair / Select', defaultFav: true, defaultColor: '#ffffff', defaultWidth: 1, onePoint: true },
     { id: 'cut', name: 'Bar Replay Cut', defaultFav: true, defaultColor: '#2962ff', defaultWidth: 1, onePoint: true },
@@ -593,14 +620,13 @@
     { id: 'box', name: 'Rectangle (f)', defaultFav: true, defaultColor: '#2962ff', defaultWidth: 1, onePoint: false },
     { id: 'long', name: 'Long Position (RR)', defaultFav: true, defaultColor: '#089981', defaultWidth: 1, onePoint: true },
     { id: 'short', name: 'Short Position (RR)', defaultFav: true, defaultColor: '#f23645', defaultWidth: 1, onePoint: true },
-    { id: 'channel', name: 'Parallel Channel (Adjustable Width)', defaultFav: false, defaultColor: '#14b8a6', defaultWidth: 1, onePoint: false },
+    { id: 'channel', name: 'Parallel Channel', defaultFav: false, defaultColor: '#14b8a6', defaultWidth: 1, onePoint: false },
     { id: 'ray', name: 'Ray', defaultFav: false, defaultColor: '#f97316', defaultWidth: 1, onePoint: false },
     { id: 'extline', name: 'Extended Line', defaultFav: false, defaultColor: '#ec4899', defaultWidth: 1, onePoint: false }
   ];
 
   let favoriteToolIds = ALL_TOOLS.filter(t => t.defaultFav).map(t => t.id);
 
-  // Format เวลาไทย (UTC+7) แสดงเรียง 21:00, 22:00, 23:00 ตามปกติบนแกน X
   function formatTHAxisTick(utcSec) {
     const d = new Date((utcSec + 7 * 3600) * 1000);
     const pad = n => String(n).padStart(2, '0');
@@ -617,9 +643,7 @@
       layout: { background: { type: 'solid', color: '#131722' }, textColor: '#d1d4dc', fontSize: 10 },
       grid: { vertLines: { color: 'rgba(255,255,255,0.05)' }, horzLines: { color: 'rgba(255,255,255,0.05)' } },
       crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
-      localization: {
-        timeFormatter: (utcSec) => formatTHTime(utcSec),
-      },
+      localization: { timeFormatter: (utcSec) => formatTHTime(utcSec) },
       rightPriceScale: { borderColor: '#363a45', autoScale: true, minimumWidth: 66 },
       timeScale: {
         borderColor: '#363a45',
@@ -672,19 +696,16 @@
   });
 
   mainChart.subscribeCrosshairMove(param => {
-    if (param && param.time) {
-      document.getElementById('cursorTimeText').textContent = formatTHTime(param.time);
+    if (param && param.seriesData) {
       const barData = param.seriesData.get(candleSeries);
       if (barData) updateOHLCLegend(barData);
     } else if (visibleCandles.length) {
-      const last = visibleCandles[visibleCandles.length - 1];
-      document.getElementById('cursorTimeText').textContent = formatTHTime(last.time);
-      updateOHLCLegend(last);
+      updateOHLCLegend(visibleCandles[visibleCandles.length - 1]);
     }
   });
 
   // =========================================================================
-  // NATIVE SERIES PRIMITIVE PLUGIN
+  // LOGICAL BAR-INDEX HELPERS (แก้ปัญหา Trendline องศาไม่ตรงตอน Copy/ย้ายจุดกลาง 100%)
   // =========================================================================
   let drawings = [];
   let selectedDrawingIdx = -1;
@@ -695,6 +716,34 @@
   let visibleCandles = [];
   let isLightTheme = false;
   let orders = [];
+  let magnetEnabled = false;
+  let drawingsLocked = false;
+
+  // แปลง Timestamp <-> ลำดับแท่งเทียนจริง (ไม่มี Weekend Gap คั่น)
+  function timeToBarIndex(ts) {
+    if (!visibleCandles.length) return 0;
+    const tfSec = timeframeMin * 60;
+    const lastIdx = visibleCandles.length - 1;
+    const lastBar = visibleCandles[lastIdx];
+    if (ts >= lastBar.time) {
+      return lastIdx + Math.round((ts - lastBar.time) / tfSec);
+    }
+    let lo = 0, hi = lastIdx;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (visibleCandles[mid].time < ts) lo = mid + 1; else hi = mid;
+    }
+    return lo;
+  }
+
+  function barIndexToTime(bIdx) {
+    if (!visibleCandles.length) return Math.floor(Date.now() / 1000);
+    const tfSec = timeframeMin * 60;
+    const lastIdx = visibleCandles.length - 1;
+    if (bIdx < 0) return visibleCandles[0].time + bIdx * tfSec;
+    if (bIdx <= lastIdx) return visibleCandles[Math.round(bIdx)].time;
+    return visibleCandles[lastIdx].time + Math.round(bIdx - lastIdx) * tfSec;
+  }
 
   function timeToX(ts) {
     const coord = mainChart.timeScale().timeToCoordinate(ts);
@@ -719,6 +768,22 @@
 
   function priceToY(p) { return candleSeries.priceToCoordinate(p) ?? 0; }
   function yToPrice(y) { return candleSeries.coordinateToPrice(y) ?? 0; }
+
+  // Magnet Mode: ดูดติด High หรือ Low ของแท่งเทียนใกล้เคียงอัตโนมัติ
+  function applyMagnetSnap(x, y) {
+    const rawTime = xToTime(x);
+    const rawPrice = yToPrice(y);
+    if (!magnetEnabled || !visibleCandles.length) return { t: rawTime, p: rawPrice };
+
+    const bIdx = Math.max(0, Math.min(visibleCandles.length - 1, timeToBarIndex(rawTime)));
+    const bar = visibleCandles[bIdx];
+    if (!bar) return { t: rawTime, p: rawPrice };
+
+    const dHigh = Math.abs(bar.high - rawPrice);
+    const dLow = Math.abs(bar.low - rawPrice);
+    const snappedPrice = dHigh < dLow ? bar.high : bar.low;
+    return { t: bar.time, p: snappedPrice };
+  }
 
   function drawControlDot(ctx, x, y, fill = '#ffffff', stroke = '#2962ff', radius = 4.8) {
     ctx.fillStyle = fill; ctx.strokeStyle = stroke; ctx.lineWidth = 1.6;
@@ -798,7 +863,7 @@
                 const visTFs = d.visibleTFs || ALL_TFS;
                 if (d !== activeDragDraw && d.tool !== 'long' && d.tool !== 'short' && !visTFs.includes(timeframeMin)) return;
 
-                const isSelected = (idx === selectedDrawingIdx) || (d === activeDragDraw);
+                const isSelected = !drawingsLocked && ((idx === selectedDrawingIdx) || (d === activeDragDraw));
                 const x1 = timeToX(d.t1), x2 = timeToX(d.t2);
                 const y1 = priceToY(d.p1), y2 = priceToY(d.p2);
                 const midX = (x1 + x2) / 2, midY = (y1 + y2) / 2;
@@ -858,18 +923,14 @@
                     drawControlDot(ctx, x2, y2);
                   }
                 } else if (d.tool === 'channel') {
-                  // Parallel Channel ที่คำนวณความกว้างจาก channelOffsetPrice (ปรับความกว้างได้จริง!)
                   const offsetPrice = d.channelOffsetPrice !== undefined ? d.channelOffsetPrice : 4.0;
                   const y1Parallel = priceToY(d.p1 + offsetPrice);
                   const y2Parallel = priceToY(d.p2 + offsetPrice);
                   const y1Mid = (y1 + y1Parallel) / 2;
                   const y2Mid = (y2 + y2Parallel) / 2;
 
-                  // เส้นฐานหลัก
                   ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
-                  // เส้นคู่ขนานอีกฝั่ง
                   ctx.beginPath(); ctx.moveTo(x1, y1Parallel); ctx.lineTo(x2, y2Parallel); ctx.stroke();
-                  // เส้นประแบ่งกึ่งกลาง Channel
                   ctx.setLineDash([4, 4]);
                   ctx.beginPath(); ctx.moveTo(x1, y1Mid); ctx.lineTo(x2, y2Mid); ctx.stroke();
                   ctx.setLineDash([]);
@@ -882,9 +943,8 @@
 
                   if (isSelected) {
                     drawControlDot(ctx, x1, y1);
-                    drawControlDot(ctx, midX, midY, '#2962ff', '#ffffff'); // จุดกลางย้ายทั้ง Channel
+                    drawControlDot(ctx, midX, midY, '#2962ff', '#ffffff');
                     drawControlDot(ctx, x2, y2);
-                    // จุดปรับความกว้าง Channel (สีส้ม/ขาว ตรงกลางเส้นคู่ขนานอีกฝั่ง)
                     drawControlDot(ctx, midX, (y1Parallel + y2Parallel) / 2, '#f59e0b', '#ffffff');
                   }
                 } else if (d.tool === 'highlighter') {
@@ -1017,7 +1077,7 @@
   candleSeries.attachPrimitive(drawingsPrimitive);
 
   // =========================================================================
-  // Master Data & Pre-Aggregated Timeframe Cache
+  // Master Data, IndexedDB Binary Cache & Incremental Series Updates
   // =========================================================================
   let m1Count = 0;
   let m1Time = null, m1Open = null, m1High = null, m1Low = null, m1Close = null, m1Vol = null;
@@ -1040,10 +1100,56 @@
 
   let initialBalance = 10000;
   let balance = 10000;
+  let peakEquity = 10000;
+  let maxDrawdownPct = 0;
   let lotSize = 0.10;
   let selectedOrderType = 'BUY';
   let history = [];
   let selectedTool = 'cursor';
+
+  // IndexedDB Helpers เพื่อเก็บฐานข้อมูล CSV ถาวรในเครื่อง (ป้องกันแรมเต็มและไม่ต้องโหลดใหม่ทุกรอบ)
+  function openMasterIDB() {
+    return new Promise((resolve) => {
+      try {
+        const req = indexedDB.open(IDB_NAME, 1);
+        req.onupgradeneeded = e => e.target.result.createObjectStore(IDB_STORE);
+        req.onsuccess = e => resolve(e.target.result);
+        req.onerror = () => resolve(null);
+      } catch (e) { resolve(null); }
+    });
+  }
+
+  async function saveMasterToIDB() {
+    if (m1Count === 0) return;
+    const db = await openMasterIDB();
+    if (!db) return;
+    try {
+      const tx = db.transaction(IDB_STORE, 'readwrite');
+      tx.objectStore(IDB_STORE).put({ m1Time, m1Open, m1High, m1Low, m1Close, m1Vol }, 'xauusd_master');
+    } catch (e) {}
+  }
+
+  async function loadMasterFromIDB() {
+    const db = await openMasterIDB();
+    if (!db) return false;
+    return new Promise((resolve) => {
+      try {
+        const tx = db.transaction(IDB_STORE, 'readonly');
+        const req = tx.objectStore(IDB_STORE).get('xauusd_master');
+        req.onsuccess = () => {
+          const data = req.result;
+          if (data && data.m1Time && data.m1Time.length > 50) {
+            m1Count = data.m1Time.length;
+            m1Time = data.m1Time; m1Open = data.m1Open; m1High = data.m1High;
+            m1Low = data.m1Low; m1Close = data.m1Close; m1Vol = data.m1Vol;
+            buildTimeframeCache();
+            resolve(true);
+          } else resolve(false);
+        };
+        req.onerror = () => resolve(false);
+      } catch (e) { resolve(false); }
+    });
+  }
 
   function parseHistDataCSV(text) {
     const lines = text.split(/\r?\n/);
@@ -1071,6 +1177,30 @@
     return rows;
   }
 
+  function buildTimeframeCache() {
+    tfAggregatedCache = {};
+    [5, 15, 60, 240, 1440].forEach(tf => {
+      const tfSec = tf * 60;
+      const bars = [];
+      let bucket = null, bucketStart = -1;
+      for (let i = 0; i < m1Count; i++) {
+        const bStart = Math.floor(m1Time[i] / tfSec) * tfSec;
+        if (bStart !== bucketStart) {
+          if (bucket) bars.push(bucket);
+          bucketStart = bStart;
+          bucket = { time: bStart, open: m1Open[i], high: m1High[i], low: m1Low[i], close: m1Close[i], volume: m1Vol[i] };
+        } else {
+          if (m1High[i] > bucket.high) bucket.high = m1High[i];
+          if (m1Low[i] < bucket.low) bucket.low = m1Low[i];
+          bucket.close = m1Close[i];
+          bucket.volume += m1Vol[i];
+        }
+      }
+      if (bucket) bars.push(bucket);
+      tfAggregatedCache[tf] = bars;
+    });
+  }
+
   function loadMasterRows(allRows) {
     allRows.sort((a, b) => a.t - b.t);
     const unique = [];
@@ -1093,43 +1223,24 @@
       m1Close[i] = unique[i].c;
       m1Vol[i] = unique[i].v;
     }
-
-    tfAggregatedCache = {};
-    [5, 15, 60, 240, 1440].forEach(tf => {
-      const tfSec = tf * 60;
-      const bars = [];
-      let bucket = null, bucketStart = -1;
-      for (let i = 0; i < m1Count; i++) {
-        const bStart = Math.floor(m1Time[i] / tfSec) * tfSec;
-        if (bStart !== bucketStart) {
-          if (bucket) bars.push(bucket);
-          bucketStart = bStart;
-          bucket = { time: bStart, open: m1Open[i], high: m1High[i], low: m1Low[i], close: m1Close[i], volume: m1Vol[i] };
-        } else {
-          if (m1High[i] > bucket.high) bucket.high = m1High[i];
-          if (m1Low[i] < bucket.low) bucket.low = m1Low[i];
-          bucket.close = m1Close[i];
-          bucket.volume += m1Vol[i];
-        }
-      }
-      if (bucket) bars.push(bucket);
-      tfAggregatedCache[tf] = bars;
-    });
-
-    const slider = document.getElementById('progressSlider');
-    slider.min = 30;
-    slider.max = Math.max(50, m1Count - 1);
+    buildTimeframeCache();
+    saveMasterToIDB();
   }
 
   async function initMasterDatabase() {
-    let combined = [];
-    for (const f of GITHUB_DATA_FILES) {
-      try {
-        const res = await fetch(`./${f}`);
-        if (res.ok) combined = combined.concat(parseHistDataCSV(await res.text()));
-      } catch (e) {}
+    document.getElementById('csvStatusText').textContent = 'Loading CSV...';
+    const loadedFromCache = await loadMasterFromIDB();
+    if (!loadedFromCache) {
+      let combined = [];
+      for (const f of GITHUB_DATA_FILES) {
+        try {
+          const res = await fetch(`./${f}`);
+          if (res.ok) combined = combined.concat(parseHistDataCSV(await res.text()));
+        } catch (e) {}
+      }
+      if (combined.length > 50) loadMasterRows(combined);
     }
-    if (combined.length > 50) loadMasterRows(combined);
+
     loadProfilesFromStorage();
     switchProfile(activeProfileId);
   }
@@ -1166,6 +1277,8 @@
       timeframeMin: 1,
       initialBalance: 10000,
       balance: 10000,
+      peakEquity: 10000,
+      maxDrawdownPct: 0,
       lotSize: 0.10,
       orders: [],
       history: [],
@@ -1176,7 +1289,7 @@
   function saveCurrentProfile() {
     if (!activeProfileId) return;
     profiles[activeProfileId] = {
-      current1mIndex, timeframeMin, initialBalance, balance, lotSize,
+      current1mIndex, timeframeMin, initialBalance, balance, peakEquity, maxDrawdownPct, lotSize,
       orders: orders.map(o => ({
         id: o.id, type: o.type, triggered: o.triggered, activateTime: o.activateTime,
         entry: o.entry, sl: o.sl, tp: o.tp, lot: o.lot, entryTime: o.entryTime, linkedDrawId: o.linkedDrawId
@@ -1199,6 +1312,8 @@
     timeframeMin = st.timeframeMin || 1;
     initialBalance = st.initialBalance || 10000;
     balance = st.balance ?? initialBalance;
+    peakEquity = st.peakEquity ?? balance;
+    maxDrawdownPct = st.maxDrawdownPct ?? 0;
     lotSize = st.lotSize || 0.10;
     history = st.history || [];
     drawings = (st.drawings || []).map(d => ({ ...d, visibleTFs: d.visibleTFs || [...ALL_TFS] }));
@@ -1331,6 +1446,21 @@
     resizeAllCharts();
   }
 
+  function updateCsvRemainingStatus() {
+    if (m1Count === 0) {
+      document.getElementById('csvStatusText').textContent = 'No CSV Data';
+      document.getElementById('csvBarFill').style.width = '0%';
+      return;
+    }
+    const remBars = Math.max(0, m1Count - 1 - current1mIndex);
+    const pct = ((current1mIndex / (m1Count - 1)) * 100).toFixed(1);
+    const endStr = formatTHTime(m1Time[m1Count - 1]).split(' ')[0];
+    document.getElementById('csvStatusText').textContent = remBars === 0
+      ? 'CSV: 100% (End of Data)'
+      : `CSV: ${pct}% • Left: ${remBars.toLocaleString()}m (End ${endStr})`;
+    document.getElementById('csvBarFill').style.width = `${pct}%`;
+  }
+
   function rebuildAllCharts(fitView = false) {
     if (m1Count === 0) return;
     const curT = m1Time[current1mIndex];
@@ -1378,15 +1508,13 @@
     }
 
     candleSeries.setData(visibleCandles);
-    document.getElementById('progressSlider').value = current1mIndex;
-
+    updateCsvRemainingStatus();
     updateTradeMarkers();
     calcIndicators(visibleCandles);
 
     if (visibleCandles.length) {
       const last = visibleCandles[visibleCandles.length - 1];
       updateOHLCLegend(last);
-      document.getElementById('cursorTimeText').textContent = formatTHTime(last.time);
       document.getElementById('ocBidText').textContent = last.close.toFixed(2);
       document.getElementById('ocAskText').textContent = (last.close + 0.25).toFixed(2);
     }
@@ -1459,9 +1587,7 @@
     candleSeries.setMarkers(markers);
   }
 
-  // =========================================================================
-  // Session Droplist (Asia, LDN, NY — เฉพาะตอนเลือกเท่านั้น)
-  // =========================================================================
+  // Session Droplist
   document.getElementById('sessionSelect').onchange = e => {
     const sessionKey = e.target.value;
     if (!sessionKey || m1Count === 0) return;
@@ -1475,16 +1601,13 @@
 
     if (sessionKey === 'asia') {
       targetUtcSec = Math.floor(Date.UTC(y, m - 1, d - 1, 22, 0, 0) / 1000);
-      label = 'Asia 05:00';
-      color = '#eab308';
+      label = 'Asia 05:00'; color = '#eab308';
     } else if (sessionKey === 'london') {
       targetUtcSec = Math.floor(Date.UTC(y, m - 1, d, 7, 0, 0) / 1000);
-      label = 'LDN 14:00';
-      color = '#2962ff';
+      label = 'LDN 14:00'; color = '#2962ff';
     } else if (sessionKey === 'ny') {
       targetUtcSec = Math.floor(Date.UTC(y, m - 1, d, 12, 0, 0) / 1000);
-      label = 'NY 19:00';
-      color = '#089981';
+      label = 'NY 19:00'; color = '#089981';
     }
 
     let lo = 0, hi = m1Count - 1;
@@ -1496,7 +1619,6 @@
     current1mIndex = Math.max(50, Math.min(m1Count - 1, lo));
     const exactTime = m1Time[current1mIndex];
 
-    // อัปเดตหรือสร้างเส้น Session Marker ของวันนั้น (ไม่ซ้ำซ้อน)
     drawings = drawings.filter(item => !item.isSessionMarker);
     drawings.push({
       id: Date.now(), isSessionMarker: true,
@@ -1504,15 +1626,13 @@
       color, width: 1, label, visibleTFs: [...ALL_TFS]
     });
 
-    // รีเซ็ต dropdown กลับเป็น 'Sess' เพื่อให้กดเลือกซ้ำหรือสลับ Session อื่นได้ตลอด
     e.target.value = '';
-
     rebuildAllCharts(true);
     updateUI();
     saveCurrentProfile();
   };
 
-  // Favorite Toolbar
+  // Favorite Toolbar + Magnet + Lock
   function renderFavoriteToolbar() {
     const container = document.getElementById('favButtonsContainer');
     container.innerHTML = favoriteToolIds.map(id => {
@@ -1533,6 +1653,22 @@
     });
   }
 
+  document.getElementById('magnetBtn').onclick = e => {
+    magnetEnabled = !magnetEnabled;
+    e.currentTarget.classList.toggle('active', magnetEnabled);
+  };
+
+  document.getElementById('lockDrawBtn').onclick = e => {
+    drawingsLocked = !drawingsLocked;
+    e.currentTarget.classList.toggle('warn-active', drawingsLocked);
+    if (drawingsLocked) {
+      selectedDrawingIdx = -1;
+      updateSelectionBar();
+      setTool('cursor');
+    }
+    drawingsPrimitive.requestRedraw();
+  };
+
   function setTool(t) {
     selectedTool = t;
     pendingFirstPoint = null;
@@ -1542,7 +1678,7 @@
     renderFavoriteToolbar();
     updatePointHint();
 
-    const needOverlay = (selectedTool !== 'cursor') || (selectedDrawingIdx >= 0);
+    const needOverlay = (selectedTool !== 'cursor') || (selectedDrawingIdx >= 0 && !drawingsLocked);
     gestureOverlay.classList.toggle('interactive', needOverlay);
     drawingsPrimitive.requestRedraw();
   }
@@ -1672,7 +1808,7 @@
     mCtx.fillText(formatTHTime(targetTime).split(' ')[1], mid, size - 3);
   }
 
-  // Hit Testing (รวมจุดปรับความกว้าง Channel และ Midpoint Handles)
+  // Hit Testing
   function distToSegment(px, py, x1, y1, x2, y2) {
     const l2 = (x2 - x1) ** 2 + (y2 - y1) ** 2;
     if (l2 === 0) return Math.hypot(px - x1, py - y1);
@@ -1697,6 +1833,7 @@
   }
 
   function hitTestDrawing(pos) {
+    if (drawingsLocked) return null;
     for (let i = drawings.length - 1; i >= 0; i--) {
       const d = drawings[i];
       const visTFs = d.visibleTFs || ALL_TFS;
@@ -1729,7 +1866,7 @@
         const offsetPrice = d.channelOffsetPrice !== undefined ? d.channelOffsetPrice : 4.0;
         const y1P = priceToY(d.p1 + offsetPrice), y2P = priceToY(d.p2 + offsetPrice);
         const midYP = (y1P + y2P) / 2;
-        if (Math.hypot(pos.x - midX, pos.y - midYP) < 18) return { idx: i, part: 'channelWidth' }; // จุดปรับความกว้าง Channel
+        if (Math.hypot(pos.x - midX, pos.y - midYP) < 18) return { idx: i, part: 'channelWidth' };
         if (Math.hypot(pos.x - midX, pos.y - midY) < 18) return { idx: i, part: 'moveBoth' };
         if (Math.hypot(pos.x - x1, pos.y - y1) < 18) return { idx: i, part: 'p1' };
         if (Math.hypot(pos.x - x2, pos.y - y2) < 18) return { idx: i, part: 'p2' };
@@ -1755,10 +1892,12 @@
       const curPrice = m1Close[current1mIndex];
       const curTime = m1Time[current1mIndex];
       const isBuy = o.type.includes('BUY');
-      const pnl = (isBuy ? curPrice - o.entry : o.entry - curPrice) * 100 * o.lot;
+      const comm = (parseFloat(document.getElementById('commInput').value) || 0) * o.lot;
+      const pnl = (isBuy ? curPrice - o.entry : o.entry - curPrice) * 100 * o.lot - comm;
       balance += pnl;
+      updateDrawdownStats();
       history.unshift({
-        type: o.type, entry: o.entry, exit: curPrice, pnl,
+        type: o.type, entry: o.entry, exit: curPrice, pnl, lot: o.lot,
         reason: 'Manual Close', entryTime: o.entryTime, exitTime: curTime
       });
       updateTradeMarkers();
@@ -1796,7 +1935,7 @@
     const execBtn = document.getElementById('execRRBtn');
     const tfGroup = document.getElementById('tfVisGroup');
 
-    if (selectedDrawingIdx >= 0 && drawings[selectedDrawingIdx]) {
+    if (selectedDrawingIdx >= 0 && drawings[selectedDrawingIdx] && !drawingsLocked) {
       const d = drawings[selectedDrawingIdx];
       const meta = ALL_TOOLS.find(x => x.id === d.tool);
       document.getElementById('selectedObjLabel').textContent = meta ? meta.name.split(' ')[0] : 'Object';
@@ -1807,7 +1946,6 @@
       document.getElementById('drawWidthSelect').value = String(d.width || 1);
 
       const isRR = (d.tool === 'long' || d.tool === 'short');
-      // ซ่อน Timeframe Visibility สำหรับ Long และ Short Position ตามที่กำหนด
       tfGroup.style.display = isRR ? 'none' : 'flex';
       execBtn.style.display = isRR ? 'inline-block' : 'none';
 
@@ -1824,13 +1962,12 @@
     }
   }
 
-  // ปุ่มย้ายตำแหน่งแถบแก้ไข (Top / Bottom) เพื่อไม่ให้บังกราฟ
   document.getElementById('toggleBarPosBtn').onclick = () => {
     document.getElementById('selectionBar').classList.toggle('bottom-pos');
   };
 
   // =========================================================================
-  // Pointer Handling
+  // Pointer Handling (ลากจุดกลางด้วย Bar-Index Delta คงองศาและความยาวเดิม 100%)
   // =========================================================================
   let editingTarget = null, draggingOrderTarget = null, lastPos = { x: 0, y: 0 }, pointerDownPos = { x: 0, y: 0 };
 
@@ -1870,7 +2007,18 @@
       const hit = hitTestDrawing(pos);
       if (hit) {
         selectedDrawingIdx = hit.idx;
-        editingTarget = hit;
+        const d = drawings[hit.idx];
+        // บันทึกค่า BarIndex ตั้งต้นของหัวและท้ายตอนเริ่มจับลาก เพื่อรักษาองศา 100%
+        editingTarget = {
+          ...hit,
+          startMouseX: pos.x,
+          startMouseY: pos.y,
+          origB1: timeToBarIndex(d.t1),
+          origB2: timeToBarIndex(d.t2),
+          origP1: d.p1,
+          origP2: d.p2,
+          origMidP: d.midP
+        };
         updateSelectionBar();
         gestureOverlay.setPointerCapture(e.pointerId);
         drawingsPrimitive.requestRedraw();
@@ -1884,7 +2032,8 @@
     }
 
     const meta = ALL_TOOLS.find(x => x.id === selectedTool);
-    const tNow = xToTime(pos.x), pNow = yToPrice(pos.y);
+    const snapped = applyMagnetSnap(pos.x, pos.y);
+    const tNow = snapped.t, pNow = snapped.p;
 
     if (meta && meta.onePoint) {
       const rrTarget = parseFloat(document.getElementById('rrTargetInput').value) || 2.0;
@@ -1893,7 +2042,7 @@
         id: Date.now(),
         tool: selectedTool,
         t1: tNow,
-        t2: tNow + timeframeMin * 600,
+        t2: barIndexToTime(timeToBarIndex(tNow) + 12),
         p1: selectedTool === 'long' ? pNow - slDist : (selectedTool === 'short' ? pNow + slDist : pNow),
         p2: selectedTool === 'long' ? pNow + tpDist : (selectedTool === 'short' ? pNow - tpDist : pNow),
         midP: pNow,
@@ -1970,12 +2119,15 @@
     if (editingTarget) {
       const d = drawings[editingTarget.idx];
       const barSpacing = mainChart.timeScale().options().barSpacing || 6;
-      const dTime = Math.round((dx / barSpacing) * (timeframeMin * 60));
-      const pNow = yToPrice(pos.y), dPrice = pNow - yToPrice(pos.y - dy);
-      const tNow = xToTime(pos.x);
+      const snapped = applyMagnetSnap(pos.x, pos.y);
+      const pNow = snapped.p, tNow = snapped.t;
+
+      // คำนวณระยะเลื่อนจากจุดเริ่มต้นตอนกดจับลาก (Bar-Index Delta + Price Delta)
+      const totalBarDelta = Math.round((pos.x - editingTarget.startMouseX) / barSpacing);
+      const totalPriceDelta = yToPrice(pos.y) - yToPrice(editingTarget.startMouseY);
 
       const isCornerOrHandle = ['p1', 'p2', 'p1x_p2y', 'p2x_p1y', 'tp', 'sl', 'entry', 'channelWidth'].includes(editingTarget.part);
-      activeSnapCrosshair = isCornerOrHandle ? { x: pos.x, y: pos.y, price: pNow, time: tNow } : null;
+      activeSnapCrosshair = isCornerOrHandle ? { x: timeToX(tNow), y: priceToY(pNow), price: pNow, time: tNow } : null;
 
       if (editingTarget.part === 'hlineMove') { d.p1 = pNow; d.p2 = pNow; }
       else if (editingTarget.part === 'vlineMove') { d.t1 = tNow; d.t2 = tNow; }
@@ -1987,15 +2139,32 @@
         const baseMidP = (d.p1 + d.p2) / 2;
         d.channelOffsetPrice = pNow - baseMidP;
       }
-      else if (editingTarget.part === 'moveBoth') { d.t1 += dTime; d.t2 += dTime; d.p1 += dPrice; d.p2 += dPrice; }
+      else if (editingTarget.part === 'moveBoth') {
+        // เลื่อน BarIndex ทั้งหัวและท้ายเท่ากันเป๊ะ -> องศาและความยาวไม่มีวันเพี้ยน!
+        d.t1 = barIndexToTime(editingTarget.origB1 + totalBarDelta);
+        d.t2 = barIndexToTime(editingTarget.origB2 + totalBarDelta);
+        d.p1 = editingTarget.origP1 + totalPriceDelta;
+        d.p2 = editingTarget.origP2 + totalPriceDelta;
+      }
       else if (editingTarget.part === 'moveHighlight' && d.points) {
-        d.points.forEach(pt => { pt.t += dTime; pt.p += dPrice; });
+        const stepBarDelta = Math.round(dx / barSpacing);
+        const stepPriceDelta = yToPrice(pos.y) - yToPrice(pos.y - dy);
+        d.points.forEach(pt => {
+          pt.t = barIndexToTime(timeToBarIndex(pt.t) + stepBarDelta);
+          pt.p += stepPriceDelta;
+        });
       }
       else if (editingTarget.part === 'tp') { d.p2 = pNow; }
       else if (editingTarget.part === 'sl') { d.p1 = pNow; }
       else if (editingTarget.part === 'entry') { const s = pNow - d.midP; d.midP = pNow; d.p1 += s; d.p2 += s; }
-      else if (editingTarget.part === 'resizeRight') { d.t2 = Math.max(d.t1 + timeframeMin * 180, tNow); }
-      else if (editingTarget.part === 'moveRR') { d.t1 += dTime; d.t2 += dTime; d.p1 += dPrice; d.p2 += dPrice; d.midP += dPrice; }
+      else if (editingTarget.part === 'resizeRight') { d.t2 = Math.max(barIndexToTime(timeToBarIndex(d.t1) + 4), tNow); }
+      else if (editingTarget.part === 'moveRR') {
+        d.t1 = barIndexToTime(editingTarget.origB1 + totalBarDelta);
+        d.t2 = barIndexToTime(editingTarget.origB2 + totalBarDelta);
+        d.p1 = editingTarget.origP1 + totalPriceDelta;
+        d.p2 = editingTarget.origP2 + totalPriceDelta;
+        d.midP = editingTarget.origMidP + totalPriceDelta;
+      }
 
       if ((d.tool === 'long' || d.tool === 'short') && d.id) {
         orders.forEach(o => {
@@ -2009,7 +2178,6 @@
         updateUI();
       }
 
-      document.getElementById('cursorTimeText').textContent = formatTHTime(tNow);
       drawingsPrimitive.requestRedraw();
       if (activeSnapCrosshair) renderMagnifier(activeSnapCrosshair.x, activeSnapCrosshair.y, activeSnapCrosshair.price, activeSnapCrosshair.time);
       else magBox.classList.remove('active');
@@ -2018,8 +2186,9 @@
 
     if (pendingFirstPoint && Math.hypot(pos.x - pointerDownPos.x, pos.y - pointerDownPos.y) > 10) {
       const meta = ALL_TOOLS.find(x => x.id === selectedTool);
-      const tNow = xToTime(pos.x), pNow = yToPrice(pos.y);
-      activeSnapCrosshair = { x: pos.x, y: pos.y, price: pNow, time: tNow };
+      const snapped = applyMagnetSnap(pos.x, pos.y);
+      const tNow = snapped.t, pNow = snapped.p;
+      activeSnapCrosshair = { x: timeToX(tNow), y: priceToY(pNow), price: pNow, time: tNow };
       activeDragDraw = {
         id: Date.now(),
         tool: selectedTool,
@@ -2032,7 +2201,7 @@
         visibleTFs: [...ALL_TFS]
       };
       drawingsPrimitive.requestRedraw();
-      renderMagnifier(pos.x, pos.y, pNow, tNow);
+      renderMagnifier(activeSnapCrosshair.x, activeSnapCrosshair.y, pNow, tNow);
     } else if (activeDragDraw && activeDragDraw.tool === 'highlighter') {
       activeDragDraw.points.push({ t: xToTime(pos.x), p: yToPrice(pos.y) });
       drawingsPrimitive.requestRedraw();
@@ -2066,11 +2235,13 @@
   });
 
   // =========================================================================
-  // Simulation Engine (+1 / -1 Step)
+  // Incremental Step Engine (ใช้ candleSeries.update() ไม่ค้างและไม่กินแรม)
   // =========================================================================
   function stepForward(customMinutes = null) {
     const stepMinutes = customMinutes || Number(document.getElementById('stepUnitSelect').value) || 1;
     if (current1mIndex + stepMinutes >= m1Count) { stopPlay(); return; }
+
+    const commPerLot = parseFloat(document.getElementById('commInput').value) || 0;
 
     for (let m = 1; m <= stepMinutes; m++) {
       const idx = current1mIndex + m;
@@ -2100,9 +2271,11 @@
             else if (o.tp && bLow <= o.tp) { exitP = o.tp; reason = 'TP'; }
           }
           if (exitP !== null) {
-            const pnl = (isBuy ? exitP - o.entry : o.entry - exitP) * 100 * o.lot;
-            balance += pnl;
-            history.unshift({ type: o.type, entry: o.entry, exit: exitP, pnl, reason, entryTime: o.entryTime, exitTime: bTime });
+            const rawPnl = (isBuy ? exitP - o.entry : o.entry - exitP) * 100 * o.lot;
+            const netPnl = rawPnl - (commPerLot * o.lot);
+            balance += netPnl;
+            updateDrawdownStats();
+            history.unshift({ type: o.type, entry: o.entry, exit: exitP, pnl: netPnl, lot: o.lot, reason, entryTime: o.entryTime, exitTime: bTime });
             continue;
           }
         }
@@ -2112,7 +2285,41 @@
     }
 
     current1mIndex += stepMinutes;
-    rebuildAllCharts(false);
+
+    // Fast Incremental Update เมื่อเดินหน้าไม่เกิน 15 นาที (ไม่ Rebuild ทั้งกราฟ ลดภาระ CPU 90%)
+    if (stepMinutes <= 15 && visibleCandles.length > 20) {
+      const tfSec = timeframeMin * 60;
+      const curT = m1Time[current1mIndex];
+      const bucketStart = Math.floor(curT / tfSec) * tfSec;
+      const lastBar = visibleCandles[visibleCandles.length - 1];
+
+      if (bucketStart === lastBar.time) {
+        // อัปเดตแท่งปัจจุบัน
+        for (let k = current1mIndex - stepMinutes + 1; k <= current1mIndex; k++) {
+          if (m1High[k] > lastBar.high) lastBar.high = m1High[k];
+          if (m1Low[k] < lastBar.low) lastBar.low = m1Low[k];
+          lastBar.close = m1Close[k];
+          lastBar.volume += m1Vol[k];
+        }
+        candleSeries.update(lastBar);
+      } else {
+        // ขึ้นแท่งใหม่
+        rebuildAllCharts(false);
+        updateUI();
+        saveCurrentProfile();
+        return;
+      }
+
+      updateCsvRemainingStatus();
+      updateTradeMarkers();
+      updateOHLCLegend(lastBar);
+      document.getElementById('ocBidText').textContent = lastBar.close.toFixed(2);
+      document.getElementById('ocAskText').textContent = (lastBar.close + 0.25).toFixed(2);
+      drawingsPrimitive.requestRedraw();
+    } else {
+      rebuildAllCharts(false);
+    }
+
     updateUI();
     saveCurrentProfile();
   }
@@ -2142,6 +2349,12 @@
     btn.className = 'btn btn-green';
   }
 
+  function updateDrawdownStats() {
+    if (balance > peakEquity) peakEquity = balance;
+    const dd = peakEquity > 0 ? ((peakEquity - balance) / peakEquity) * 100 : 0;
+    if (dd > maxDrawdownPct) maxDrawdownPct = dd;
+  }
+
   let activeTab = 'active';
   function updateUI() {
     const curPrice = m1Count > 0 ? m1Close[current1mIndex] : 0;
@@ -2153,6 +2366,10 @@
       }
     });
     const eq = balance + floating;
+    if (eq > peakEquity) peakEquity = eq;
+    const curDD = peakEquity > 0 ? ((peakEquity - eq) / peakEquity) * 100 : 0;
+    if (curDD > maxDrawdownPct) maxDrawdownPct = curDD;
+
     document.getElementById('balText').textContent = `$${balance.toFixed(2)}`;
     const eqEl = document.getElementById('eqText');
     eqEl.textContent = `$${eq.toFixed(2)}`;
@@ -2160,7 +2377,8 @@
 
     const wins = history.filter(h => h.pnl > 0).length;
     const winRate = history.length ? ((wins / history.length) * 100).toFixed(0) : 0;
-    document.getElementById('winRateText').textContent = `${winRate}% (${wins}/${history.length})`;
+    document.getElementById('winRateText').textContent = `${winRate}%`;
+    document.getElementById('maxDDText').textContent = `${maxDrawdownPct.toFixed(1)}%`;
     document.getElementById('activeCount').textContent = orders.length;
     document.getElementById('histCount').textContent = history.length;
 
@@ -2245,12 +2463,28 @@
     if (!confirm(`Reset all trades and balance for [${activeProfileId}]?`)) return;
     stopPlay();
     balance = initialBalance;
+    peakEquity = initialBalance;
+    maxDrawdownPct = 0;
     orders = [];
     history = [];
     updateTradeMarkers();
     drawingsPrimitive.requestRedraw();
     updateUI();
     saveCurrentProfile();
+  };
+
+  // Export Trade History เป็นไฟล์ CSV
+  document.getElementById('exportCsvBtn').onclick = () => {
+    if (!history.length) return alert('No trade history to export.');
+    const header = 'Type,Lot,Entry,Exit,Reason,NetPnL\n';
+    const rows = history.map(h => `${h.type},${h.lot || 0.1},${h.entry},${h.exit},${h.reason},${h.pnl.toFixed(2)}`).join('\n');
+    const blob = new Blob([header + rows], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${activeProfileId.replace(/\s+/g, '_')}_history.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   document.querySelectorAll('#swatchGroup .swatch').forEach(sw => {
@@ -2264,18 +2498,18 @@
     };
   });
 
-  // Copy ด้วย Logical Pixel Offset (องศาและความยาวเท่าเดิม 100%)
+  // Copy ด้วย Bar-Index Delta (ความยาวและองศาเท่าเดิม 100%)
   document.getElementById('copySelectedBtn').onclick = () => {
     if (selectedDrawingIdx < 0 || !drawings[selectedDrawingIdx]) return;
     const orig = drawings[selectedDrawingIdx];
     const cloned = JSON.parse(JSON.stringify(orig));
     cloned.id = Date.now();
 
-    const x1 = timeToX(orig.t1);
-    const x2 = timeToX(orig.t2);
-    const shiftPx = 36;
-    cloned.t1 = xToTime(x1 + shiftPx);
-    cloned.t2 = xToTime(x2 + shiftPx);
+    const barDelta = 8; // คัดลอกเยื้องขวาไป 8 แท่งเทียนทั้งหัวและท้าย (คงองศาและความยาวเท่าเดิม 100%)
+    const origB1 = timeToBarIndex(orig.t1);
+    const origB2 = timeToBarIndex(orig.t2);
+    cloned.t1 = barIndexToTime(origB1 + barDelta);
+    cloned.t2 = barIndexToTime(origB2 + barDelta);
 
     const priceShift = 1.2;
     cloned.p1 += priceShift;
@@ -2283,7 +2517,7 @@
     if (cloned.midP !== undefined) cloned.midP += priceShift;
     if (cloned.points) {
       cloned.points.forEach(pt => {
-        pt.t = xToTime(timeToX(pt.t) + shiftPx);
+        pt.t = barIndexToTime(timeToBarIndex(pt.t) + barDelta);
         pt.p += priceShift;
       });
     }
@@ -2458,7 +2692,8 @@
   document.getElementById('applyBalBtn').onclick = () => {
     const val = parseFloat(document.getElementById('initBalInput').value);
     if (!isNaN(val) && val > 0) {
-      initialBalance = val; balance = val; updateUI(); saveCurrentProfile();
+      initialBalance = val; balance = val; peakEquity = val; maxDrawdownPct = 0;
+      updateUI(); saveCurrentProfile();
     }
   };
 
@@ -2468,10 +2703,6 @@
   document.getElementById('speedSelect').onchange = e => {
     speedMs = Number(e.target.value);
     if (isPlaying) { stopPlay(); startPlay(); }
-  };
-  document.getElementById('progressSlider').oninput = e => {
-    current1mIndex = Number(e.target.value);
-    rebuildAllCharts(false); updateUI(); saveCurrentProfile();
   };
 
   document.getElementById('lotMinus').onclick = () => {
@@ -2539,12 +2770,14 @@
   document.getElementById('closeAllBtn').onclick = () => {
     if (m1Count === 0) return;
     const cur = m1Close[current1mIndex], curT = m1Time[current1mIndex];
+    const commPerLot = parseFloat(document.getElementById('commInput').value) || 0;
     orders = orders.filter(o => {
       if (!o.triggered) return true;
       const isBuy = o.type.includes('BUY');
-      const pnl = (isBuy ? cur - o.entry : o.entry - cur) * 100 * o.lot;
-      balance += pnl;
-      history.unshift({ type: o.type, entry: o.entry, exit: cur, pnl, reason: 'Manual', entryTime: o.entryTime, exitTime: curT });
+      const netPnl = (isBuy ? cur - o.entry : o.entry - cur) * 100 * o.lot - (commPerLot * o.lot);
+      balance += netPnl;
+      updateDrawdownStats();
+      history.unshift({ type: o.type, entry: o.entry, exit: cur, pnl: netPnl, lot: o.lot, reason: 'Manual', entryTime: o.entryTime, exitTime: curT });
       return false;
     });
     updateTradeMarkers();
@@ -2561,7 +2794,6 @@
     saveCurrentProfile();
   };
 
-  // ปุ่มเคลียร์เส้นและกล่องที่วาดทั้งหมด
   document.getElementById('clearAllDrawingsBtn').onclick = () => {
     if (drawings.length === 0) return;
     if (!confirm('Clear all drawings on chart?')) return;
@@ -2598,6 +2830,7 @@
   document.getElementById('csvInput').onchange = async e => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
+    document.getElementById('csvStatusText').textContent = 'Importing CSV...';
     let allRows = [];
     for (const f of files) allRows = allRows.concat(parseHistDataCSV(await f.text()));
     if (allRows.length > 50) {
