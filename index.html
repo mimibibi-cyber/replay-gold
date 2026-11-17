@@ -13,7 +13,7 @@
       --bg: #131722;
       --panel: #1e222d;
       --panel2: #2a2e39;
-      --glass: rgba(30, 34, 45, 0.88);
+      --glass: rgba(30, 34, 45, 0.9);
       --border: #363a45;
       --text: #d1d4dc;
       --muted: #787b86;
@@ -27,7 +27,7 @@
       --bg: #ffffff;
       --panel: #f8fafc;
       --panel2: #e2e8f0;
-      --glass: rgba(248, 250, 252, 0.9);
+      --glass: rgba(248, 250, 252, 0.92);
       --border: #cbd5e1;
       --text: #131722;
       --muted: #64748b;
@@ -83,25 +83,42 @@
     }
     #gestureOverlay.interactive { pointer-events: auto; }
 
-    /* One-Click Trading Floating Header */
-    .one-click-box {
-      position: absolute; top: 38px; left: 8px; z-index: 16;
-      display: flex; align-items: center; gap: 4px;
+    /* Top-Right MT5-Style Quick Order & One-Click Toggle Buttons */
+    .top-right-trade-icons {
+      position: absolute; top: 8px; right: 74px; z-index: 26;
+      display: flex; align-items: center; gap: 5px;
     }
-    .oc-btn {
-      padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700;
-      cursor: pointer; border: 1px solid transparent; display: flex; flex-direction: column; align-items: center;
-      min-width: 64px; line-height: 1.15;
+    .tr-icon-btn {
+      width: 30px; height: 28px; border-radius: 6px; border: 1px solid var(--border);
+      background: var(--glass); backdrop-filter: blur(10px); color: var(--text);
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
     }
-    .oc-sell { background: rgba(242, 54, 69, 0.14); border-color: var(--red); color: var(--red); }
-    .oc-sell:active { background: var(--red); color: #fff; }
-    .oc-buy { background: rgba(41, 98, 255, 0.14); border-color: var(--blue); color: var(--blue); }
-    .oc-buy:active { background: var(--blue); color: #fff; }
-    .oc-spread { font-size: 10px; color: var(--muted); font-family: monospace; padding: 0 2px; }
+    .tr-icon-btn.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+
+    /* Long-Press Context Menu (Cut & Rewind / Pending Limit-Stop) */
+    .context-menu {
+      position: absolute; z-index: 60;
+      background: var(--glass); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--border); border-radius: 10px;
+      padding: 5px; min-width: 188px;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.5);
+      display: none; flex-direction: column; gap: 3px;
+    }
+    .context-menu.visible { display: flex; }
+    .ctx-header {
+      font-size: 10px; color: var(--muted); padding: 3px 8px;
+      border-bottom: 1px solid var(--border); font-family: monospace;
+    }
+    .ctx-item {
+      background: transparent; border: none; color: var(--text);
+      padding: 7px 9px; border-radius: 6px; font-size: 11px; font-weight: 600;
+      text-align: left; cursor: pointer; display: flex; align-items: center; gap: 7px;
+    }
+    .ctx-item:hover, .ctx-item:active { background: var(--panel2); }
 
     /* Magnifier Zoom Loupe */
     .magnifier-box {
-      position: absolute; top: 82px; left: 10px;
+      position: absolute; top: 48px; left: 10px;
       width: 112px; height: 112px; border-radius: 50%;
       border: 2px solid var(--blue); background: var(--bg);
       box-shadow: 0 8px 24px rgba(0,0,0,0.5); z-index: 40;
@@ -121,9 +138,9 @@
       font-weight: 600; pointer-events: none; background: var(--glass); padding: 1px 5px; border-radius: 3px;
     }
 
-    /* Minimal Glassmorphism Floating Favorite Toolbar */
+    /* Draggable Floating Favorite Toolbar */
     .fav-toolbar {
-      position: absolute; right: 74px; top: 14px;
+      position: absolute; right: 74px; top: 44px;
       background: var(--glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
       border: 1px solid var(--border);
       border-radius: 10px; padding: 4px; display: flex; flex-direction: column; gap: 3px;
@@ -150,7 +167,7 @@
       border: 1px solid var(--border);
       padding: 5px 8px; border-radius: 10px; display: none; align-items: center; gap: 6px;
       box-shadow: 0 6px 20px rgba(0,0,0,0.4); z-index: 35; font-size: 11px; flex-wrap: wrap;
-      max-width: calc(100% - 115px);
+      max-width: calc(100% - 145px);
     }
     .selection-bar.visible { display: flex; }
     .selection-bar.bottom-pos { top: auto; bottom: 28px; }
@@ -203,48 +220,52 @@
       display: flex; justify-content: space-between; align-items: center; margin-top: 6px; gap: 6px;
     }
 
-    /* Clean Replay Bar (No Slider - Shows CSV Remaining Status) */
+    /* Clean Replay Bar (Date & Time Display - No Percentage) */
     .replay-bar {
       display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 5px 8px;
       background: var(--panel); border-top: 1px solid var(--border);
     }
-    .csv-status-pill {
+    .date-status-pill {
       flex: 1; background: var(--panel2); border: 1px solid var(--border);
-      border-radius: 5px; padding: 4px 8px; font-size: 10px; font-family: monospace;
-      display: flex; align-items: center; justify-content: space-between; gap: 6px;
-      overflow: hidden; white-space: nowrap;
-    }
-    .csv-bar-track {
-      width: 48px; height: 5px; background: rgba(120,123,134,0.3); border-radius: 3px; overflow: hidden; flex-shrink: 0;
-    }
-    .csv-bar-fill {
-      height: 100%; background: var(--blue); width: 0%; transition: width 0.2s;
+      border-radius: 5px; padding: 4px 8px; font-size: 11px; font-family: monospace;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden; white-space: nowrap; font-weight: 600;
     }
 
-    /* Trade Panel */
-    .trade-panel {
-      padding: 5px 8px; background: var(--panel); border-top: 1px solid var(--border);
-      display: flex; flex-direction: column; gap: 5px;
+    /* MT5-Style Bottom One-Click Trade Bar (Toggleable via Top-Right Button) */
+    .mt5-trade-bar {
+      display: none; align-items: stretch; height: 44px;
+      background: var(--panel); border-top: 1px solid var(--border);
     }
-    .order-types { display: flex; gap: 4px; overflow-x: auto; }
-    .order-types::-webkit-scrollbar { display: none; }
-    .trade-inputs-row {
-      display: flex; align-items: center; gap: 5px; overflow-x: auto; font-size: 11px;
+    .mt5-trade-bar.visible { display: flex; }
+    .mt5-sell-btn {
+      flex: 1; background: #e11d48; color: #fff; border: none; cursor: pointer;
+      display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
+      padding: 0 12px; line-height: 1.15;
     }
-    .trade-inputs-row::-webkit-scrollbar { display: none; }
-    .trade-actions { display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap; }
-    .lot-box {
-      display: flex; align-items: center; gap: 4px; font-size: 11px;
-      background: var(--panel2); padding: 3px 6px; border-radius: 5px;
+    .mt5-sell-btn:active { opacity: 0.85; }
+    .mt5-buy-btn {
+      flex: 1; background: #2563eb; color: #fff; border: none; cursor: pointer;
+      display: flex; flex-direction: column; justify-content: center; align-items: flex-end;
+      padding: 0 12px; line-height: 1.15;
     }
-    .lot-box button {
-      background: #475569; color: #fff; border: none; width: 20px; height: 20px;
-      border-radius: 4px; font-weight: bold; cursor: pointer;
+    .mt5-buy-btn:active { opacity: 0.85; }
+    .mt5-lot-center {
+      width: 118px; background: var(--panel2); border-left: 1px solid var(--border); border-right: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; padding: 0 6px;
+    }
+    .mt5-lot-step {
+      background: transparent; border: none; color: var(--text); cursor: pointer;
+      padding: 6px; display: flex; align-items: center; justify-content: center;
+    }
+    .mt5-lot-input {
+      width: 48px; text-align: center; background: transparent; border: none;
+      color: var(--text); font-weight: 700; font-size: 13px; padding: 0;
     }
 
     /* Bottom Sheet */
     .bottom-sheet {
-      height: 105px; background: var(--bg); border-top: 1px solid var(--border);
+      height: 102px; background: var(--bg); border-top: 1px solid var(--border);
       display: flex; flex-direction: column; padding-bottom: env(safe-area-inset-bottom);
     }
     .tabs { display: flex; background: var(--panel); }
@@ -279,7 +300,7 @@
 
     <div class="group">
       <input type="date" id="startDateInput" min="2026-04-01" max="2026-11-30" value="2026-11-02" />
-      <select id="sessionSelect" title="Jump to Market Open (TH Time)">
+      <select id="sessionSelect" title="Jump to Market Open">
         <option value="" selected>Sess</option>
         <option value="asia">Asia</option>
         <option value="london">LDN</option>
@@ -305,23 +326,27 @@
     </div>
   </div>
 
-  <!-- Subbar (เพิ่ม Commission, Max DD และปุ่ม Export CSV) -->
+  <!-- Subbar -->
   <div class="tv-subbar">
     <div class="stat">
       <span style="color:var(--muted);">ID:</span>
-      <select id="profileSelect" style="max-width:100px;"></select>
+      <select id="profileSelect" style="max-width:98px;"></select>
       <button class="btn" id="addProfileBtn" title="New Profile">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       </button>
     </div>
     <div class="stat">
       <span style="color:var(--muted);">Cap:</span>
-      <input type="number" id="initBalInput" value="10000" style="width:54px; padding:2px 4px;" />
+      <input type="number" id="initBalInput" value="10000" style="width:52px; padding:2px 4px;" />
       <button class="btn btn-blue" id="applyBalBtn" style="padding:2px 5px;">Set</button>
     </div>
     <div class="stat">
-      <span style="color:var(--muted);">Comm/L:</span>
-      <input type="number" id="commInput" value="7" step="0.5" style="width:38px; padding:2px 4px;" title="Commission per 1.00 Lot ($)" />
+      <span style="color:var(--muted);">Risk($):</span>
+      <input type="number" id="riskDollarInput" value="100" style="width:42px; padding:2px 4px;" />
+      <span style="color:var(--muted);">RR:</span>
+      <input type="number" id="rrTargetInput" value="2.0" step="0.5" style="width:34px; padding:2px 4px;" />
+      <span style="color:var(--muted);">Comm:</span>
+      <input type="number" id="commInput" value="7" step="0.5" style="width:34px; padding:2px 4px;" />
     </div>
     <div class="stat">
       <span style="color:var(--muted);">Bal:</span>
@@ -340,13 +365,40 @@
       <b id="maxDDText" style="color:var(--red);">0.0%</b>
     </div>
     <div class="stat">
-      <button class="btn" id="exportCsvBtn" style="padding:2px 6px;" title="Export Trade History CSV">Export</button>
-      <button class="btn btn-red" id="resetTradesBtn" style="padding:2px 6px;" title="Reset Trade History">Reset</button>
+      <button class="btn" id="exportCsvBtn" style="padding:2px 6px;">Export</button>
+      <button class="btn btn-red" id="resetTradesBtn" style="padding:2px 6px;">Reset</button>
     </div>
   </div>
 
   <!-- Workspace -->
   <div class="workspace">
+    <!-- Top-Right 2 MT5 Buttons (Left: Drag Pending Order on Chart | Right: Toggle Bottom One-Click Bar) -->
+    <div class="top-right-trade-icons">
+      <button class="tr-icon-btn" id="dragPendingToolBtn" title="Place Pending Order on Chart (Buy/Sell Limit & Stop)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="8"/><polyline points="12 8 12 12 15 14"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/></svg>
+      </button>
+      <button class="tr-icon-btn active" id="toggleOneClickBarBtn" title="Show/Hide Bottom Trade Bar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><line x1="12" y1="5" x2="12" y2="19"/></svg>
+      </button>
+    </div>
+
+    <!-- Long-Press Context Menu (Cut & Rewind / Pending Orders) -->
+    <div class="context-menu" id="chartContextMenu">
+      <div class="ctx-header" id="ctxInfoText">17/11 21:25 @ 3863.500</div>
+      <button class="ctx-item" id="ctxCutRewindBtn" style="color:#38bdf8;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 4v16"/><path d="M8 9l-3 3 3 3"/><path d="M16 9l3 3-3 3"/></svg>
+        <span>Cut &amp; Rewind Here</span>
+      </button>
+      <button class="ctx-item" id="ctxBuyPendingBtn" style="color:#2962ff;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+        <span id="ctxBuyPendingLabel">BUY LIMIT @ --</span>
+      </button>
+      <button class="ctx-item" id="ctxSellPendingBtn" style="color:#f23645;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+        <span id="ctxSellPendingLabel">SELL LIMIT @ --</span>
+      </button>
+    </div>
+
     <!-- Contextual Edit Bar -->
     <div class="selection-bar" id="selectionBar">
       <button class="btn" id="toggleBarPosBtn" style="padding:2px 5px;" title="Move Toolbar Top/Bottom">
@@ -367,7 +419,7 @@
         <option value="5">5px</option>
         <option value="8">8px</option>
       </select>
-      <button class="btn" id="copySelectedBtn" title="Duplicate with exact angle & length">
+      <button class="btn" id="copySelectedBtn" title="Duplicate">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
         <span>Copy</span>
       </button>
@@ -396,7 +448,7 @@
     <!-- Point-by-Point Guidance Pill -->
     <div class="point-hint" id="pointHint">Select Point 1</div>
 
-    <!-- Draggable Floating Favorite Toolbar (เพิ่ม Magnet Mode + Lock Drawings + Clear All) -->
+    <!-- Draggable Floating Favorite Toolbar -->
     <div class="fav-toolbar" id="favToolbar">
       <div class="fav-drag-handle" id="favDragHandle">
         <svg width="14" height="10" viewBox="0 0 24 12" fill="currentColor"><circle cx="8" cy="3" r="1.5"/><circle cx="16" cy="3" r="1.5"/><circle cx="8" cy="9" r="1.5"/><circle cx="16" cy="9" r="1.5"/></svg>
@@ -422,11 +474,6 @@
     <!-- Main Chart Pane -->
     <div id="mainChartPane">
       <div class="ohlc-legend" id="ohlcLegend">XAUUSD • HistData Real M1</div>
-      <div class="one-click-box">
-        <button class="oc-btn oc-sell" id="ocSellBtn"><span>SELL</span><span id="ocBidText">--</span></button>
-        <span class="oc-spread">0.25</span>
-        <button class="oc-btn oc-buy" id="ocBuyBtn"><span>BUY</span><span id="ocAskText">--</span></button>
-      </div>
       <div id="gestureOverlay"></div>
     </div>
 
@@ -436,7 +483,7 @@
     <div class="ind-pane" id="paneSTOCH"><div class="ind-label" id="labelSTOCH" style="color:#f59e0b;">Stochastic (14, 3, 3)</div></div>
   </div>
 
-  <!-- Minimal Replay Bar (ตัด Slider ออก เหลือเฉพาะปุ่มควบคุม + สถานะข้อมูล CSV คงเหลือ) -->
+  <!-- Minimal Replay Bar (Date & Time Only - No Percentage) -->
   <div class="replay-bar">
     <div class="group" style="gap:4px;">
       <button class="btn btn-green" id="playBtn" style="width:58px;">
@@ -464,11 +511,8 @@
       </button>
     </div>
 
-    <!-- แถบสถานะข้อมูล CSV คงเหลือ (แทนที่ Slider) -->
-    <div class="csv-status-pill" id="csvStatusPill" title="Remaining CSV Data">
-      <span id="csvStatusText">Loading CSV...</span>
-      <div class="csv-bar-track"><div class="csv-bar-fill" id="csvBarFill"></div></div>
-    </div>
+    <!-- แถบแสดงวันที่และเวลา (ตัด % ออกทั้งหมด) -->
+    <div class="date-status-pill" id="dateTimeStatusText">--/-- --:--</div>
 
     <select id="speedSelect">
       <option value="800">0.5x</option>
@@ -478,40 +522,27 @@
     </select>
   </div>
 
-  <!-- Trade Panel -->
-  <div class="trade-panel">
-    <div class="order-types" id="orderTypeGroup">
-      <button class="btn active" data-type="BUY">BUY</button>
-      <button class="btn" data-type="SELL">SELL</button>
-      <button class="btn" data-type="BUY LIMIT">BUY LIMIT</button>
-      <button class="btn" data-type="SELL LIMIT">SELL LIMIT</button>
-      <button class="btn" data-type="BUY STOP">BUY STOP</button>
-      <button class="btn" data-type="SELL STOP">SELL STOP</button>
+  <!-- MT5-Style Bottom One-Click Trade Bar (Toggleable) -->
+  <div class="mt5-trade-bar visible" id="mt5TradeBar">
+    <button class="mt5-sell-btn" id="mt5SellBtn">
+      <span style="font-size:10px; font-weight:700; opacity:0.9;">SELL</span>
+      <span id="mt5BidPrice" style="font-size:15px; font-weight:800; font-family:monospace;">--</span>
+    </button>
+
+    <div class="mt5-lot-center">
+      <button class="mt5-lot-step" id="lotMinus" title="Decrease Lot">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <input type="number" class="mt5-lot-input" id="lotInput" value="0.10" step="0.01" min="0.01" />
+      <button class="mt5-lot-step" id="lotPlus" title="Increase Lot">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+      </button>
     </div>
-    <div class="trade-inputs-row">
-      <span style="color:var(--muted);">Entry:</span>
-      <input type="number" id="orderEntryInput" placeholder="Auto" step="0.01" style="width:64px; padding:2px 4px; font-size:10px;" />
-      <span style="color:var(--red);">SL:</span>
-      <input type="number" id="orderSLInput" placeholder="Auto" step="0.01" style="width:64px; padding:2px 4px; font-size:10px;" />
-      <span style="color:var(--green);">TP:</span>
-      <input type="number" id="orderTPInput" placeholder="Auto" step="0.01" style="width:64px; padding:2px 4px; font-size:10px;" />
-      <button class="btn" id="clearPriceInputsBtn" style="padding:2px 5px; font-size:10px;">Auto</button>
-    </div>
-    <div class="trade-actions">
-      <div class="lot-box">
-        <button id="lotMinus">-</button>
-        <span>Lot: <b id="lotText">0.10</b></span>
-        <button id="lotPlus">+</button>
-        <span style="color:var(--muted);">| Risk($):</span>
-        <input type="number" id="riskDollarInput" value="100" style="width:44px; padding:1px 3px; font-size:10px;" />
-        <span style="color:var(--muted);">RR:</span>
-        <input type="number" id="rrTargetInput" value="2.0" step="0.5" style="width:34px; padding:1px 3px; font-size:10px;" />
-      </div>
-      <div style="display:flex; gap:5px;">
-        <button class="btn btn-blue" id="placeOrderBtn">Place BUY</button>
-        <button class="btn" id="closeAllBtn">Close All</button>
-      </div>
-    </div>
+
+    <button class="mt5-buy-btn" id="mt5BuyBtn">
+      <span style="font-size:10px; font-weight:700; opacity:0.9;">BUY</span>
+      <span id="mt5AskPrice" style="font-size:15px; font-weight:800; font-family:monospace;">--</span>
+    </button>
   </div>
 
   <!-- Bottom Sheet -->
@@ -519,6 +550,7 @@
     <div class="tabs">
       <div class="tab active" id="tabActive">Active / Pending (<span id="activeCount">0</span>)</div>
       <div class="tab" id="tabHistory">History (<span id="histCount">0</span>)</div>
+      <button class="btn" id="closeAllBtn" style="border-radius:0; padding:0 10px; font-size:10px;">Close All</button>
     </div>
     <div class="list-area" id="listArea"></div>
   </div>
@@ -583,12 +615,13 @@
   const magBox = document.getElementById('magnifierBox');
   const magCanvas = document.getElementById('magCanvas');
   const mCtx = magCanvas.getContext('2d');
+  const ctxMenu = document.getElementById('chartContextMenu');
 
   const GITHUB_DATA_FILES = [
     '202604.csv', '202605.csv', '202606.csv', '202607.csv',
     '202608.csv', '202609.csv', '202610.csv', '202611.csv'
   ];
-  const PROFILES_STORAGE_KEY = 'tv_replay_profiles_v9';
+  const PROFILES_STORAGE_KEY = 'tv_replay_profiles_v10';
   const IDB_NAME = 'TVReplayMasterDB_v1';
   const IDB_STORE = 'csv_cache';
   const ALL_TFS = [1, 5, 15, 60, 240, 1440];
@@ -705,7 +738,7 @@
   });
 
   // =========================================================================
-  // LOGICAL BAR-INDEX HELPERS (แก้ปัญหา Trendline องศาไม่ตรงตอน Copy/ย้ายจุดกลาง 100%)
+  // LOGICAL BAR-INDEX HELPERS & NATIVE SERIES PRIMITIVE
   // =========================================================================
   let drawings = [];
   let selectedDrawingIdx = -1;
@@ -718,16 +751,14 @@
   let orders = [];
   let magnetEnabled = false;
   let drawingsLocked = false;
+  let pendingDragMode = false; // โหมดลากวาง Pending Order บนกราฟจากปุ่มขวาบน
 
-  // แปลง Timestamp <-> ลำดับแท่งเทียนจริง (ไม่มี Weekend Gap คั่น)
   function timeToBarIndex(ts) {
     if (!visibleCandles.length) return 0;
     const tfSec = timeframeMin * 60;
     const lastIdx = visibleCandles.length - 1;
     const lastBar = visibleCandles[lastIdx];
-    if (ts >= lastBar.time) {
-      return lastIdx + Math.round((ts - lastBar.time) / tfSec);
-    }
+    if (ts >= lastBar.time) return lastIdx + Math.round((ts - lastBar.time) / tfSec);
     let lo = 0, hi = lastIdx;
     while (lo < hi) {
       const mid = (lo + hi) >> 1;
@@ -769,7 +800,6 @@
   function priceToY(p) { return candleSeries.priceToCoordinate(p) ?? 0; }
   function yToPrice(y) { return candleSeries.coordinateToPrice(y) ?? 0; }
 
-  // Magnet Mode: ดูดติด High หรือ Low ของแท่งเทียนใกล้เคียงอัตโนมัติ
   function applyMagnetSnap(x, y) {
     const rawTime = xToTime(x);
     const rawPrice = yToPrice(y);
@@ -781,8 +811,7 @@
 
     const dHigh = Math.abs(bar.high - rawPrice);
     const dLow = Math.abs(bar.low - rawPrice);
-    const snappedPrice = dHigh < dLow ? bar.high : bar.low;
-    return { t: bar.time, p: snappedPrice };
+    return { t: bar.time, p: dHigh < dLow ? bar.high : bar.low };
   }
 
   function drawControlDot(ctx, x, y, fill = '#ffffff', stroke = '#2962ff', radius = 4.8) {
@@ -1077,7 +1106,7 @@
   candleSeries.attachPrimitive(drawingsPrimitive);
 
   // =========================================================================
-  // Master Data, IndexedDB Binary Cache & Incremental Series Updates
+  // Master Data, IndexedDB Binary Cache & Replay Engine
   // =========================================================================
   let m1Count = 0;
   let m1Time = null, m1Open = null, m1High = null, m1Low = null, m1Close = null, m1Vol = null;
@@ -1103,11 +1132,9 @@
   let peakEquity = 10000;
   let maxDrawdownPct = 0;
   let lotSize = 0.10;
-  let selectedOrderType = 'BUY';
   let history = [];
   let selectedTool = 'cursor';
 
-  // IndexedDB Helpers เพื่อเก็บฐานข้อมูล CSV ถาวรในเครื่อง (ป้องกันแรมเต็มและไม่ต้องโหลดใหม่ทุกรอบ)
   function openMasterIDB() {
     return new Promise((resolve) => {
       try {
@@ -1228,7 +1255,7 @@
   }
 
   async function initMasterDatabase() {
-    document.getElementById('csvStatusText').textContent = 'Loading CSV...';
+    document.getElementById('dateTimeStatusText').textContent = 'Loading...';
     const loadedFromCache = await loadMasterFromIDB();
     if (!loadedFromCache) {
       let combined = [];
@@ -1324,7 +1351,7 @@
     updatePointHint();
 
     document.getElementById('initBalInput').value = initialBalance;
-    document.getElementById('lotText').textContent = lotSize.toFixed(2);
+    document.getElementById('lotInput').value = lotSize.toFixed(2);
     document.querySelectorAll('#tfGroup .btn[data-min]').forEach(b => b.classList.toggle('active', Number(b.dataset.min) === timeframeMin));
 
     rebuildAllCharts(true);
@@ -1446,19 +1473,15 @@
     resizeAllCharts();
   }
 
-  function updateCsvRemainingStatus() {
+  // แสดงวันที่ + เวลาเต็มใน Replay Bar (ลบ % ออกทั้งหมด)
+  function updateReplayDateTimePill() {
     if (m1Count === 0) {
-      document.getElementById('csvStatusText').textContent = 'No CSV Data';
-      document.getElementById('csvBarFill').style.width = '0%';
+      document.getElementById('dateTimeStatusText').textContent = 'No Data';
       return;
     }
-    const remBars = Math.max(0, m1Count - 1 - current1mIndex);
-    const pct = ((current1mIndex / (m1Count - 1)) * 100).toFixed(1);
-    const endStr = formatTHTime(m1Time[m1Count - 1]).split(' ')[0];
-    document.getElementById('csvStatusText').textContent = remBars === 0
-      ? 'CSV: 100% (End of Data)'
-      : `CSV: ${pct}% • Left: ${remBars.toLocaleString()}m (End ${endStr})`;
-    document.getElementById('csvBarFill').style.width = `${pct}%`;
+    const curStr = formatTHTime(m1Time[current1mIndex]);
+    const endStr = formatTHTime(m1Time[m1Count - 1]);
+    document.getElementById('dateTimeStatusText').textContent = `${curStr}  |  End ${endStr}`;
   }
 
   function rebuildAllCharts(fitView = false) {
@@ -1508,15 +1531,15 @@
     }
 
     candleSeries.setData(visibleCandles);
-    updateCsvRemainingStatus();
+    updateReplayDateTimePill();
     updateTradeMarkers();
     calcIndicators(visibleCandles);
 
     if (visibleCandles.length) {
       const last = visibleCandles[visibleCandles.length - 1];
       updateOHLCLegend(last);
-      document.getElementById('ocBidText').textContent = last.close.toFixed(2);
-      document.getElementById('ocAskText').textContent = (last.close + 0.25).toFixed(2);
+      document.getElementById('mt5BidPrice').textContent = last.close.toFixed(2);
+      document.getElementById('mt5AskPrice').textContent = (last.close + 0.25).toFixed(2);
     }
 
     if (fitView) autoFitGraph();
@@ -1587,6 +1610,141 @@
     candleSeries.setMarkers(markers);
   }
 
+  // =========================================================================
+  // Top-Right 2 MT5 Buttons & Long-Press Context Menu on Chart
+  // =========================================================================
+  const dragPendingBtn = document.getElementById('dragPendingToolBtn');
+  const toggleOneClickBtn = document.getElementById('toggleOneClickBarBtn');
+  const mt5TradeBar = document.getElementById('mt5TradeBar');
+
+  // ปุ่มขวา: เปิด/ซ่อนแถบซื้อขาย One-Click ด้านล่าง
+  toggleOneClickBtn.onclick = () => {
+    const isVisible = mt5TradeBar.classList.toggle('visible');
+    toggleOneClickBtn.classList.toggle('active', isVisible);
+    resizeAllCharts();
+  };
+
+  // ปุ่มซ้าย: เปิดโหมดลากวาง Pending Order บนกราฟโดยตรง
+  dragPendingBtn.onclick = () => {
+    pendingDragMode = !pendingDragMode;
+    dragPendingBtn.classList.toggle('active', pendingDragMode);
+    if (pendingDragMode) {
+      setTool('cursor');
+      gestureOverlay.classList.add('interactive');
+      document.getElementById('pointHint').textContent = 'Tap or drag on chart to place Pending Order';
+      document.getElementById('pointHint').classList.add('visible');
+    } else {
+      document.getElementById('pointHint').classList.remove('visible');
+      if (selectedDrawingIdx < 0) gestureOverlay.classList.remove('interactive');
+    }
+  };
+
+  // Long-Press Detection on Chart (กดค้าง 420ms เพื่อ Cut & Rewind หรือวาง Pending Limit/Stop)
+  let longPressTimer = null;
+  let longPressTarget = null; // { time, price }
+  let touchStartXY = { x: 0, y: 0 };
+
+  function hideContextMenu() {
+    ctxMenu.classList.remove('visible');
+  }
+
+  function showContextMenu(clientX, clientY, targetTime, targetPrice) {
+    if (m1Count === 0) return;
+    longPressTarget = { time: targetTime, price: targetPrice };
+    const curPrice = m1Close[current1mIndex];
+
+    document.getElementById('ctxInfoText').textContent = `${formatTHTime(targetTime)}  @  ${targetPrice.toFixed(3)}`;
+    const buyType = targetPrice <= curPrice ? 'BUY LIMIT' : 'BUY STOP';
+    const sellType = targetPrice >= curPrice ? 'SELL LIMIT' : 'SELL STOP';
+    document.getElementById('ctxBuyPendingLabel').textContent = `${buyType} @ ${targetPrice.toFixed(2)}`;
+    document.getElementById('ctxSellPendingLabel').textContent = `${sellType} @ ${targetPrice.toFixed(2)}`;
+
+    const wsRect = mainPane.getBoundingClientRect();
+    const left = Math.max(8, Math.min(wsRect.width - 200, clientX - wsRect.left - 80));
+    const top = Math.max(8, Math.min(wsRect.height - 135, clientY - wsRect.top - 20));
+    ctxMenu.style.left = `${left}px`;
+    ctxMenu.style.top = `${top}px`;
+    ctxMenu.classList.add('visible');
+  }
+
+  mainPane.addEventListener('pointerdown', e => {
+    if (e.target.closest('.context-menu') || e.target.closest('.selection-bar') || e.target.closest('.fav-toolbar') || e.target.closest('.top-right-trade-icons')) return;
+    hideContextMenu();
+    touchStartXY = { x: e.clientX, y: e.clientY };
+
+    clearTimeout(longPressTimer);
+    longPressTimer = setTimeout(() => {
+      const rect = mainPane.getBoundingClientRect();
+      const lx = e.clientX - rect.left;
+      const ly = e.clientY - rect.top;
+      const t = xToTime(lx);
+      const p = yToPrice(ly);
+      showContextMenu(e.clientX, e.clientY, t, p);
+    }, 420);
+  }, true);
+
+  mainPane.addEventListener('pointermove', e => {
+    if (Math.hypot(e.clientX - touchStartXY.x, e.clientY - touchStartXY.y) > 10) {
+      clearTimeout(longPressTimer);
+    }
+  }, true);
+
+  mainPane.addEventListener('pointerup', () => clearTimeout(longPressTimer), true);
+  mainPane.addEventListener('pointercancel', () => clearTimeout(longPressTimer), true);
+
+  // เมนู 1: Cut & Rewind Here (ตัดกราฟย้อนกลับไปยังวันและเวลาที่กดค้าง)
+  document.getElementById('ctxCutRewindBtn').onclick = () => {
+    if (!longPressTarget || m1Count === 0) return;
+    stopPlay();
+    let lo = 0, hi = m1Count - 1;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (m1Time[mid] < longPressTarget.time) lo = mid + 1; else hi = mid;
+    }
+    current1mIndex = Math.max(30, Math.min(m1Count - 1, lo));
+    hideContextMenu();
+    rebuildAllCharts(false);
+    updateUI();
+    saveCurrentProfile();
+  };
+
+  // เมนู 2 & 3: วาง Pending Order (Buy/Sell Limit หรือ Stop) ตรงราคาและเวลาที่กดค้าง
+  function placePendingAtTarget(isBuy, targetTime, targetPrice) {
+    if (m1Count === 0) return;
+    const curPrice = m1Close[current1mIndex];
+    const curTime = m1Time[current1mIndex];
+    const rr = parseFloat(document.getElementById('rrTargetInput').value) || 2.0;
+    const slDist = 5.0, tpDist = slDist * rr;
+
+    let orderType = isBuy ? 'BUY LIMIT' : 'SELL LIMIT';
+    if (isBuy) orderType = targetPrice <= curPrice ? 'BUY LIMIT' : 'BUY STOP';
+    else orderType = targetPrice >= curPrice ? 'SELL LIMIT' : 'SELL STOP';
+
+    orders.push({
+      id: Date.now(),
+      type: orderType,
+      triggered: false,
+      activateTime: Math.max(curTime, targetTime),
+      entry: targetPrice,
+      sl: isBuy ? targetPrice - slDist : targetPrice + slDist,
+      tp: isBuy ? targetPrice + tpDist : targetPrice - tpDist,
+      lot: lotSize,
+      entryTime: null
+    });
+    hideContextMenu();
+    gestureOverlay.classList.add('interactive');
+    drawingsPrimitive.requestRedraw();
+    updateUI();
+    saveCurrentProfile();
+  }
+
+  document.getElementById('ctxBuyPendingBtn').onclick = () => {
+    if (longPressTarget) placePendingAtTarget(true, longPressTarget.time, longPressTarget.price);
+  };
+  document.getElementById('ctxSellPendingBtn').onclick = () => {
+    if (longPressTarget) placePendingAtTarget(false, longPressTarget.time, longPressTarget.price);
+  };
+
   // Session Droplist
   document.getElementById('sessionSelect').onchange = e => {
     const sessionKey = e.target.value;
@@ -1643,6 +1801,8 @@
 
     container.querySelectorAll('.tool-btn').forEach(btn => {
       btn.onclick = () => {
+        pendingDragMode = false;
+        dragPendingBtn.classList.remove('active');
         const clickedTool = btn.dataset.tool;
         if (selectedTool === clickedTool && clickedTool !== 'cursor') {
           setTool('cursor');
@@ -1678,13 +1838,14 @@
     renderFavoriteToolbar();
     updatePointHint();
 
-    const needOverlay = (selectedTool !== 'cursor') || (selectedDrawingIdx >= 0 && !drawingsLocked);
+    const needOverlay = (selectedTool !== 'cursor') || pendingDragMode || (selectedDrawingIdx >= 0 && !drawingsLocked);
     gestureOverlay.classList.toggle('interactive', needOverlay);
     drawingsPrimitive.requestRedraw();
   }
 
   function updatePointHint() {
     const hint = document.getElementById('pointHint');
+    if (pendingDragMode) return;
     if (selectedTool === 'cursor' || selectedTool === 'cut') {
       hint.classList.remove('visible');
       return;
@@ -1967,7 +2128,7 @@
   };
 
   // =========================================================================
-  // Pointer Handling (ลากจุดกลางด้วย Bar-Index Delta คงองศาและความยาวเดิม 100%)
+  // Pointer Handling (รวมโหมดลากวาง Pending Order บนกราฟจากปุ่มขวาบน)
   // =========================================================================
   let editingTarget = null, draggingOrderTarget = null, lastPos = { x: 0, y: 0 }, pointerDownPos = { x: 0, y: 0 };
 
@@ -1976,6 +2137,21 @@
     const pos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
     lastPos = pos;
     pointerDownPos = pos;
+
+    // โหมดลากวาง Pending Order บนกราฟ (ปุ่มซ้ายมุมขวาบน)
+    if (pendingDragMode && m1Count > 0) {
+      const targetPrice = yToPrice(pos.y);
+      const curPrice = m1Close[current1mIndex];
+      const isBuy = targetPrice < curPrice; // ต่ำกว่าราคาปัจจุบัน -> Buy Limit, สูงกว่า -> Sell Limit
+      placePendingAtTarget(isBuy, m1Time[current1mIndex], targetPrice);
+      pendingDragMode = false;
+      dragPendingBtn.classList.remove('active');
+      document.getElementById('pointHint').classList.remove('visible');
+      // จับลากเส้น Entry ต่อได้ทันทีหากผู้ใช้ลากนิ้วต่อ
+      draggingOrderTarget = { orderIdx: orders.length - 1, field: 'entry' };
+      gestureOverlay.setPointerCapture(e.pointerId);
+      return;
+    }
 
     if (selectedTool === 'cut') {
       const targetTs = xToTime(pos.x);
@@ -2008,7 +2184,6 @@
       if (hit) {
         selectedDrawingIdx = hit.idx;
         const d = drawings[hit.idx];
-        // บันทึกค่า BarIndex ตั้งต้นของหัวและท้ายตอนเริ่มจับลาก เพื่อรักษาองศา 100%
         editingTarget = {
           ...hit,
           startMouseX: pos.x,
@@ -2108,6 +2283,12 @@
       if (o) {
         const newPrice = yToPrice(pos.y);
         o[draggingOrderTarget.field] = newPrice;
+        // อัปเดตประเภท Limit/Stop อัตโนมัติตอนลาก Entry
+        if (draggingOrderTarget.field === 'entry' && !o.triggered && m1Count > 0) {
+          const curP = m1Close[current1mIndex];
+          const isBuy = o.type.includes('BUY');
+          o.type = isBuy ? (newPrice <= curP ? 'BUY LIMIT' : 'BUY STOP') : (newPrice >= curP ? 'SELL LIMIT' : 'SELL STOP');
+        }
         activeSnapCrosshair = { x: pos.x, y: pos.y, price: newPrice, time: m1Time[current1mIndex] };
         drawingsPrimitive.requestRedraw();
         renderMagnifier(pos.x, pos.y, newPrice, m1Time[current1mIndex]);
@@ -2122,7 +2303,6 @@
       const snapped = applyMagnetSnap(pos.x, pos.y);
       const pNow = snapped.p, tNow = snapped.t;
 
-      // คำนวณระยะเลื่อนจากจุดเริ่มต้นตอนกดจับลาก (Bar-Index Delta + Price Delta)
       const totalBarDelta = Math.round((pos.x - editingTarget.startMouseX) / barSpacing);
       const totalPriceDelta = yToPrice(pos.y) - yToPrice(editingTarget.startMouseY);
 
@@ -2140,7 +2320,6 @@
         d.channelOffsetPrice = pNow - baseMidP;
       }
       else if (editingTarget.part === 'moveBoth') {
-        // เลื่อน BarIndex ทั้งหัวและท้ายเท่ากันเป๊ะ -> องศาและความยาวไม่มีวันเพี้ยน!
         d.t1 = barIndexToTime(editingTarget.origB1 + totalBarDelta);
         d.t2 = barIndexToTime(editingTarget.origB2 + totalBarDelta);
         d.p1 = editingTarget.origP1 + totalPriceDelta;
@@ -2235,7 +2414,7 @@
   });
 
   // =========================================================================
-  // Incremental Step Engine (ใช้ candleSeries.update() ไม่ค้างและไม่กินแรม)
+  // Incremental Step Engine
   // =========================================================================
   function stepForward(customMinutes = null) {
     const stepMinutes = customMinutes || Number(document.getElementById('stepUnitSelect').value) || 1;
@@ -2286,7 +2465,6 @@
 
     current1mIndex += stepMinutes;
 
-    // Fast Incremental Update เมื่อเดินหน้าไม่เกิน 15 นาที (ไม่ Rebuild ทั้งกราฟ ลดภาระ CPU 90%)
     if (stepMinutes <= 15 && visibleCandles.length > 20) {
       const tfSec = timeframeMin * 60;
       const curT = m1Time[current1mIndex];
@@ -2294,7 +2472,6 @@
       const lastBar = visibleCandles[visibleCandles.length - 1];
 
       if (bucketStart === lastBar.time) {
-        // อัปเดตแท่งปัจจุบัน
         for (let k = current1mIndex - stepMinutes + 1; k <= current1mIndex; k++) {
           if (m1High[k] > lastBar.high) lastBar.high = m1High[k];
           if (m1Low[k] < lastBar.low) lastBar.low = m1Low[k];
@@ -2303,18 +2480,17 @@
         }
         candleSeries.update(lastBar);
       } else {
-        // ขึ้นแท่งใหม่
         rebuildAllCharts(false);
         updateUI();
         saveCurrentProfile();
         return;
       }
 
-      updateCsvRemainingStatus();
+      updateReplayDateTimePill();
       updateTradeMarkers();
       updateOHLCLegend(lastBar);
-      document.getElementById('ocBidText').textContent = lastBar.close.toFixed(2);
-      document.getElementById('ocAskText').textContent = (lastBar.close + 0.25).toFixed(2);
+      document.getElementById('mt5BidPrice').textContent = lastBar.close.toFixed(2);
+      document.getElementById('mt5AskPrice').textContent = (lastBar.close + 0.25).toFixed(2);
       drawingsPrimitive.requestRedraw();
     } else {
       rebuildAllCharts(false);
@@ -2398,7 +2574,7 @@
             <button class="btn btn-red" data-close-order="${idx}" style="padding:2px 6px; font-size:10px;">${o.triggered ? 'Close' : 'Cancel'}</button>
           </div>
         </div>`;
-      }).join('') || '<div style="color:var(--muted);text-align:center;margin-top:14px;">No active orders</div>';
+      }).join('') || '<div style="color:var(--muted);text-align:center;margin-top:14px;">No active orders (Long-press chart to cut or place pending order)</div>';
 
       list.querySelectorAll('[data-close-order]').forEach(btn => {
         btn.onclick = () => closeOrCancelSingleOrder(Number(btn.dataset.closeOrder));
@@ -2473,7 +2649,6 @@
     saveCurrentProfile();
   };
 
-  // Export Trade History เป็นไฟล์ CSV
   document.getElementById('exportCsvBtn').onclick = () => {
     if (!history.length) return alert('No trade history to export.');
     const header = 'Type,Lot,Entry,Exit,Reason,NetPnL\n';
@@ -2498,14 +2673,13 @@
     };
   });
 
-  // Copy ด้วย Bar-Index Delta (ความยาวและองศาเท่าเดิม 100%)
   document.getElementById('copySelectedBtn').onclick = () => {
     if (selectedDrawingIdx < 0 || !drawings[selectedDrawingIdx]) return;
     const orig = drawings[selectedDrawingIdx];
     const cloned = JSON.parse(JSON.stringify(orig));
     cloned.id = Date.now();
 
-    const barDelta = 8; // คัดลอกเยื้องขวาไป 8 แท่งเทียนทั้งหัวและท้าย (คงองศาและความยาวเท่าเดิม 100%)
+    const barDelta = 8;
     const origB1 = timeToBarIndex(orig.t1);
     const origB2 = timeToBarIndex(orig.t2);
     cloned.t1 = barIndexToTime(origB1 + barDelta);
@@ -2586,14 +2760,11 @@
     const rr = parseFloat(document.getElementById('rrTargetInput').value) || 2.0;
     const slDist = 5.0, tpDist = slDist * rr;
 
-    const customSL = parseFloat(document.getElementById('orderSLInput').value);
-    const customTP = parseFloat(document.getElementById('orderTPInput').value);
-
     orders.push({
       id: Date.now(), type: isBuy ? 'BUY' : 'SELL', triggered: true,
       activateTime: curTime, entry,
-      sl: !isNaN(customSL) ? customSL : (isBuy ? entry - slDist : entry + slDist),
-      tp: !isNaN(customTP) ? customTP : (isBuy ? entry + tpDist : entry - tpDist),
+      sl: isBuy ? entry - slDist : entry + slDist,
+      tp: isBuy ? entry + tpDist : entry - tpDist,
       lot: lotSize, entryTime: curTime
     });
     gestureOverlay.classList.add('interactive');
@@ -2602,14 +2773,8 @@
     saveCurrentProfile();
   }
 
-  document.getElementById('ocBuyBtn').onclick = () => placeInstantMarketOrder(true);
-  document.getElementById('ocSellBtn').onclick = () => placeInstantMarketOrder(false);
-
-  document.getElementById('clearPriceInputsBtn').onclick = () => {
-    document.getElementById('orderEntryInput').value = '';
-    document.getElementById('orderSLInput').value = '';
-    document.getElementById('orderTPInput').value = '';
-  };
+  document.getElementById('mt5BuyBtn').onclick = () => placeInstantMarketOrder(true);
+  document.getElementById('mt5SellBtn').onclick = () => placeInstantMarketOrder(false);
 
   document.getElementById('openAllToolsBtn').onclick = () => {
     renderAllToolsModal();
@@ -2705,66 +2870,24 @@
     if (isPlaying) { stopPlay(); startPlay(); }
   };
 
+  const lotInputEl = document.getElementById('lotInput');
   document.getElementById('lotMinus').onclick = () => {
     lotSize = Math.max(0.01, +(lotSize - 0.05).toFixed(2));
-    document.getElementById('lotText').textContent = lotSize.toFixed(2);
+    lotInputEl.value = lotSize.toFixed(2);
     drawingsPrimitive.requestRedraw(); saveCurrentProfile();
   };
   document.getElementById('lotPlus').onclick = () => {
     lotSize = +(lotSize + 0.05).toFixed(2);
-    document.getElementById('lotText').textContent = lotSize.toFixed(2);
+    lotInputEl.value = lotSize.toFixed(2);
     drawingsPrimitive.requestRedraw(); saveCurrentProfile();
   };
-
-  document.querySelectorAll('#orderTypeGroup .btn').forEach(btn => {
-    btn.onclick = () => {
-      document.querySelectorAll('#orderTypeGroup .btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      selectedOrderType = btn.dataset.type;
-      const pBtn = document.getElementById('placeOrderBtn');
-      pBtn.textContent = `Place ${selectedOrderType}`;
-      pBtn.className = `btn ${selectedOrderType.includes('BUY') ? 'btn-blue' : 'btn-red'}`;
-    };
-  });
-
-  document.getElementById('placeOrderBtn').onclick = () => {
-    if (m1Count === 0) return;
-    const price = m1Close[current1mIndex];
-    const curTime = m1Time[current1mIndex];
-    const isBuy = selectedOrderType.includes('BUY');
-    let entry = price, triggered = false;
-
-    const customEntry = parseFloat(document.getElementById('orderEntryInput').value);
-    const customSL = parseFloat(document.getElementById('orderSLInput').value);
-    const customTP = parseFloat(document.getElementById('orderTPInput').value);
-
-    if (!isNaN(customEntry)) {
-      entry = customEntry;
-      triggered = (selectedOrderType === 'BUY' || selectedOrderType === 'SELL');
-    } else {
-      if (selectedOrderType === 'BUY') { entry = price + 0.25; triggered = true; }
-      else if (selectedOrderType === 'SELL') { entry = price; triggered = true; }
-      else if (selectedOrderType === 'BUY LIMIT') entry = price - 3.5;
-      else if (selectedOrderType === 'SELL LIMIT') entry = price + 3.5;
-      else if (selectedOrderType === 'BUY STOP') entry = price + 3.5;
-      else if (selectedOrderType === 'SELL STOP') entry = price - 3.5;
+  lotInputEl.onchange = e => {
+    const v = parseFloat(e.target.value);
+    if (!isNaN(v) && v >= 0.01) {
+      lotSize = +v.toFixed(2);
+      lotInputEl.value = lotSize.toFixed(2);
+      drawingsPrimitive.requestRedraw(); saveCurrentProfile();
     }
-
-    const rr = parseFloat(document.getElementById('rrTargetInput').value) || 2.0;
-    const slDist = 5.0, tpDist = slDist * rr;
-
-    orders.push({
-      id: Date.now(), type: selectedOrderType, triggered,
-      activateTime: curTime,
-      entry,
-      sl: !isNaN(customSL) ? customSL : (isBuy ? entry - slDist : entry + slDist),
-      tp: !isNaN(customTP) ? customTP : (isBuy ? entry + tpDist : entry - tpDist),
-      lot: lotSize,
-      entryTime: triggered ? curTime : null
-    });
-    gestureOverlay.classList.add('interactive');
-    drawingsPrimitive.requestRedraw();
-    updateUI(); saveCurrentProfile();
   };
 
   document.getElementById('closeAllBtn').onclick = () => {
@@ -2830,7 +2953,7 @@
   document.getElementById('csvInput').onchange = async e => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
-    document.getElementById('csvStatusText').textContent = 'Importing CSV...';
+    document.getElementById('dateTimeStatusText').textContent = 'Importing CSV...';
     let allRows = [];
     for (const f of files) allRows = allRows.concat(parseHistDataCSV(await f.text()));
     if (allRows.length > 50) {
