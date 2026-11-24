@@ -1472,7 +1472,7 @@
   let selectedTool = 'cursor';
 
   // =========================================================================
-  // TIME-TRAVEL / REWIND-SYNC BOT ENGINE (Supports Forward, Step Back & Jump)
+  // TIME-TRAVEL / REWIND-SYNC BOT ENGINE (Non-Blocking & Crash-Safe)
   // =========================================================================
   let botState = {
     armed: false,
@@ -1489,26 +1489,32 @@
 
   function saveBotTimelineSnapshot() {
     if (!botState.armed || m1Count === 0) return;
-    const curT = m1Time[current1mIndex];
-    botSnapshots = botSnapshots.filter(s => s.time < curT);
-    botSnapshots.push({
-      time: curT,
-      index: current1mIndex,
-      balance,
-      peakEquity,
-      maxDrawdownPct,
-      orders: JSON.parse(JSON.stringify(orders)),
-      history: JSON.parse(JSON.stringify(history)),
-      drawings: JSON.parse(JSON.stringify(drawings)),
-      botState: JSON.parse(JSON.stringify({
-        activeSetup: botState.activeSetup,
-        lastEvaluatedM15: botState.lastEvaluatedM15,
-        lastEvaluatedM1: botState.lastEvaluatedM1,
-        tradesTodayCount: botState.tradesTodayCount,
-        currentDayStr: botState.currentDayStr
-      }))
-    });
-    if (botSnapshots.length > 250) botSnapshots.shift();
+    try {
+      const curT = m1Time[current1mIndex];
+      botSnapshots = botSnapshots.filter(s => s.time < curT);
+      botSnapshots.push({
+        time: curT,
+        index: current1mIndex,
+        balance,
+        peakEquity,
+        maxDrawdownPct,
+        orders: orders.map(o => ({ ...o })),
+        history: history.map(h => ({ ...h })),
+        drawings: drawings.map(d => ({
+          ...d,
+          visibleTFs: d.visibleTFs ? [...d.visibleTFs] : [...ALL_TFS],
+          points: d.points ? d.points.map(p => ({ ...p })) : undefined
+        })),
+        botState: {
+          activeSetup: botState.activeSetup ? JSON.parse(JSON.stringify(botState.activeSetup)) : null,
+          lastEvaluatedM15: botState.lastEvaluatedM15,
+          lastEvaluatedM1: botState.lastEvaluatedM1,
+          tradesTodayCount: botState.tradesTodayCount,
+          currentDayStr: botState.currentDayStr
+        }
+      });
+      if (botSnapshots.length > 60) botSnapshots.shift();
+    } catch (e) {}
   }
 
   function restoreBotTimelineToTime(targetTime) {
@@ -1527,9 +1533,9 @@
       balance = bestSnap.balance;
       peakEquity = bestSnap.peakEquity;
       maxDrawdownPct = bestSnap.maxDrawdownPct;
-      orders = JSON.parse(JSON.stringify(bestSnap.orders));
-      history = JSON.parse(JSON.stringify(bestSnap.history));
-      drawings = JSON.parse(JSON.stringify(bestSnap.drawings));
+      orders = bestSnap.orders.map(o => ({ ...o }));
+      history = bestSnap.history.map(h => ({ ...h }));
+      drawings = bestSnap.drawings.map(d => ({ ...d }));
       botState.activeSetup = bestSnap.botState.activeSetup;
       botState.lastEvaluatedM15 = bestSnap.botState.lastEvaluatedM15;
       botState.lastEvaluatedM1 = bestSnap.botState.lastEvaluatedM1;
@@ -1552,11 +1558,14 @@
   function appendBotLog(msg) {
     const ts = m1Count > 0 ? formatTHTimeShort(m1Time[current1mIndex]).split(' ')[1] : '--:--';
     botState.logs.unshift(`[${ts}] ${msg}`);
-    if (botState.logs.length > 40) botState.logs.pop();
-    const box = document.getElementById('botLogBox');
-    if (box) box.innerHTML = botState.logs.map(l => `<div>${l}</div>`).join('');
+    if (botState.logs.length > 25) botState.logs.pop();
     const hud = document.getElementById('botHudText');
     if (hud) hud.textContent = `BOT: ${msg}`;
+    const modal = document.getElementById('botModal');
+    if (modal && modal.classList.contains('open')) {
+      const box = document.getElementById('botLogBox');
+      if (box) box.innerHTML = botState.logs.map(l => `<div>${l}</div>`).join('');
+    }
   }
 
   function getCompletedHTFBars(tfMin, lookbackBars = 70) {
@@ -1583,7 +1592,6 @@
 
   // =========================================================================
   // STRATEGY 1: SMC SNIPER (M15 ChoCh + OB/SZ + $$$ Sweep -> M1 MSS & Reject)
-  // Symmetric for BOTH Bearish (Sell) & Bullish (Buy)
   // =========================================================================
   function scanM15SniperSetup(m15Bars, curT) {
     if (m15Bars.length < 35) return null;
@@ -1785,12 +1793,13 @@
     const setup = botState.activeSetup;
     if (!setup || setup.executed) return;
 
-    if (setup.side === 'SELL' && curClose > setup.extremeOB.high + 2.5) {
+    // Fixed: use curPrice instead of undefined curClose
+    if (setup.side === 'SELL' && curPrice > setup.extremeOB.high + 2.5) {
       appendBotLog('Setup Invalidated (Broke above Extreme OB M15)');
       botState.activeSetup = null;
       return;
     }
-    if (setup.side === 'BUY' && curClose < setup.extremeOB.low - 2.5) {
+    if (setup.side === 'BUY' && curPrice < setup.extremeOB.low - 2.5) {
       appendBotLog('Setup Invalidated (Broke below Extreme OB M15)');
       botState.activeSetup = null;
       return;
@@ -2136,8 +2145,13 @@
 
   function runActiveBotStrategy() {
     if (!botState.armed) return;
-    if (botState.strategy === 'smc_sniper_v2') evaluateSMCSniperBot();
-    else evaluateSMCM15M5Bot();
+    try {
+      if (botState.strategy === 'smc_sniper_v2') evaluateSMCSniperBot();
+      else evaluateSMCM15M5Bot();
+    } catch (err) {
+      console.error('Bot Engine Error:', err);
+      appendBotLog(`Warning: ${err.message}`);
+    }
   }
 
   // Bot Modal Controls
@@ -2152,7 +2166,11 @@
     document.getElementById('botDescTrend').style.display = botState.strategy === 'smc_m15_m5' ? 'block' : 'none';
   };
 
-  openBotModalBtn.onclick = () => document.getElementById('botModal').classList.add('open');
+  openBotModalBtn.onclick = () => {
+    const box = document.getElementById('botLogBox');
+    if (box && botState.logs.length) box.innerHTML = botState.logs.map(l => `<div>${l}</div>`).join('');
+    document.getElementById('botModal').classList.add('open');
+  };
   document.getElementById('closeBotModalBtn').onclick = () => document.getElementById('botModal').classList.remove('open');
 
   toggleBotArmBtn.onclick = () => {
@@ -2168,9 +2186,10 @@
       botSnapshots = [];
       saveBotTimelineSnapshot();
       document.getElementById('botModal').classList.remove('open');
-      appendBotLog('Armed! Press Play or +1/-1 to run & rewind with full chart sync.');
+      appendBotLog('Armed! Auto-running & scanning M15 ChoCh -> $$$ -> SZ/OB...');
       runActiveBotStrategy();
       drawingsPrimitive.requestRedraw();
+      if (!isPlaying) startPlay();
     } else {
       toggleBotArmBtn.textContent = 'เปิดโหมดบอท (Arm Bot — พร้อมรันตามปุ่ม Play / -1 / +1)';
       toggleBotArmBtn.className = 'btn btn-green';
@@ -3651,11 +3670,23 @@
   });
 
   // =========================================================================
-  // Incremental Step Engine (With Time-Travel Snapshot Sync)
+  // Incremental Step Engine (With Time-Travel Snapshot Sync & Non-Blocking Save)
   // =========================================================================
+  let saveProfileTimer = null;
+  function scheduleSaveProfile() {
+    if (saveProfileTimer) return;
+    saveProfileTimer = setTimeout(() => {
+      saveProfileTimer = null;
+      saveCurrentProfile();
+    }, 1200);
+  }
+
   function stepForward(customMinutes = null) {
     const stepMinutes = customMinutes || Number(document.getElementById('stepUnitSelect').value) || 1;
-    if (current1mIndex + stepMinutes >= m1Count) { stopPlay(); return; }
+    if (m1Count === 0 || current1mIndex + stepMinutes >= m1Count) {
+      stopPlay();
+      return;
+    }
 
     if (botState.armed) saveBotTimelineSnapshot();
 
@@ -3732,7 +3763,7 @@
       } else {
         rebuildAllCharts(false);
         updateUI();
-        saveCurrentProfile();
+        scheduleSaveProfile();
         return;
       }
 
@@ -3745,7 +3776,7 @@
     }
 
     updateUI();
-    saveCurrentProfile();
+    scheduleSaveProfile();
   }
 
   function stepBackward() {
@@ -3760,20 +3791,33 @@
     saveCurrentProfile();
   }
 
+  // Self-Scheduling Async Loop (Prevents UI freeze / overlapping timer backlog on mobile)
+  function scheduleNextPlayTick() {
+    if (!isPlaying) return;
+    playTimer = setTimeout(() => {
+      if (!isPlaying) return;
+      stepForward();
+      if (isPlaying) scheduleNextPlayTick();
+    }, speedMs);
+  }
+
   function startPlay() {
     if (isPlaying) return;
     isPlaying = true;
     const btn = document.getElementById('playBtn');
     btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg><span>Pause</span>';
     btn.className = 'btn btn-orange play-main-btn';
-    playTimer = setInterval(() => stepForward(), speedMs);
+    scheduleNextPlayTick();
   }
+
   function stopPlay() {
     isPlaying = false;
-    clearInterval(playTimer);
+    clearTimeout(playTimer);
+    playTimer = null;
     const btn = document.getElementById('playBtn');
     btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg><span>Play</span>';
     btn.className = 'btn btn-green play-main-btn';
+    saveCurrentProfile();
   }
 
   function updateDrawdownStats() {
@@ -3832,6 +3876,15 @@
     const curDD = peakEquity > 0 ? ((peakEquity - eq) / peakEquity) * 100 : 0;
     if (curDD > maxDrawdownPct) maxDrawdownPct = curDD;
 
+    const topBadge = document.getElementById('topOrderBadge');
+    topBadge.textContent = orders.length;
+    topBadge.classList.toggle('zero', orders.length === 0);
+
+    // Skip heavy DOM updates when portfolio panels are hidden (maximizes playback FPS)
+    const isSubbarOpen = portfolioSubbar.classList.contains('visible');
+    const isSheetOpen = portfolioBottomSheet.classList.contains('visible');
+    if (!isSubbarOpen && !isSheetOpen) return;
+
     document.getElementById('balText').textContent = `$${balance.toFixed(2)}`;
     const eqEl = document.getElementById('eqText');
     eqEl.textContent = `$${eq.toFixed(2)}`;
@@ -3844,9 +3897,7 @@
     document.getElementById('activeCount').textContent = orders.length;
     document.getElementById('histCount').textContent = history.length;
 
-    const topBadge = document.getElementById('topOrderBadge');
-    topBadge.textContent = orders.length;
-    topBadge.classList.toggle('zero', orders.length === 0);
+    if (!isSheetOpen) return;
 
     const list = document.getElementById('listArea');
     if (activeTab === 'overview') {
