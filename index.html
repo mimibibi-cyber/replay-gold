@@ -13,7 +13,7 @@
       --bg: #131722;
       --panel: #1e222d;
       --panel2: #2a2e39;
-      --glass: rgba(30, 34, 45, 0.9);
+      --glass: rgba(30, 34, 45, 0.92);
       --border: #363a45;
       --text: #d1d4dc;
       --muted: #787b86;
@@ -27,7 +27,7 @@
       --bg: #ffffff;
       --panel: #f8fafc;
       --panel2: #e2e8f0;
-      --glass: rgba(248, 250, 252, 0.92);
+      --glass: rgba(248, 250, 252, 0.94);
       --border: #cbd5e1;
       --text: #131722;
       --muted: #64748b;
@@ -45,9 +45,10 @@
       display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px;
       padding: 5px 8px; background: var(--panel); border-bottom: 1px solid var(--border);
       padding-top: max(5px, env(safe-area-inset-top));
+      flex-shrink: 0;
     }
     .group { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
-    .btn, select, input[type="date"], input[type="number"] {
+    .btn, select, input[type="date"], input[type="datetime-local"], input[type="number"] {
       background: var(--panel2); color: var(--text); border: 1px solid var(--border);
       padding: 4px 6px; border-radius: 5px; font-size: 11px; font-weight: 500;
       display: inline-flex; align-items: center; justify-content: center; gap: 4px;
@@ -61,12 +62,13 @@
     .btn-blue { background: var(--blue); color: #fff; }
     .btn-orange { background: #ea580c; color: #fff; }
 
-    /* Subbar */
+    /* Subbar (Hidden by default for Clean Chart, toggled via Top-Right Portfolio Button) */
     .tv-subbar {
-      display: flex; justify-content: space-between; align-items: center;
+      display: none; justify-content: space-between; align-items: center;
       padding: 4px 8px; background: var(--bg); border-bottom: 1px solid var(--border);
       font-size: 11px; overflow-x: auto; gap: 8px; flex-shrink: 0;
     }
+    .tv-subbar.visible { display: flex; }
     .tv-subbar::-webkit-scrollbar { display: none; }
     .stat { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
 
@@ -83,24 +85,30 @@
     }
     #gestureOverlay.interactive { pointer-events: auto; }
 
-    /* Top-Right MT5-Style Quick Order & One-Click Toggle Buttons */
+    /* Top-Right Floating Controls: Pending Drag Shortcut + Single Portfolio/Orders Toggle */
     .top-right-trade-icons {
       position: absolute; top: 8px; right: 74px; z-index: 26;
       display: flex; align-items: center; gap: 5px;
     }
     .tr-icon-btn {
-      width: 30px; height: 28px; border-radius: 6px; border: 1px solid var(--border);
+      height: 28px; min-width: 30px; padding: 0 7px; border-radius: 6px; border: 1px solid var(--border);
       background: var(--glass); backdrop-filter: blur(10px); color: var(--text);
-      display: flex; align-items: center; justify-content: center; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer;
+      font-size: 11px; font-weight: 600;
     }
     .tr-icon-btn.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .badge-pill {
+      background: var(--red); color: #fff; font-size: 9px; font-weight: 700;
+      padding: 1px 4px; border-radius: 8px; line-height: 1.2;
+    }
+    .badge-pill.zero { display: none; }
 
     /* Long-Press Context Menu (Cut & Rewind / Pending Limit-Stop) */
     .context-menu {
       position: absolute; z-index: 60;
       background: var(--glass); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
       border: 1px solid var(--border); border-radius: 10px;
-      padding: 5px; min-width: 188px;
+      padding: 5px; min-width: 196px;
       box-shadow: 0 10px 28px rgba(0,0,0,0.5);
       display: none; flex-direction: column; gap: 3px;
     }
@@ -187,6 +195,7 @@
       background: var(--blue); color: #fff; padding: 4px 12px;
       border-radius: 16px; font-size: 11px; font-weight: 600; z-index: 28;
       display: none; pointer-events: none; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      white-space: nowrap;
     }
     .point-hint.visible { display: block; }
 
@@ -220,65 +229,51 @@
       display: flex; justify-content: space-between; align-items: center; margin-top: 6px; gap: 6px;
     }
 
-    /* Clean Replay Bar (Date & Time Display - No Percentage) */
+    /* Clean Replay Bar (Date & Time Display + Go To Date Trigger) */
     .replay-bar {
       display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 5px 8px;
       background: var(--panel); border-top: 1px solid var(--border);
+      padding-bottom: max(5px, env(safe-area-inset-bottom));
+      flex-shrink: 0;
     }
     .date-status-pill {
       flex: 1; background: var(--panel2); border: 1px solid var(--border);
       border-radius: 5px; padding: 4px 8px; font-size: 11px; font-family: monospace;
-      display: flex; align-items: center; justify-content: center;
-      overflow: hidden; white-space: nowrap; font-weight: 600;
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+      overflow: hidden; white-space: nowrap; font-weight: 600; cursor: pointer;
     }
+    .date-status-pill:hover { border-color: var(--blue); }
 
-    /* MT5-Style Bottom One-Click Trade Bar (Toggleable via Top-Right Button) */
-    .mt5-trade-bar {
-      display: none; align-items: stretch; height: 44px;
-      background: var(--panel); border-top: 1px solid var(--border);
-    }
-    .mt5-trade-bar.visible { display: flex; }
-    .mt5-sell-btn {
-      flex: 1; background: #e11d48; color: #fff; border: none; cursor: pointer;
-      display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
-      padding: 0 12px; line-height: 1.15;
-    }
-    .mt5-sell-btn:active { opacity: 0.85; }
-    .mt5-buy-btn {
-      flex: 1; background: #2563eb; color: #fff; border: none; cursor: pointer;
-      display: flex; flex-direction: column; justify-content: center; align-items: flex-end;
-      padding: 0 12px; line-height: 1.15;
-    }
-    .mt5-buy-btn:active { opacity: 0.85; }
-    .mt5-lot-center {
-      width: 118px; background: var(--panel2); border-left: 1px solid var(--border); border-right: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between; padding: 0 6px;
-    }
-    .mt5-lot-step {
-      background: transparent; border: none; color: var(--text); cursor: pointer;
-      padding: 6px; display: flex; align-items: center; justify-content: center;
-    }
-    .mt5-lot-input {
-      width: 48px; text-align: center; background: transparent; border: none;
-      color: var(--text); font-weight: 700; font-size: 13px; padding: 0;
-    }
-
-    /* Bottom Sheet */
+    /* Hidden Portfolio & Performance Bottom Sheet (Toggled via Top-Right Button) */
     .bottom-sheet {
-      height: 102px; background: var(--bg); border-top: 1px solid var(--border);
-      display: flex; flex-direction: column; padding-bottom: env(safe-area-inset-bottom);
+      display: none; height: 185px; background: var(--bg); border-top: 1px solid var(--border);
+      flex-direction: column; padding-bottom: env(safe-area-inset-bottom);
+      flex-shrink: 0;
     }
-    .tabs { display: flex; background: var(--panel); }
+    .bottom-sheet.visible { display: flex; }
+    .tabs { display: flex; background: var(--panel); border-bottom: 1px solid var(--border); }
     .tab {
-      flex: 1; text-align: center; padding: 5px; font-size: 11px;
+      flex: 1; text-align: center; padding: 6px 4px; font-size: 11px;
       font-weight: 600; color: var(--muted); cursor: pointer;
     }
     .tab.active { color: var(--text); border-bottom: 2px solid var(--blue); }
-    .list-area { flex: 1; overflow-y: auto; padding: 4px 8px; font-size: 11px; }
+    .list-area { flex: 1; overflow-y: auto; padding: 6px 8px; font-size: 11px; }
     .order-row {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 5px 0; border-bottom: 1px solid var(--border);
+      padding: 6px 0; border-bottom: 1px solid var(--border); gap: 6px;
     }
+
+    /* Performance Analytics Overview Grid */
+    .perf-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-bottom: 8px;
+    }
+    .perf-card {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 7px;
+      padding: 6px 8px; display: flex; flex-direction: column; gap: 2px;
+    }
+    .perf-label { font-size: 10px; color: var(--muted); font-weight: 600; }
+    .perf-val { font-size: 13px; font-weight: 700; font-family: monospace; }
+    .perf-sub { font-size: 9px; color: var(--muted); }
   </style>
 </head>
 <body>
@@ -300,6 +295,9 @@
 
     <div class="group">
       <input type="date" id="startDateInput" min="2026-04-01" max="2026-11-30" value="2026-11-02" />
+      <button class="btn" id="openGoToModalBtn" title="Go To Date & Time">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="15" r="1.5" fill="currentColor"/></svg>
+      </button>
       <select id="sessionSelect" title="Jump to Market Open">
         <option value="" selected>Sess</option>
         <option value="asia">Asia</option>
@@ -326,8 +324,8 @@
     </div>
   </div>
 
-  <!-- Subbar -->
-  <div class="tv-subbar">
+  <!-- Subbar (Hidden by Default; Toggled with Portfolio Panel) -->
+  <div class="tv-subbar" id="portfolioSubbar">
     <div class="stat">
       <span style="color:var(--muted);">ID:</span>
       <select id="profileSelect" style="max-width:98px;"></select>
@@ -341,6 +339,8 @@
       <button class="btn btn-blue" id="applyBalBtn" style="padding:2px 5px;">Set</button>
     </div>
     <div class="stat">
+      <span style="color:var(--muted);">Lot:</span>
+      <input type="number" id="lotInput" value="0.10" step="0.01" min="0.01" style="width:46px; padding:2px 4px;" />
       <span style="color:var(--muted);">Risk($):</span>
       <input type="number" id="riskDollarInput" value="100" style="width:42px; padding:2px 4px;" />
       <span style="color:var(--muted);">RR:</span>
@@ -372,17 +372,18 @@
 
   <!-- Workspace -->
   <div class="workspace">
-    <!-- Top-Right 2 MT5 Buttons (Left: Drag Pending Order on Chart | Right: Toggle Bottom One-Click Bar) -->
+    <!-- Top-Right Controls: Pending Order Shortcut + Single Portfolio/Orders Toggle -->
     <div class="top-right-trade-icons">
-      <button class="tr-icon-btn" id="dragPendingToolBtn" title="Place Pending Order on Chart (Buy/Sell Limit & Stop)">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="8"/><polyline points="12 8 12 12 15 14"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/></svg>
+      <button class="tr-icon-btn" id="dragPendingToolBtn" title="Place Pending Limit/Stop Order on Chart">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><polyline points="12 8 12 12 15 14"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/></svg>
       </button>
-      <button class="tr-icon-btn active" id="toggleOneClickBarBtn" title="Show/Hide Bottom Trade Bar">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><line x1="12" y1="5" x2="12" y2="19"/></svg>
+      <button class="tr-icon-btn" id="togglePortfolioBtn" title="Show/Hide Portfolio, Orders & Performance">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+        <span class="badge-pill zero" id="topOrderBadge">0</span>
       </button>
     </div>
 
-    <!-- Long-Press Context Menu (Cut & Rewind / Pending Orders) -->
+    <!-- Long-Press Context Menu (Cut & Rewind / Pending Limit-Stop Orders) -->
     <div class="context-menu" id="chartContextMenu">
       <div class="ctx-header" id="ctxInfoText">17/11 21:25 @ 3863.500</div>
       <button class="ctx-item" id="ctxCutRewindBtn" style="color:#38bdf8;">
@@ -431,7 +432,7 @@
         <span class="tf-vis-chip on" data-vtf="240">4H</span>
         <span class="tf-vis-chip on" data-vtf="1440">1D</span>
       </div>
-      <button class="btn btn-green" id="execRRBtn" style="display:none; padding:2px 7px;">Place Order</button>
+      <button class="btn btn-green" id="execRRBtn" style="display:none; padding:2px 7px;">Place Pending</button>
       <button class="btn btn-red" id="deleteSelectedBtn" style="padding:2px 6px;">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
       </button>
@@ -483,7 +484,7 @@
     <div class="ind-pane" id="paneSTOCH"><div class="ind-label" id="labelSTOCH" style="color:#f59e0b;">Stochastic (14, 3, 3)</div></div>
   </div>
 
-  <!-- Minimal Replay Bar (Date & Time Only - No Percentage) -->
+  <!-- Minimal Replay Bar (Date & Time Display - Tap to Open Go To Date) -->
   <div class="replay-bar">
     <div class="group" style="gap:4px;">
       <button class="btn btn-green" id="playBtn" style="width:58px;">
@@ -511,8 +512,7 @@
       </button>
     </div>
 
-    <!-- แถบแสดงวันที่และเวลา (ตัด % ออกทั้งหมด) -->
-    <div class="date-status-pill" id="dateTimeStatusText">--/-- --:--</div>
+    <div class="date-status-pill" id="dateTimeStatusText" title="Tap to Go To Date & Time">--/-- --:--</div>
 
     <select id="speedSelect">
       <option value="800">0.5x</option>
@@ -522,33 +522,11 @@
     </select>
   </div>
 
-  <!-- MT5-Style Bottom One-Click Trade Bar (Toggleable) -->
-  <div class="mt5-trade-bar visible" id="mt5TradeBar">
-    <button class="mt5-sell-btn" id="mt5SellBtn">
-      <span style="font-size:10px; font-weight:700; opacity:0.9;">SELL</span>
-      <span id="mt5BidPrice" style="font-size:15px; font-weight:800; font-family:monospace;">--</span>
-    </button>
-
-    <div class="mt5-lot-center">
-      <button class="mt5-lot-step" id="lotMinus" title="Decrease Lot">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-      </button>
-      <input type="number" class="mt5-lot-input" id="lotInput" value="0.10" step="0.01" min="0.01" />
-      <button class="mt5-lot-step" id="lotPlus" title="Increase Lot">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
-      </button>
-    </div>
-
-    <button class="mt5-buy-btn" id="mt5BuyBtn">
-      <span style="font-size:10px; font-weight:700; opacity:0.9;">BUY</span>
-      <span id="mt5AskPrice" style="font-size:15px; font-weight:800; font-family:monospace;">--</span>
-    </button>
-  </div>
-
-  <!-- Bottom Sheet -->
-  <div class="bottom-sheet">
+  <!-- Hidden Portfolio & Performance Bottom Sheet (Toggled via Top-Right Button) -->
+  <div class="bottom-sheet" id="portfolioBottomSheet">
     <div class="tabs">
-      <div class="tab active" id="tabActive">Active / Pending (<span id="activeCount">0</span>)</div>
+      <div class="tab active" id="tabOverview">Overview</div>
+      <div class="tab" id="tabActive">Orders (<span id="activeCount">0</span>)</div>
       <div class="tab" id="tabHistory">History (<span id="histCount">0</span>)</div>
       <button class="btn" id="closeAllBtn" style="border-radius:0; padding:0 10px; font-size:10px;">Close All</button>
     </div>
@@ -605,6 +583,25 @@
         </div>
       </div>
       <button class="btn btn-blue" id="applyIndBtn" style="width:100%; padding:8px; margin-top:4px;">Apply Indicators</button>
+    </div>
+  </div>
+
+  <!-- Modal 3: Go To Date & Time (Jump to Specific Candle) -->
+  <div class="modal-backdrop" id="goToDateModal">
+    <div class="modal-card" style="max-width:320px;">
+      <div class="modal-header">
+        <b>Go To Date &amp; Time (TH UTC+7)</b>
+        <button class="btn" id="closeGoToModalBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:10px; font-size:12px;">
+        <div style="color:var(--muted); font-size:11px;">เลือกวันและเวลาที่ต้องการตัดกราฟและกระโดดไปเริ่มทันที:</div>
+        <input type="datetime-local" id="goToDateTimeInput" value="2026-11-15T19:00" style="width:100%; padding:8px; font-size:13px;" />
+        <div style="display:flex; gap:6px;">
+          <button class="btn btn-blue" id="confirmGoToBtn" style="flex:1; padding:8px;">Jump to Candle</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -751,7 +748,7 @@
   let orders = [];
   let magnetEnabled = false;
   let drawingsLocked = false;
-  let pendingDragMode = false; // โหมดลากวาง Pending Order บนกราฟจากปุ่มขวาบน
+  let pendingDragMode = false;
 
   function timeToBarIndex(ts) {
     if (!visibleCandles.length) return 0;
@@ -819,7 +816,8 @@
     ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
   }
 
-  function drawInteractiveOrderTag(ctx, W, price, text, color, dashed, showCloseBtn) {
+  // Interactive Order Tag with Break-Even (BE) & Partial Close (50%) Action Buttons on Chart
+  function drawInteractiveOrderTag(ctx, W, price, text, color, dashed, actions = {}) {
     const y = Math.round(priceToY(price)) + 0.5;
     if (y < -16 || y > 2000) return null;
 
@@ -831,9 +829,11 @@
 
     ctx.font = '600 10px -apple-system, BlinkMacSystemFont, sans-serif';
     const textW = ctx.measureText(text).width;
-    const closeW = showCloseBtn ? 20 : 0;
-    const pillW = textW + 14 + closeW;
-    const pillH = 18;
+    const beW = actions.showBE ? 26 : 0;
+    const halfW = actions.showHalf ? 30 : 0;
+    const closeW = actions.showClose ? 20 : 0;
+    const pillW = textW + 14 + beW + halfW + closeW;
+    const pillH = 19;
     const pillX = 6;
     const pillY = y - pillH / 2;
 
@@ -846,23 +846,50 @@
     ctx.textBaseline = 'middle';
     ctx.fillText(text, pillX + 7, y + 0.5);
 
-    if (showCloseBtn) {
-      const closeX = pillX + textW + 12;
+    let cursorX = pillX + textW + 12;
+    let beRect = null, halfRect = null, closeRect = null;
+
+    if (actions.showBE) {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
+      ctx.fillRect(cursorX, pillY + 2, beW - 2, pillH - 4);
+      ctx.fillStyle = '#fde047';
+      ctx.font = '700 9px sans-serif';
+      ctx.fillText('BE', cursorX + 5, y + 0.5);
+      beRect = { x: cursorX, y: pillY, w: beW, h: pillH };
+      cursorX += beW;
+    }
+
+    if (actions.showHalf) {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
+      ctx.fillRect(cursorX, pillY + 2, halfW - 2, pillH - 4);
+      ctx.fillStyle = '#a7f3d0';
+      ctx.font = '700 9px sans-serif';
+      ctx.fillText('50%', cursorX + 4, y + 0.5);
+      halfRect = { x: cursorX, y: pillY, w: halfW, h: pillH };
+      cursorX += halfW;
+    }
+
+    if (actions.showClose) {
       ctx.strokeStyle = 'rgba(255,255,255,0.35)';
       ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(closeX, pillY + 3); ctx.lineTo(closeX, pillY + pillH - 3); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cursorX, pillY + 3); ctx.lineTo(cursorX, pillY + pillH - 3); ctx.stroke();
 
-      const cx = closeX + 10, cy = y;
+      const cx = cursorX + 10, cy = y;
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(cx - 3, cy - 3); ctx.lineTo(cx + 3, cy + 3);
       ctx.moveTo(cx + 3, cy - 3); ctx.lineTo(cx - 3, cy + 3);
       ctx.stroke();
-
-      return { pillRect: { x: pillX, y: pillY, w: pillW, h: pillH }, closeRect: { x: closeX, y: pillY, w: 22, h: pillH } };
+      closeRect = { x: cursorX, y: pillY, w: 22, h: pillH };
     }
-    return { pillRect: { x: pillX, y: pillY, w: pillW, h: pillH }, closeRect: null };
+
+    return {
+      pillRect: { x: pillX, y: pillY, w: pillW, h: pillH },
+      beRect,
+      halfRect,
+      closeRect
+    };
   }
 
   let orderTagHitboxes = [];
@@ -1069,18 +1096,25 @@
                   entryLabel += ` [>=${formatTHTime(o.activateTime).split(' ')[1]}]`;
                 }
 
-                const eBox = drawInteractiveOrderTag(ctx, W, o.entry, entryLabel, entryColor, !o.triggered, true);
+                // Active orders show BE (Break-Even) and 50% (Partial Close) buttons directly on the chart tag
+                const eBox = drawInteractiveOrderTag(ctx, W, o.entry, entryLabel, entryColor, !o.triggered, {
+                  showBE: o.triggered,
+                  showHalf: o.triggered && o.lot >= 0.02,
+                  showClose: true
+                });
                 if (eBox) orderTagHitboxes.push({ orderIdx: oIdx, field: 'entry', ...eBox });
 
                 if (o.sl) {
-                  const loss = Math.abs(o.entry - o.sl) * 100 * o.lot;
-                  const slBox = drawInteractiveOrderTag(ctx, W, o.sl, `SL -$${loss.toFixed(0)}`, '#f23645', true, false);
+                  const slPnl = (isBuy ? o.sl - o.entry : o.entry - o.sl) * 100 * o.lot;
+                  const slText = slPnl >= 0 ? `SL +$${slPnl.toFixed(0)} (BE)` : `SL -$${Math.abs(slPnl).toFixed(0)}`;
+                  const slColor = slPnl >= 0 ? '#089981' : '#f23645';
+                  const slBox = drawInteractiveOrderTag(ctx, W, o.sl, slText, slColor, true, {});
                   if (slBox) orderTagHitboxes.push({ orderIdx: oIdx, field: 'sl', ...slBox });
                 }
 
                 if (o.tp) {
                   const gain = Math.abs(o.tp - o.entry) * 100 * o.lot;
-                  const tpBox = drawInteractiveOrderTag(ctx, W, o.tp, `TP +$${gain.toFixed(0)}`, '#089981', true, false);
+                  const tpBox = drawInteractiveOrderTag(ctx, W, o.tp, `TP +$${gain.toFixed(0)}`, '#089981', true, {});
                   if (tpBox) orderTagHitboxes.push({ orderIdx: oIdx, field: 'tp', ...tpBox });
                 }
               });
@@ -1319,7 +1353,8 @@
       current1mIndex, timeframeMin, initialBalance, balance, peakEquity, maxDrawdownPct, lotSize,
       orders: orders.map(o => ({
         id: o.id, type: o.type, triggered: o.triggered, activateTime: o.activateTime,
-        entry: o.entry, sl: o.sl, tp: o.tp, lot: o.lot, entryTime: o.entryTime, linkedDrawId: o.linkedDrawId
+        entry: o.entry, sl: o.sl, tp: o.tp, lot: o.lot, entryTime: o.entryTime, linkedDrawId: o.linkedDrawId,
+        riskMoney: o.riskMoney
       })),
       history, drawings
     };
@@ -1473,7 +1508,6 @@
     resizeAllCharts();
   }
 
-  // แสดงวันที่ + เวลาเต็มใน Replay Bar (ลบ % ออกทั้งหมด)
   function updateReplayDateTimePill() {
     if (m1Count === 0) {
       document.getElementById('dateTimeStatusText').textContent = 'No Data';
@@ -1538,8 +1572,6 @@
     if (visibleCandles.length) {
       const last = visibleCandles[visibleCandles.length - 1];
       updateOHLCLegend(last);
-      document.getElementById('mt5BidPrice').textContent = last.close.toFixed(2);
-      document.getElementById('mt5AskPrice').textContent = (last.close + 0.25).toFixed(2);
     }
 
     if (fitView) autoFitGraph();
@@ -1611,20 +1643,22 @@
   }
 
   // =========================================================================
-  // Top-Right 2 MT5 Buttons & Long-Press Context Menu on Chart
+  // Top-Right Portfolio Panel Toggle, Pending Shortcut, BE & Partial Close
   // =========================================================================
   const dragPendingBtn = document.getElementById('dragPendingToolBtn');
-  const toggleOneClickBtn = document.getElementById('toggleOneClickBarBtn');
-  const mt5TradeBar = document.getElementById('mt5TradeBar');
+  const togglePortfolioBtn = document.getElementById('togglePortfolioBtn');
+  const portfolioSubbar = document.getElementById('portfolioSubbar');
+  const portfolioBottomSheet = document.getElementById('portfolioBottomSheet');
 
-  // ปุ่มขวา: เปิด/ซ่อนแถบซื้อขาย One-Click ด้านล่าง
-  toggleOneClickBtn.onclick = () => {
-    const isVisible = mt5TradeBar.classList.toggle('visible');
-    toggleOneClickBtn.classList.toggle('active', isVisible);
+  // Single Toggle Button at Top-Right: Shows/Hides Portfolio Subbar + Bottom Sheet (Clean Chart By Default)
+  togglePortfolioBtn.onclick = () => {
+    const isVisible = portfolioBottomSheet.classList.toggle('visible');
+    portfolioSubbar.classList.toggle('visible', isVisible);
+    togglePortfolioBtn.classList.toggle('active', isVisible);
     resizeAllCharts();
   };
 
-  // ปุ่มซ้าย: เปิดโหมดลากวาง Pending Order บนกราฟโดยตรง
+  // Top-Right Pending Order Shortcut Button (Tap or Drag on Chart)
   dragPendingBtn.onclick = () => {
     pendingDragMode = !pendingDragMode;
     dragPendingBtn.classList.toggle('active', pendingDragMode);
@@ -1635,13 +1669,108 @@
       document.getElementById('pointHint').classList.add('visible');
     } else {
       document.getElementById('pointHint').classList.remove('visible');
-      if (selectedDrawingIdx < 0) gestureOverlay.classList.remove('interactive');
+      if (selectedDrawingIdx < 0 && orders.length === 0) gestureOverlay.classList.remove('interactive');
     }
   };
 
-  // Long-Press Detection on Chart (กดค้าง 420ms เพื่อ Cut & Rewind หรือวาง Pending Limit/Stop)
+  // Break-Even Automation: Moves SL to Entry Price + Commission Offset
+  function moveOrderToBreakEven(orderIdx) {
+    const o = orders[orderIdx];
+    if (!o || !o.triggered) return;
+    const isBuy = o.type.includes('BUY');
+    const commPerLot = parseFloat(document.getElementById('commInput').value) || 0;
+    // 1.0 price move on XAUUSD = $100 per 1.00 lot -> commission price offset = commPerLot / 100
+    const commPriceOffset = commPerLot / 100;
+    o.sl = isBuy ? +(o.entry + commPriceOffset).toFixed(3) : +(o.entry - commPriceOffset).toFixed(3);
+    drawingsPrimitive.requestRedraw();
+    updateUI();
+    saveCurrentProfile();
+  }
+
+  // Partial Close 50%: Closes half of the active position and realizes proportional PnL & Commission
+  function partialCloseOrder50(orderIdx) {
+    const o = orders[orderIdx];
+    if (!o || !o.triggered || m1Count === 0) return;
+    if (o.lot < 0.02) {
+      closeOrCancelSingleOrder(orderIdx);
+      return;
+    }
+
+    const closeLot = +(o.lot / 2).toFixed(2);
+    const remainLot = +(o.lot - closeLot).toFixed(2);
+    const curPrice = m1Close[current1mIndex];
+    const curTime = m1Time[current1mIndex];
+    const isBuy = o.type.includes('BUY');
+    const commPerLot = parseFloat(document.getElementById('commInput').value) || 0;
+    const rawPnl = (isBuy ? curPrice - o.entry : o.entry - curPrice) * 100 * closeLot;
+    const netPnl = rawPnl - (commPerLot * closeLot);
+
+    balance += netPnl;
+    updateDrawdownStats();
+
+    const fullRisk = o.riskMoney || (o.sl ? Math.abs(o.entry - o.sl) * 100 * o.lot : 0);
+    const closedRisk = fullRisk * (closeLot / o.lot);
+    if (o.riskMoney) o.riskMoney = Math.max(0, o.riskMoney - closedRisk);
+
+    history.unshift({
+      type: o.type,
+      entry: o.entry,
+      exit: curPrice,
+      pnl: netPnl,
+      lot: closeLot,
+      riskMoney: closedRisk,
+      reason: 'Partial 50%',
+      entryTime: o.entryTime,
+      exitTime: curTime
+    });
+
+    o.lot = remainLot;
+    updateTradeMarkers();
+    drawingsPrimitive.requestRedraw();
+    updateUI();
+    saveCurrentProfile();
+  }
+
+  // Go To Date & Time Modal Handlers
+  document.getElementById('openGoToModalBtn').onclick = () => {
+    if (m1Count > 0) {
+      const d = new Date((m1Time[current1mIndex] + 7 * 3600) * 1000);
+      const pad = n => String(n).padStart(2, '0');
+      document.getElementById('goToDateTimeInput').value =
+        `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
+    }
+    document.getElementById('goToDateModal').classList.add('open');
+  };
+  document.getElementById('dateTimeStatusText').onclick = () => document.getElementById('openGoToModalBtn').click();
+  document.getElementById('closeGoToModalBtn').onclick = () => document.getElementById('goToDateModal').classList.remove('open');
+
+  document.getElementById('confirmGoToBtn').onclick = () => {
+    const val = document.getElementById('goToDateTimeInput').value;
+    if (!val || m1Count === 0) return;
+    const [datePart, timePart] = val.split('T');
+    if (!datePart || !timePart) return;
+    const [y, m, d] = datePart.split('-').map(Number);
+    const [hh, mm] = timePart.split(':').map(Number);
+    // Input is TH time (UTC+7), convert to UTC timestamp
+    const targetUtcSec = Math.floor(Date.UTC(y, m - 1, d, hh - 7, mm, 0) / 1000);
+
+    stopPlay();
+    let lo = 0, hi = m1Count - 1;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (m1Time[mid] < targetUtcSec) lo = mid + 1; else hi = mid;
+    }
+    current1mIndex = Math.max(30, Math.min(m1Count - 1, lo));
+    document.getElementById('startDateInput').value = datePart;
+    document.getElementById('goToDateModal').classList.remove('open');
+    rebuildAllCharts(true);
+    updateUI();
+    saveCurrentProfile();
+  };
+
+  // Long-Press Detection on Chart (Cut & Rewind or Place Pending Limit/Stop)
   let longPressTimer = null;
-  let longPressTarget = null; // { time, price }
+  let longPressTarget = null;
   let touchStartXY = { x: 0, y: 0 };
 
   function hideContextMenu() {
@@ -1660,7 +1789,7 @@
     document.getElementById('ctxSellPendingLabel').textContent = `${sellType} @ ${targetPrice.toFixed(2)}`;
 
     const wsRect = mainPane.getBoundingClientRect();
-    const left = Math.max(8, Math.min(wsRect.width - 200, clientX - wsRect.left - 80));
+    const left = Math.max(8, Math.min(wsRect.width - 208, clientX - wsRect.left - 80));
     const top = Math.max(8, Math.min(wsRect.height - 135, clientY - wsRect.top - 20));
     ctxMenu.style.left = `${left}px`;
     ctxMenu.style.top = `${top}px`;
@@ -1692,7 +1821,6 @@
   mainPane.addEventListener('pointerup', () => clearTimeout(longPressTimer), true);
   mainPane.addEventListener('pointercancel', () => clearTimeout(longPressTimer), true);
 
-  // เมนู 1: Cut & Rewind Here (ตัดกราฟย้อนกลับไปยังวันและเวลาที่กดค้าง)
   document.getElementById('ctxCutRewindBtn').onclick = () => {
     if (!longPressTarget || m1Count === 0) return;
     stopPlay();
@@ -1708,13 +1836,14 @@
     saveCurrentProfile();
   };
 
-  // เมนู 2 & 3: วาง Pending Order (Buy/Sell Limit หรือ Stop) ตรงราคาและเวลาที่กดค้าง
   function placePendingAtTarget(isBuy, targetTime, targetPrice) {
     if (m1Count === 0) return;
     const curPrice = m1Close[current1mIndex];
     const curTime = m1Time[current1mIndex];
     const rr = parseFloat(document.getElementById('rrTargetInput').value) || 2.0;
     const slDist = 5.0, tpDist = slDist * rr;
+    const slPrice = isBuy ? targetPrice - slDist : targetPrice + slDist;
+    const tpPrice = isBuy ? targetPrice + tpDist : targetPrice - tpDist;
 
     let orderType = isBuy ? 'BUY LIMIT' : 'SELL LIMIT';
     if (isBuy) orderType = targetPrice <= curPrice ? 'BUY LIMIT' : 'BUY STOP';
@@ -1726,9 +1855,10 @@
       triggered: false,
       activateTime: Math.max(curTime, targetTime),
       entry: targetPrice,
-      sl: isBuy ? targetPrice - slDist : targetPrice + slDist,
-      tp: isBuy ? targetPrice + tpDist : targetPrice - tpDist,
+      sl: slPrice,
+      tp: tpPrice,
       lot: lotSize,
+      riskMoney: slDist * 100 * lotSize,
       entryTime: null
     });
     hideContextMenu();
@@ -1838,7 +1968,7 @@
     renderFavoriteToolbar();
     updatePointHint();
 
-    const needOverlay = (selectedTool !== 'cursor') || pendingDragMode || (selectedDrawingIdx >= 0 && !drawingsLocked);
+    const needOverlay = (selectedTool !== 'cursor') || pendingDragMode || (selectedDrawingIdx >= 0 && !drawingsLocked) || orders.length > 0;
     gestureOverlay.classList.toggle('interactive', needOverlay);
     drawingsPrimitive.requestRedraw();
   }
@@ -1980,6 +2110,16 @@
   function hitTestOrderTag(pos) {
     for (let i = orderTagHitboxes.length - 1; i >= 0; i--) {
       const hb = orderTagHitboxes[i];
+      if (hb.beRect &&
+          pos.x >= hb.beRect.x && pos.x <= hb.beRect.x + hb.beRect.w &&
+          pos.y >= hb.beRect.y - 4 && pos.y <= hb.beRect.y + hb.beRect.h + 4) {
+        return { action: 'be', orderIdx: hb.orderIdx };
+      }
+      if (hb.halfRect &&
+          pos.x >= hb.halfRect.x && pos.x <= hb.halfRect.x + hb.halfRect.w &&
+          pos.y >= hb.halfRect.y - 4 && pos.y <= hb.halfRect.y + hb.halfRect.h + 4) {
+        return { action: 'half', orderIdx: hb.orderIdx };
+      }
       if (hb.closeRect &&
           pos.x >= hb.closeRect.x && pos.x <= hb.closeRect.x + hb.closeRect.w &&
           pos.y >= hb.closeRect.y - 4 && pos.y <= hb.closeRect.y + hb.closeRect.h + 4) {
@@ -2059,6 +2199,7 @@
       updateDrawdownStats();
       history.unshift({
         type: o.type, entry: o.entry, exit: curPrice, pnl, lot: o.lot,
+        riskMoney: o.riskMoney || (o.sl ? Math.abs(o.entry - o.sl) * 100 * o.lot : 0),
         reason: 'Manual Close', entryTime: o.entryTime, exitTime: curTime
       });
       updateTradeMarkers();
@@ -2074,7 +2215,11 @@
 
     const orderHit = hitTestOrderTag(param.point);
     if (orderHit) {
-      if (orderHit.action === 'close') {
+      if (orderHit.action === 'be') {
+        moveOrderToBreakEven(orderHit.orderIdx);
+      } else if (orderHit.action === 'half') {
+        partialCloseOrder50(orderHit.orderIdx);
+      } else if (orderHit.action === 'close') {
         closeOrCancelSingleOrder(orderHit.orderIdx);
       } else {
         gestureOverlay.classList.add('interactive');
@@ -2128,7 +2273,7 @@
   };
 
   // =========================================================================
-  // Pointer Handling (รวมโหมดลากวาง Pending Order บนกราฟจากปุ่มขวาบน)
+  // Pointer Handling
   // =========================================================================
   let editingTarget = null, draggingOrderTarget = null, lastPos = { x: 0, y: 0 }, pointerDownPos = { x: 0, y: 0 };
 
@@ -2138,16 +2283,14 @@
     lastPos = pos;
     pointerDownPos = pos;
 
-    // โหมดลากวาง Pending Order บนกราฟ (ปุ่มซ้ายมุมขวาบน)
     if (pendingDragMode && m1Count > 0) {
       const targetPrice = yToPrice(pos.y);
       const curPrice = m1Close[current1mIndex];
-      const isBuy = targetPrice < curPrice; // ต่ำกว่าราคาปัจจุบัน -> Buy Limit, สูงกว่า -> Sell Limit
+      const isBuy = targetPrice < curPrice;
       placePendingAtTarget(isBuy, m1Time[current1mIndex], targetPrice);
       pendingDragMode = false;
       dragPendingBtn.classList.remove('active');
       document.getElementById('pointHint').classList.remove('visible');
-      // จับลากเส้น Entry ต่อได้ทันทีหากผู้ใช้ลากนิ้วต่อ
       draggingOrderTarget = { orderIdx: orders.length - 1, field: 'entry' };
       gestureOverlay.setPointerCapture(e.pointerId);
       return;
@@ -2168,7 +2311,11 @@
     if (selectedTool === 'cursor') {
       const orderHit = hitTestOrderTag(pos);
       if (orderHit) {
-        if (orderHit.action === 'close') {
+        if (orderHit.action === 'be') {
+          moveOrderToBreakEven(orderHit.orderIdx);
+        } else if (orderHit.action === 'half') {
+          partialCloseOrder50(orderHit.orderIdx);
+        } else if (orderHit.action === 'close') {
           closeOrCancelSingleOrder(orderHit.orderIdx);
           if (orders.length === 0 && selectedDrawingIdx < 0) gestureOverlay.classList.remove('interactive');
         } else if (orderHit.action === 'drag') {
@@ -2200,7 +2347,7 @@
       } else {
         selectedDrawingIdx = -1;
         updateSelectionBar();
-        gestureOverlay.classList.remove('interactive');
+        if (orders.length === 0) gestureOverlay.classList.remove('interactive');
         drawingsPrimitive.requestRedraw();
       }
       return;
@@ -2283,12 +2430,12 @@
       if (o) {
         const newPrice = yToPrice(pos.y);
         o[draggingOrderTarget.field] = newPrice;
-        // อัปเดตประเภท Limit/Stop อัตโนมัติตอนลาก Entry
         if (draggingOrderTarget.field === 'entry' && !o.triggered && m1Count > 0) {
           const curP = m1Close[current1mIndex];
           const isBuy = o.type.includes('BUY');
           o.type = isBuy ? (newPrice <= curP ? 'BUY LIMIT' : 'BUY STOP') : (newPrice >= curP ? 'SELL LIMIT' : 'SELL STOP');
         }
+        if (o.sl) o.riskMoney = Math.abs(o.entry - o.sl) * 100 * o.lot;
         activeSnapCrosshair = { x: pos.x, y: pos.y, price: newPrice, time: m1Time[current1mIndex] };
         drawingsPrimitive.requestRedraw();
         renderMagnifier(pos.x, pos.y, newPrice, m1Time[current1mIndex]);
@@ -2351,6 +2498,7 @@
             o.entry = d.midP;
             o.sl = d.p1;
             o.tp = d.p2;
+            o.riskMoney = Math.abs(o.entry - o.sl) * 100 * o.lot;
             o.activateTime = Math.max(m1Time[current1mIndex], d.t1);
           }
         });
@@ -2454,7 +2602,11 @@
             const netPnl = rawPnl - (commPerLot * o.lot);
             balance += netPnl;
             updateDrawdownStats();
-            history.unshift({ type: o.type, entry: o.entry, exit: exitP, pnl: netPnl, lot: o.lot, reason, entryTime: o.entryTime, exitTime: bTime });
+            history.unshift({
+              type: o.type, entry: o.entry, exit: exitP, pnl: netPnl, lot: o.lot,
+              riskMoney: o.riskMoney || (o.sl ? Math.abs(o.entry - o.sl) * 100 * o.lot : 0),
+              reason, entryTime: o.entryTime, exitTime: bTime
+            });
             continue;
           }
         }
@@ -2489,8 +2641,6 @@
       updateReplayDateTimePill();
       updateTradeMarkers();
       updateOHLCLegend(lastBar);
-      document.getElementById('mt5BidPrice').textContent = lastBar.close.toFixed(2);
-      document.getElementById('mt5AskPrice').textContent = (lastBar.close + 0.25).toFixed(2);
       drawingsPrimitive.requestRedraw();
     } else {
       rebuildAllCharts(false);
@@ -2531,7 +2681,43 @@
     if (dd > maxDrawdownPct) maxDrawdownPct = dd;
   }
 
-  let activeTab = 'active';
+  // Performance Analytics Computation (TradingView Strategy Tester Style)
+  function computePerformanceMetrics() {
+    const netProfit = balance - initialBalance;
+    const netProfitPct = initialBalance > 0 ? (netProfit / initialBalance) * 100 : 0;
+
+    let grossProfit = 0, grossLoss = 0, winCount = 0;
+    let rrSum = 0, rrSamples = 0;
+
+    history.forEach(h => {
+      if (h.pnl > 0) {
+        grossProfit += h.pnl;
+        winCount++;
+      } else if (h.pnl < 0) {
+        grossLoss += Math.abs(h.pnl);
+      }
+      if (h.riskMoney && h.riskMoney > 0) {
+        rrSum += (h.pnl / h.riskMoney);
+        rrSamples++;
+      }
+    });
+
+    const profitFactor = grossLoss > 0 ? (grossProfit / grossLoss).toFixed(2) : (grossProfit > 0 ? '∞' : '0.00');
+    const winRate = history.length > 0 ? ((winCount / history.length) * 100).toFixed(1) : '0.0';
+    const avgRR = rrSamples > 0 ? (rrSum / rrSamples).toFixed(2) : '0.00';
+
+    return {
+      netProfit,
+      netProfitPct,
+      profitFactor,
+      maxDD: maxDrawdownPct.toFixed(2),
+      winRate,
+      avgRR,
+      totalTrades: history.length
+    };
+  }
+
+  let activeTab = 'overview';
   function updateUI() {
     const curPrice = m1Count > 0 ? m1Close[current1mIndex] : 0;
     let floating = 0;
@@ -2558,8 +2744,40 @@
     document.getElementById('activeCount').textContent = orders.length;
     document.getElementById('histCount').textContent = history.length;
 
+    const topBadge = document.getElementById('topOrderBadge');
+    topBadge.textContent = orders.length;
+    topBadge.classList.toggle('zero', orders.length === 0);
+
     const list = document.getElementById('listArea');
-    if (activeTab === 'active') {
+    if (activeTab === 'overview') {
+      const m = computePerformanceMetrics();
+      const npColor = m.netProfit >= 0 ? 'var(--green)' : 'var(--red)';
+      const pfColor = m.profitFactor === '∞' || parseFloat(m.profitFactor) >= 1.5 ? 'var(--green)' : 'var(--yellow)';
+      list.innerHTML = `
+        <div class="perf-grid">
+          <div class="perf-card">
+            <span class="perf-label">Net Profit ($ / %)</span>
+            <span class="perf-val" style="color:${npColor};">${m.netProfit >= 0 ? '+' : ''}$${m.netProfit.toFixed(2)} (${m.netProfitPct >= 0 ? '+' : ''}${m.netProfitPct.toFixed(2)}%)</span>
+            <span class="perf-sub">After Commission • ${m.totalTrades} Trades</span>
+          </div>
+          <div class="perf-card">
+            <span class="perf-label">Profit Factor</span>
+            <span class="perf-val" style="color:${pfColor};">${m.profitFactor}</span>
+            <span class="perf-sub">Target &gt; 1.50</span>
+          </div>
+          <div class="perf-card">
+            <span class="perf-label">Max Drawdown (%)</span>
+            <span class="perf-val" style="color:var(--red);">-${m.maxDD}%</span>
+            <span class="perf-sub">Peak Equity: $${peakEquity.toFixed(0)}</span>
+          </div>
+          <div class="perf-card">
+            <span class="perf-label">Avg RR &amp; Win Rate</span>
+            <span class="perf-val" style="color:var(--blue);">${m.avgRR}R  •  ${m.winRate}%</span>
+            <span class="perf-sub">Realized R-Multiple</span>
+          </div>
+        </div>
+      `;
+    } else if (activeTab === 'active') {
       list.innerHTML = orders.map((o, idx) => {
         const isBuy = o.type.includes('BUY');
         const pnl = o.triggered ? (isBuy ? curPrice - o.entry : o.entry - curPrice) * 100 * o.lot : 0;
@@ -2569,20 +2787,28 @@
             <b style="color:${isBuy ? 'var(--blue)' : 'var(--purple)'}">${o.type}</b> ${o.lot.toFixed(2)} @ ${o.entry.toFixed(3)}
             <div style="font-size:10px; color:var(--muted);">SL: ${o.sl ? o.sl.toFixed(2) : '-'} | TP: ${o.tp ? o.tp.toFixed(2) : '-'}</div>
           </div>
-          <div style="display:flex; align-items:center; gap:6px;">
+          <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; justify-content:flex-end;">
             ${o.triggered ? `<b style="color:${pnl >= 0 ? 'var(--green)' : 'var(--red)'}">${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}</b>` : `<span style="color:var(--yellow); font-weight:600;">${waitTxt}</span>`}
+            ${o.triggered ? `<button class="btn" data-be-order="${idx}" style="padding:2px 5px; font-size:10px; color:#fde047;">BE</button>` : ''}
+            ${o.triggered && o.lot >= 0.02 ? `<button class="btn" data-half-order="${idx}" style="padding:2px 5px; font-size:10px; color:#a7f3d0;">50%</button>` : ''}
             <button class="btn btn-red" data-close-order="${idx}" style="padding:2px 6px; font-size:10px;">${o.triggered ? 'Close' : 'Cancel'}</button>
           </div>
         </div>`;
-      }).join('') || '<div style="color:var(--muted);text-align:center;margin-top:14px;">No active orders (Long-press chart to cut or place pending order)</div>';
+      }).join('') || '<div style="color:var(--muted);text-align:center;margin-top:14px;">No active or pending orders (Use RR Position box or Long-Press chart)</div>';
 
+      list.querySelectorAll('[data-be-order]').forEach(btn => {
+        btn.onclick = () => moveOrderToBreakEven(Number(btn.dataset.beOrder));
+      });
+      list.querySelectorAll('[data-half-order]').forEach(btn => {
+        btn.onclick = () => partialCloseOrder50(Number(btn.dataset.halfOrder));
+      });
       list.querySelectorAll('[data-close-order]').forEach(btn => {
         btn.onclick = () => closeOrCancelSingleOrder(Number(btn.dataset.closeOrder));
       });
     } else {
       list.innerHTML = history.map(h => `
         <div class="order-row">
-          <div><b>${h.type}</b> (${h.reason}) ${h.entry.toFixed(3)} &rarr; ${h.exit.toFixed(3)}</div>
+          <div><b>${h.type}</b> (${h.reason}) ${h.lot ? h.lot.toFixed(2) + 'L ' : ''}${h.entry.toFixed(3)} &rarr; ${h.exit.toFixed(3)}</div>
           <b style="color:${h.pnl >= 0 ? 'var(--green)' : 'var(--red)'}">${h.pnl >= 0 ? '+' : ''}$${h.pnl.toFixed(2)}</b>
         </div>
       `).join('') || '<div style="color:var(--muted);text-align:center;margin-top:14px;">No trade history</div>';
@@ -2744,37 +2970,18 @@
       type: orderType,
       triggered: false,
       activateTime: Math.max(curTime, d.t1),
-      entry, sl: d.p1, tp: d.p2, lot: calcLot, entryTime: null
+      entry,
+      sl: d.p1,
+      tp: d.p2,
+      lot: calcLot,
+      riskMoney: riskDiff * 100 * calcLot,
+      entryTime: null
     });
     gestureOverlay.classList.add('interactive');
     drawingsPrimitive.requestRedraw();
     updateUI();
     saveCurrentProfile();
   };
-
-  function placeInstantMarketOrder(isBuy) {
-    if (m1Count === 0) return;
-    const price = m1Close[current1mIndex];
-    const curTime = m1Time[current1mIndex];
-    const entry = isBuy ? price + 0.25 : price;
-    const rr = parseFloat(document.getElementById('rrTargetInput').value) || 2.0;
-    const slDist = 5.0, tpDist = slDist * rr;
-
-    orders.push({
-      id: Date.now(), type: isBuy ? 'BUY' : 'SELL', triggered: true,
-      activateTime: curTime, entry,
-      sl: isBuy ? entry - slDist : entry + slDist,
-      tp: isBuy ? entry + tpDist : entry - tpDist,
-      lot: lotSize, entryTime: curTime
-    });
-    gestureOverlay.classList.add('interactive');
-    drawingsPrimitive.requestRedraw();
-    updateUI();
-    saveCurrentProfile();
-  }
-
-  document.getElementById('mt5BuyBtn').onclick = () => placeInstantMarketOrder(true);
-  document.getElementById('mt5SellBtn').onclick = () => placeInstantMarketOrder(false);
 
   document.getElementById('openAllToolsBtn').onclick = () => {
     renderAllToolsModal();
@@ -2822,7 +3029,7 @@
       drawings.splice(selectedDrawingIdx, 1);
       selectedDrawingIdx = -1;
       updateSelectionBar();
-      gestureOverlay.classList.remove('interactive');
+      if (orders.length === 0) gestureOverlay.classList.remove('interactive');
       drawingsPrimitive.requestRedraw();
       saveCurrentProfile();
     }
@@ -2830,7 +3037,7 @@
   document.getElementById('deselectBtn').onclick = () => {
     selectedDrawingIdx = -1;
     updateSelectionBar();
-    gestureOverlay.classList.remove('interactive');
+    if (orders.length === 0) gestureOverlay.classList.remove('interactive');
     drawingsPrimitive.requestRedraw();
   };
 
@@ -2871,16 +3078,6 @@
   };
 
   const lotInputEl = document.getElementById('lotInput');
-  document.getElementById('lotMinus').onclick = () => {
-    lotSize = Math.max(0.01, +(lotSize - 0.05).toFixed(2));
-    lotInputEl.value = lotSize.toFixed(2);
-    drawingsPrimitive.requestRedraw(); saveCurrentProfile();
-  };
-  document.getElementById('lotPlus').onclick = () => {
-    lotSize = +(lotSize + 0.05).toFixed(2);
-    lotInputEl.value = lotSize.toFixed(2);
-    drawingsPrimitive.requestRedraw(); saveCurrentProfile();
-  };
   lotInputEl.onchange = e => {
     const v = parseFloat(e.target.value);
     if (!isNaN(v) && v >= 0.01) {
@@ -2900,7 +3097,11 @@
       const netPnl = (isBuy ? cur - o.entry : o.entry - cur) * 100 * o.lot - (commPerLot * o.lot);
       balance += netPnl;
       updateDrawdownStats();
-      history.unshift({ type: o.type, entry: o.entry, exit: cur, pnl: netPnl, lot: o.lot, reason: 'Manual', entryTime: o.entryTime, exitTime: curT });
+      history.unshift({
+        type: o.type, entry: o.entry, exit: cur, pnl: netPnl, lot: o.lot,
+        riskMoney: o.riskMoney || (o.sl ? Math.abs(o.entry - o.sl) * 100 * o.lot : 0),
+        reason: 'Manual', entryTime: o.entryTime, exitTime: curT
+      });
       return false;
     });
     updateTradeMarkers();
@@ -2912,7 +3113,7 @@
     drawings.pop();
     selectedDrawingIdx = -1;
     updateSelectionBar();
-    gestureOverlay.classList.remove('interactive');
+    if (orders.length === 0) gestureOverlay.classList.remove('interactive');
     drawingsPrimitive.requestRedraw();
     saveCurrentProfile();
   };
@@ -2923,7 +3124,7 @@
     drawings = [];
     selectedDrawingIdx = -1;
     updateSelectionBar();
-    gestureOverlay.classList.remove('interactive');
+    if (orders.length === 0) gestureOverlay.classList.remove('interactive');
     drawingsPrimitive.requestRedraw();
     saveCurrentProfile();
   };
@@ -2937,18 +3138,17 @@
     };
   });
 
-  document.getElementById('tabActive').onclick = () => {
-    activeTab = 'active';
-    document.getElementById('tabActive').classList.add('active');
-    document.getElementById('tabHistory').classList.remove('active');
+  function setBottomTab(tabName) {
+    activeTab = tabName;
+    document.getElementById('tabOverview').classList.toggle('active', tabName === 'overview');
+    document.getElementById('tabActive').classList.toggle('active', tabName === 'active');
+    document.getElementById('tabHistory').classList.toggle('active', tabName === 'history');
     updateUI();
-  };
-  document.getElementById('tabHistory').onclick = () => {
-    activeTab = 'history';
-    document.getElementById('tabHistory').classList.add('active');
-    document.getElementById('tabActive').classList.remove('active');
-    updateUI();
-  };
+  }
+
+  document.getElementById('tabOverview').onclick = () => setBottomTab('overview');
+  document.getElementById('tabActive').onclick = () => setBottomTab('active');
+  document.getElementById('tabHistory').onclick = () => setBottomTab('history');
 
   document.getElementById('csvInput').onchange = async e => {
     const files = Array.from(e.target.files);
