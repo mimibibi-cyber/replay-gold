@@ -7,6 +7,11 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="TV Replay Pro" />
   <title>Pro Charting & Replay Engine</title>
+
+  <!-- Custom Candlestick Chart App Icon (Favicon & iOS Home Screen Apple Touch Icon) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%231e222d'/%3E%3Cstop offset='100%25' stop-color='%230f172a'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='512' height='512' rx='112' fill='url(%23bg)'/%3E%3Cg stroke='rgba(255,255,255,0.06)' stroke-width='3'%3E%3Cline x1='0' y1='140' x2='512' y2='140'/%3E%3Cline x1='0' y1='256' x2='512' y2='256'/%3E%3Cline x1='0' y1='372' x2='512' y2='372'/%3E%3C/g%3E%3Cpath d='M90 360 L195 280 L285 310 L422 145' fill='none' stroke='%232962ff' stroke-width='14' stroke-linecap='round' stroke-linejoin='round' opacity='0.45'/%3E%3Cline x1='115' y1='250' x2='115' y2='410' stroke='%23089981' stroke-width='10' stroke-linecap='round'/%3E%3Crect x='95' y='285' width='40' height='90' rx='8' fill='%23089981'/%3E%3Cline x1='208' y1='210' x2='208' y2='365' stroke='%23f23645' stroke-width='10' stroke-linecap='round'/%3E%3Crect x='188' y='245' width='40' height='80' rx='8' fill='%23f23645'/%3E%3Cline x1='302' y1='165' x2='302' y2='330' stroke='%23089981' stroke-width='10' stroke-linecap='round'/%3E%3Crect x='282' y='195' width='40' height='95' rx='8' fill='%23089981'/%3E%3Cline x1='396' y1='100' x2='396' y2='265' stroke='%23089981' stroke-width='10' stroke-linecap='round'/%3E%3Crect x='376' y='130' width='40' height='100' rx='8' fill='%23089981'/%3E%3C/svg%3E" />
+  <link rel="apple-touch-icon" id="appleTouchIcon" href="" />
+
   <script src="https://unpkg.com/lightweight-charts@4.2.1/dist/lightweight-charts.standalone.production.js"></script>
   <style>
     :root {
@@ -53,14 +58,21 @@
       padding: 4px 6px; border-radius: 5px; font-size: 11px; font-weight: 500;
       display: inline-flex; align-items: center; justify-content: center; gap: 4px;
     }
-    .btn { cursor: pointer; border: none; transition: background 0.15s, transform 0.1s; }
-    .btn:active { transform: scale(0.96); }
+    .btn { cursor: pointer; border: none; transition: background 0.12s, transform 0.08s; }
+    .btn:active { transform: scale(0.95); }
     .btn:hover { opacity: 0.92; }
     .btn.active { background: var(--blue); color: #fff; }
     .btn-green { background: var(--green); color: #fff; }
     .btn-red { background: var(--red); color: #fff; }
     .btn-blue { background: var(--blue); color: #fff; }
     .btn-orange { background: #ea580c; color: #fff; }
+
+    /* Brand Symbol Badge with Mini Candlestick Icon */
+    .brand-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 12px; font-weight: 800; letter-spacing: 0.4px;
+      padding-right: 2px;
+    }
 
     /* Subbar (Hidden by default for Clean Chart, toggled via Top-Right Portfolio Button) */
     .tv-subbar {
@@ -74,28 +86,31 @@
 
     /* Workspace */
     .workspace {
-      position: relative; flex: 1; display: flex; flex-direction: column; min-height: 230px; overflow: hidden;
+      position: relative; flex: 1; display: flex; flex-direction: column; min-height: 220px; overflow: hidden;
     }
     #mainChartPane {
-      position: relative; flex: 1; width: 100%; min-height: 150px;
+      position: relative; flex: 1; width: 100%; min-height: 140px;
     }
     #gestureOverlay {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      pointer-events: none; z-index: 10;
+      pointer-events: none; z-index: 10; touch-action: none;
     }
     #gestureOverlay.interactive { pointer-events: auto; }
 
-    /* Top-Right Floating Controls: Toggle Draw Toolbar + Pending Drag Shortcut + Single Portfolio/Orders Toggle */
+    /* Top-Right Floating Controls */
     .top-right-trade-icons {
       position: absolute; top: 8px; right: 74px; z-index: 26;
       display: flex; align-items: center; gap: 5px;
     }
     .tr-icon-btn {
       height: 30px; min-width: 30px; padding: 0 7px; border-radius: 7px; border: 1px solid var(--border);
-      background: var(--glass); backdrop-filter: blur(10px); color: var(--text);
+      background: var(--glass); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      color: var(--text);
       display: flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer;
       font-size: 11px; font-weight: 600;
+      transition: background 0.12s, transform 0.08s;
     }
+    .tr-icon-btn:active { transform: scale(0.94); }
     .tr-icon-btn.active { background: var(--blue); border-color: var(--blue); color: #fff; }
     .badge-pill {
       background: var(--red); color: #fff; font-size: 9px; font-weight: 700;
@@ -103,7 +118,7 @@
     }
     .badge-pill.zero { display: none; }
 
-    /* Long-Press Context Menu (Cut & Rewind / Pending Limit-Stop) */
+    /* Long-Press Context Menu */
     .context-menu {
       position: absolute; z-index: 60;
       background: var(--glass); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
@@ -146,7 +161,7 @@
       font-weight: 600; pointer-events: none; background: var(--glass); padding: 1px 5px; border-radius: 3px;
     }
 
-    /* Draggable Floating Favorite Toolbar (Collapsible on iPhone for 100% Clear Chart) */
+    /* Draggable Floating Favorite Toolbar (Hidden by default for 100% unobstructed chart) */
     .fav-toolbar {
       position: absolute; right: 74px; top: 44px;
       background: var(--glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
@@ -163,7 +178,7 @@
       width: 30px; height: 27px; border-radius: 6px; border: none;
       background: transparent; color: var(--text);
       display: flex; align-items: center; justify-content: center; cursor: pointer;
-      transition: background 0.15s, color 0.15s;
+      transition: background 0.12s, color 0.12s;
     }
     .tool-btn:hover { background: var(--panel2); }
     .tool-btn.active { background: var(--blue); color: #fff; }
@@ -192,7 +207,7 @@
     .tf-vis-chip.on { background: var(--blue); color: #fff; border-color: var(--blue); }
 
     .point-hint {
-      position: absolute; bottom: 26px; left: 50%; transform: translateX(-50%);
+      position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
       background: var(--blue); color: #fff; padding: 4px 12px;
       border-radius: 16px; font-size: 11px; font-weight: 600; z-index: 28;
       display: none; pointer-events: none; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
@@ -200,9 +215,11 @@
     }
     .point-hint.visible { display: block; }
 
+    /* Clean Wrapped OHLC Legend (Never collides with top-right buttons) */
     .ohlc-legend {
       position: absolute; top: 6px; left: 8px; pointer-events: none; z-index: 15;
-      font-size: 11px; line-height: 1.3;
+      font-size: 10.5px; line-height: 1.35;
+      max-width: calc(100% - 185px);
     }
 
     /* Modals */
@@ -230,33 +247,53 @@
       display: flex; justify-content: space-between; align-items: center; margin-top: 6px; gap: 6px;
     }
 
-    /* Ergonomic Replay Bar for iPhone 15 Pro Max (Elevated above Home Indicator + Larger Tap Targets) */
-    .replay-bar {
-      display: flex; align-items: center; justify-content: space-between; gap: 6px;
-      padding: 7px 10px;
+    /* Two-Tier Ergonomic Replay Deck (Row 1: Full Date/Time Ribbon | Row 2: Thumb-Zone Controls) */
+    .replay-deck {
+      display: flex; flex-direction: column; gap: 6px;
+      padding: 6px 10px;
       padding-bottom: calc(env(safe-area-inset-bottom) + 14px);
       background: var(--panel); border-top: 1px solid var(--border);
       flex-shrink: 0;
     }
-    .replay-bar .btn, .replay-bar select {
-      min-height: 36px;
-      padding: 6px 9px;
-      font-size: 12px;
-      border-radius: 7px;
+    .date-ribbon-full {
+      width: 100%; min-height: 28px;
+      background: var(--panel2); border: 1px solid var(--border);
+      border-radius: 6px; padding: 4px 10px;
+      font-size: 11.5px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      font-weight: 700; letter-spacing: 0.2px; cursor: pointer;
+      white-space: nowrap;
+      transition: border-color 0.15s, background 0.15s;
     }
-    .replay-bar .step-tap-btn {
-      min-width: 44px;
+    .date-ribbon-full:active { background: var(--border); }
+    .date-ribbon-full:hover { border-color: var(--blue); }
+
+    .replay-controls-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 6px;
+      width: 100%;
+    }
+    .replay-controls-row .btn, .replay-controls-row select {
+      min-height: 36px;
+      font-size: 12.5px;
+      border-radius: 8px;
       font-weight: 700;
     }
-    .date-status-pill {
-      flex: 1; min-height: 36px; background: var(--panel2); border: 1px solid var(--border);
-      border-radius: 7px; padding: 6px 8px; font-size: 11px; font-family: monospace;
-      display: flex; align-items: center; justify-content: center; gap: 5px;
-      overflow: hidden; white-space: nowrap; font-weight: 600; cursor: pointer;
+    .replay-controls-row .play-main-btn {
+      flex: 1.25;
     }
-    .date-status-pill:hover { border-color: var(--blue); }
+    .replay-controls-row .step-tap-btn {
+      flex: 1.15;
+    }
+    .replay-controls-row .unit-select {
+      flex: 0.85;
+      text-align: center;
+    }
+    .replay-controls-row .speed-select {
+      flex: 0.85;
+      text-align: center;
+    }
 
-    /* Hidden Portfolio & Performance Bottom Sheet (Toggled via Top-Right Button) */
+    /* Hidden Portfolio & Performance Bottom Sheet */
     .bottom-sheet {
       display: none; height: 195px; background: var(--bg); border-top: 1px solid var(--border);
       flex-direction: column;
@@ -293,7 +330,17 @@
   <!-- Top Header -->
   <div class="tv-header">
     <div class="group">
-      <span style="font-size:12px; font-weight:700; letter-spacing:0.4px;">XAUUSD</span>
+      <span class="brand-badge">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+          <line x1="6" y1="5" x2="6" y2="19" stroke="#f23645" stroke-width="2" stroke-linecap="round"/>
+          <rect x="4" y="8" width="4" height="7" rx="1" fill="#f23645"/>
+          <line x1="12" y1="3" x2="12" y2="17" stroke="#089981" stroke-width="2" stroke-linecap="round"/>
+          <rect x="10" y="6" width="4" height="8" rx="1" fill="#089981"/>
+          <line x1="18" y1="2" x2="18" y2="15" stroke="#089981" stroke-width="2" stroke-linecap="round"/>
+          <rect x="16" y="4" width="4" height="8" rx="1" fill="#089981"/>
+        </svg>
+        <span>XAUUSD</span>
+      </span>
 
       <div class="group" id="tfGroup">
         <button class="btn active" data-min="1">1m</button>
@@ -323,14 +370,12 @@
       <button class="btn" id="openIndModalBtn" title="Indicators">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 17l6-6 4 4 8-8"/><path d="M17 7h4v4"/></svg>
       </button>
-      <!-- Trade Markers Default OFF so Chart Starts 100% Clean -->
       <button class="btn" id="toggleMarkersBtn" title="Show/Hide Trade Entry & Exit Arrows on Chart">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
       </button>
       <button class="btn" id="themeBtn" title="Light/Dark Theme">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
       </button>
-      <!-- Force Clear Cache & App Update Button for iOS Home Screen PWA -->
       <button class="btn" id="openCacheModalBtn" title="Clear Cache / Force App Update">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>
       </button>
@@ -391,7 +436,7 @@
   <div class="workspace">
     <!-- Top-Right Controls: Show/Hide Drawing Toolbar + Pending Order Shortcut + Portfolio Toggle -->
     <div class="top-right-trade-icons">
-      <button class="tr-icon-btn active" id="toggleDrawToolbarBtn" title="Show/Hide Drawing Toolbar">
+      <button class="tr-icon-btn" id="toggleDrawToolbarBtn" title="Show/Hide Drawing Toolbar">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/></svg>
       </button>
       <button class="tr-icon-btn" id="dragPendingToolBtn" title="Place Pending Limit/Stop Order on Chart">
@@ -405,7 +450,7 @@
 
     <!-- Long-Press Context Menu (Cut & Rewind / Pending Limit-Stop Orders) -->
     <div class="context-menu" id="chartContextMenu">
-      <div class="ctx-header" id="ctxInfoText">17/11 21:25 @ 3863.500</div>
+      <div class="ctx-header" id="ctxInfoText">17/11/2026 21:25 @ 3863.500</div>
       <button class="ctx-item" id="ctxCutRewindBtn" style="color:#38bdf8;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 4v16"/><path d="M8 9l-3 3 3 3"/><path d="M16 9l3 3-3 3"/></svg>
         <span>Cut &amp; Rewind Here</span>
@@ -469,8 +514,8 @@
     <!-- Point-by-Point Guidance Pill -->
     <div class="point-hint" id="pointHint">Select Point 1</div>
 
-    <!-- Draggable Floating Favorite Toolbar -->
-    <div class="fav-toolbar" id="favToolbar">
+    <!-- Draggable Floating Favorite Toolbar (Collapsed by default for clean chart) -->
+    <div class="fav-toolbar collapsed" id="favToolbar">
       <div class="fav-drag-handle" id="favDragHandle">
         <svg width="14" height="10" viewBox="0 0 24 12" fill="currentColor"><circle cx="8" cy="3" r="1.5"/><circle cx="16" cy="3" r="1.5"/><circle cx="8" cy="9" r="1.5"/><circle cx="16" cy="9" r="1.5"/></svg>
       </div>
@@ -504,20 +549,24 @@
     <div class="ind-pane" id="paneSTOCH"><div class="ind-label" id="labelSTOCH" style="color:#f59e0b;">Stochastic (14, 3, 3)</div></div>
   </div>
 
-  <!-- Ergonomic Replay Bar for iPhone 15 Pro Max (Elevated above Home Indicator) -->
-  <div class="replay-bar">
-    <div class="group" style="gap:5px;">
-      <button class="btn btn-green" id="playBtn" style="min-width:64px;">
+  <!-- Two-Tier Ergonomic Replay Deck for iPhone 15 Pro Max -->
+  <div class="replay-deck">
+    <!-- Row 1: Full-Width Date & Time Ribbon (Shows e.g. 12/04/2026 16:32 | End 06/12/2026 in full) -->
+    <div class="date-ribbon-full" id="dateTimeStatusText" title="Tap to Go To Date & Time">--/--/---- --:-- | End --/--/----</div>
+
+    <!-- Row 2: Wide Thumb-Zone Playback & Step Controls -->
+    <div class="replay-controls-row">
+      <button class="btn btn-green play-main-btn" id="playBtn">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
         <span>Play</span>
       </button>
 
       <button class="btn step-tap-btn" id="stepBackBtn" title="Step Backward">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="5" x2="5" y2="19"/><polygon points="19 4 9 12 19 20 19 4"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="5" y1="5" x2="5" y2="19"/><polygon points="19 4 9 12 19 20 19 4"/></svg>
         <span>-1</span>
       </button>
 
-      <select id="stepUnitSelect" title="Step Interval">
+      <select id="stepUnitSelect" class="unit-select" title="Step Interval">
         <option value="1" selected>1m</option>
         <option value="5">5m</option>
         <option value="15">15m</option>
@@ -528,18 +577,16 @@
 
       <button class="btn btn-blue step-tap-btn" id="stepBtn" title="Step Forward">
         <span>+1</span>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
       </button>
+
+      <select id="speedSelect" class="speed-select" title="Playback Speed">
+        <option value="800">0.5x</option>
+        <option value="250" selected>1x</option>
+        <option value="100">3x</option>
+        <option value="30">10x</option>
+      </select>
     </div>
-
-    <div class="date-status-pill" id="dateTimeStatusText" title="Tap to Go To Date & Time">--/-- --:--</div>
-
-    <select id="speedSelect">
-      <option value="800">0.5x</option>
-      <option value="250" selected>1x</option>
-      <option value="100">3x</option>
-      <option value="30">10x</option>
-    </select>
   </div>
 
   <!-- Hidden Portfolio & Performance Bottom Sheet (Toggled via Top-Right Button) -->
@@ -625,7 +672,7 @@
     </div>
   </div>
 
-  <!-- Modal 4: Clear Cache & Force App Update (For iOS Home Screen Web App) -->
+  <!-- Modal 4: Clear Cache & Force App Update -->
   <div class="modal-backdrop" id="cacheModal">
     <div class="modal-card" style="max-width:340px;">
       <div class="modal-header">
@@ -650,6 +697,52 @@
 
 <script>
 (() => {
+  // Generate High-Res PNG Apple Touch Icon (180x180) dynamically for iOS Home Screen
+  (function generateAppleTouchIcon() {
+    try {
+      const c = document.createElement('canvas');
+      c.width = 180; c.height = 180;
+      const ctx = c.getContext('2d');
+      const grad = ctx.createLinearGradient(0, 0, 180, 180);
+      grad.addColorStop(0, '#1e222d');
+      grad.addColorStop(1, '#0f172a');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 180, 180);
+
+      // Subtle Grid
+      ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+      ctx.lineWidth = 1.5;
+      [48, 90, 132].forEach(y => {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(180, y); ctx.stroke();
+      });
+
+      // Trend Curve
+      ctx.strokeStyle = 'rgba(41, 98, 255, 0.5)';
+      ctx.lineWidth = 5;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(28, 128); ctx.lineTo(68, 98); ctx.lineTo(104, 110); ctx.lineTo(152, 48);
+      ctx.stroke();
+
+      // Candlesticks
+      const candles = [
+        { x: 40, wickTop: 88, wickBot: 145, bodyTop: 100, bodyH: 32, col: '#089981' },
+        { x: 73, wickTop: 72, wickBot: 128, bodyTop: 85, bodyH: 28, col: '#f23645' },
+        { x: 106, wickTop: 56, wickBot: 116, bodyTop: 68, bodyH: 34, col: '#089981' },
+        { x: 139, wickTop: 34, wickBot: 94, bodyTop: 45, bodyH: 36, col: '#089981' }
+      ];
+      candles.forEach(cd => {
+        ctx.strokeStyle = cd.col;
+        ctx.lineWidth = 3.5;
+        ctx.beginPath(); ctx.moveTo(cd.x, cd.wickTop); ctx.lineTo(cd.x, cd.wickBot); ctx.stroke();
+        ctx.fillStyle = cd.col;
+        ctx.beginPath(); ctx.roundRect(cd.x - 7, cd.bodyTop, 14, cd.bodyH, 3); ctx.fill();
+      });
+
+      document.getElementById('appleTouchIcon').href = c.toDataURL('image/png');
+    } catch (e) {}
+  })();
+
   const mainPane = document.getElementById('mainChartPane');
   const gestureOverlay = document.getElementById('gestureOverlay');
   const magBox = document.getElementById('magnifierBox');
@@ -657,7 +750,6 @@
   const mCtx = magCanvas.getContext('2d');
   const ctxMenu = document.getElementById('chartContextMenu');
 
-  // รองรับไฟล์ 202601 ถึง 202611 อัตโนมัติ (หากไฟล์ไหนยังไม่มีบน GitHub ระบบจะข้ามโดยไม่ Error)
   const GITHUB_DATA_FILES = [
     '202601.csv', '202602.csv', '202603.csv',
     '202604.csv', '202605.csv', '202606.csv', '202607.csv',
@@ -718,7 +810,7 @@
       layout: { background: { type: 'solid', color: '#131722' }, textColor: '#d1d4dc', fontSize: 10 },
       grid: { vertLines: { color: 'rgba(255,255,255,0.05)' }, horzLines: { color: 'rgba(255,255,255,0.05)' } },
       crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
-      localization: { timeFormatter: (utcSec) => formatTHTime(utcSec) },
+      localization: { timeFormatter: (utcSec) => formatTHTimeFull(utcSec) },
       rightPriceScale: { borderColor: '#363a45', autoScale: true, minimumWidth: 66 },
       timeScale: {
         borderColor: '#363a45',
@@ -780,7 +872,7 @@
   });
 
   // =========================================================================
-  // LOGICAL BAR-INDEX HELPERS & NATIVE SERIES PRIMITIVE
+  // LOGICAL BAR-INDEX HELPERS & 60FPS RAF THROTTLED PRIMITIVE
   // =========================================================================
   let drawings = [];
   let selectedDrawingIdx = -1;
@@ -861,7 +953,6 @@
     ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
   }
 
-  // Interactive Order Tag with Break-Even (BE) & Partial Close (50%) Action Buttons on Chart
   function drawInteractiveOrderTag(ctx, W, price, text, color, dashed, actions = {}) {
     const y = Math.round(priceToY(price)) + 0.5;
     if (y < -16 || y > 2000) return null;
@@ -940,10 +1031,20 @@
   let orderTagHitboxes = [];
 
   class NativeDrawingsPrimitive {
-    constructor() { this._requestUpdate = null; }
+    constructor() {
+      this._requestUpdate = null;
+      this._rafScheduled = false;
+    }
     attached({ requestUpdate }) { this._requestUpdate = requestUpdate; }
     detached() { this._requestUpdate = null; }
-    requestRedraw() { if (this._requestUpdate) this._requestUpdate(); }
+    requestRedraw() {
+      if (!this._requestUpdate || this._rafScheduled) return;
+      this._rafScheduled = true;
+      requestAnimationFrame(() => {
+        this._rafScheduled = false;
+        if (this._requestUpdate) this._requestUpdate();
+      });
+    }
     paneViews() {
       return [{
         zOrder: () => 'top',
@@ -1114,7 +1215,7 @@
                   const tagX = right + 4;
                   ctx.font = '600 9px sans-serif';
                   ctx.fillStyle = '#089981'; ctx.fillText(`TP +$${tpMoney} (${calcLot}L)`, tagX, yTP + 3);
-                  ctx.fillStyle = isLightTheme ? '#131722' : '#d1d4dc'; ctx.fillText(`RR 1:${rr} [${formatTHTime(d.t1).split(' ')[1]}]`, tagX, yEntry + 3);
+                  ctx.fillStyle = isLightTheme ? '#131722' : '#d1d4dc'; ctx.fillText(`RR 1:${rr} [${formatTHTimeShort(d.t1).split(' ')[1]}]`, tagX, yEntry + 3);
                   ctx.fillStyle = '#f23645'; ctx.fillText(`SL -$${slMoney}`, tagX, ySL + 3);
 
                   if (isSelected) {
@@ -1138,7 +1239,7 @@
                   const pnl = (isBuy ? curClose - o.entry : o.entry - curClose) * 100 * o.lot;
                   entryLabel += ` (${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)})`;
                 } else if (o.activateTime) {
-                  entryLabel += ` [>=${formatTHTime(o.activateTime).split(' ')[1]}]`;
+                  entryLabel += ` [>=${formatTHTimeShort(o.activateTime).split(' ')[1]}]`;
                 }
 
                 const eBox = drawInteractiveOrderTag(ctx, W, o.entry, entryLabel, entryColor, !o.triggered, {
@@ -1193,7 +1294,7 @@
   let profiles = {};
   let activeProfileId = 'Strategy A (SMC)';
   let current1mIndex = 1500;
-  let showTradeMarkers = false; // Default OFF: Clean Chart without history arrows on startup
+  let showTradeMarkers = false;
 
   let indConfig = {
     vol: false, rsi: false, rsiPeriod: 14, rsiOB: 70, rsiOS: 30,
@@ -1353,15 +1454,13 @@
         if (res.ok) {
           combined = combined.concat(parseHistDataCSV(await res.text()));
         }
-      } catch (e) {
-        // Missing CSV files (e.g., 202601-202603 not uploaded yet) are safely skipped without error
-      }
+      } catch (e) {}
     }
     return combined;
   }
 
   async function initMasterDatabase(forceFetch = false) {
-    document.getElementById('dateTimeStatusText').textContent = 'Loading...';
+    document.getElementById('dateTimeStatusText').textContent = 'Loading Market Data...';
     const loadedFromCache = forceFetch ? false : await loadMasterFromIDB();
     if (!loadedFromCache) {
       const combined = await fetchAllServerCSVFiles();
@@ -1574,14 +1673,33 @@
     resizeAllCharts();
   }
 
+  // Formatters: Full DD/MM/YYYY HH:MM and DD/MM/YYYY
+  function formatTHTimeFull(utcSec) {
+    const d = new Date((utcSec + 7 * 3600) * 1000);
+    const pad = n => String(n).padStart(2, '0');
+    return `${pad(d.getUTCDate())}/${pad(d.getUTCMonth() + 1)}/${d.getUTCFullYear()} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
+  }
+
+  function formatTHDateFull(utcSec) {
+    const d = new Date((utcSec + 7 * 3600) * 1000);
+    const pad = n => String(n).padStart(2, '0');
+    return `${pad(d.getUTCDate())}/${pad(d.getUTCMonth() + 1)}/${d.getUTCFullYear()}`;
+  }
+
+  function formatTHTimeShort(utcSec) {
+    const d = new Date((utcSec + 7 * 3600) * 1000);
+    const pad = n => String(n).padStart(2, '0');
+    return `${pad(d.getUTCDate())}/${pad(d.getUTCMonth() + 1)} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
+  }
+
   function updateReplayDateTimePill() {
     if (m1Count === 0) {
       document.getElementById('dateTimeStatusText').textContent = 'No Data';
       return;
     }
-    const curStr = formatTHTime(m1Time[current1mIndex]);
-    const endStr = formatTHTime(m1Time[m1Count - 1]);
-    document.getElementById('dateTimeStatusText').textContent = `${curStr} | End ${endStr}`;
+    const curFull = formatTHTimeFull(m1Time[current1mIndex]);
+    const endDateFull = formatTHDateFull(m1Time[m1Count - 1]);
+    document.getElementById('dateTimeStatusText').textContent = `${curFull}  |  End ${endDateFull}`;
   }
 
   function rebuildAllCharts(fitView = false) {
@@ -1662,15 +1780,9 @@
     document.getElementById('ohlcLegend').innerHTML = `
       <div style="font-weight:700;">XAUUSD • ${timeframeMin >= 60 ? (timeframeMin / 60) + 'H' : timeframeMin + 'm'} [${activeProfileId}]</div>
       <div style="color:${col}; font-family:monospace; font-weight:600;">
-        O:${bar.open.toFixed(3)} H:${bar.high.toFixed(3)} L:${bar.low.toFixed(3)} C:${bar.close.toFixed(3)} (${chg >= 0 ? '+' : ''}${pct}%)
+        O:${bar.open.toFixed(2)} H:${bar.high.toFixed(2)} L:${bar.low.toFixed(2)} C:${bar.close.toFixed(2)} (${chg >= 0 ? '+' : ''}${pct}%)
       </div>
     `;
-  }
-
-  function formatTHTime(utcSec) {
-    const d = new Date((utcSec + 7 * 3600) * 1000);
-    const pad = n => String(n).padStart(2, '0');
-    return `${pad(d.getUTCDate())}/${pad(d.getUTCMonth() + 1)} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
   }
 
   function updateTradeMarkers() {
@@ -1718,13 +1830,11 @@
   const portfolioSubbar = document.getElementById('portfolioSubbar');
   const portfolioBottomSheet = document.getElementById('portfolioBottomSheet');
 
-  // Toggle Floating Drawing Toolbar (Useful on iPhone to see 100% of candles)
   toggleDrawToolbarBtn.onclick = () => {
     const isCollapsed = favToolbar.classList.toggle('collapsed');
     toggleDrawToolbarBtn.classList.toggle('active', !isCollapsed);
   };
 
-  // Single Toggle Button at Top-Right: Shows/Hides Portfolio Subbar + Bottom Sheet (Clean Chart By Default)
   togglePortfolioBtn.onclick = () => {
     const isVisible = portfolioBottomSheet.classList.toggle('visible');
     portfolioSubbar.classList.toggle('visible', isVisible);
@@ -1732,7 +1842,6 @@
     resizeAllCharts();
   };
 
-  // Top-Right Pending Order Shortcut Button (Tap or Drag on Chart)
   dragPendingBtn.onclick = () => {
     pendingDragMode = !pendingDragMode;
     dragPendingBtn.classList.toggle('active', pendingDragMode);
@@ -1747,7 +1856,6 @@
     }
   };
 
-  // Cache & Force App Update Modal Handlers
   document.getElementById('openCacheModalBtn').onclick = () => document.getElementById('cacheModal').classList.add('open');
   document.getElementById('closeCacheModalBtn').onclick = () => document.getElementById('cacheModal').classList.remove('open');
 
@@ -1774,7 +1882,6 @@
     alert('Reloaded CSV database from server.');
   };
 
-  // Break-Even Automation: Moves SL to Entry Price + Commission Offset
   function moveOrderToBreakEven(orderIdx) {
     const o = orders[orderIdx];
     if (!o || !o.triggered) return;
@@ -1787,7 +1894,6 @@
     saveCurrentProfile();
   }
 
-  // Partial Close 50%: Closes half of the active position and realizes proportional PnL & Commission
   function partialCloseOrder50(orderIdx) {
     const o = orders[orderIdx];
     if (!o || !o.triggered || m1Count === 0) return;
@@ -1867,7 +1973,7 @@
     saveCurrentProfile();
   };
 
-  // Long-Press Detection on Chart (Cut & Rewind or Place Pending Limit/Stop)
+  // Long-Press Detection on Chart
   let longPressTimer = null;
   let longPressTarget = null;
   let touchStartXY = { x: 0, y: 0 };
@@ -1881,7 +1987,7 @@
     longPressTarget = { time: targetTime, price: targetPrice };
     const curPrice = m1Close[current1mIndex];
 
-    document.getElementById('ctxInfoText').textContent = `${formatTHTime(targetTime)}  @  ${targetPrice.toFixed(3)}`;
+    document.getElementById('ctxInfoText').textContent = `${formatTHTimeFull(targetTime)} @ ${targetPrice.toFixed(3)}`;
     const buyType = targetPrice <= curPrice ? 'BUY LIMIT' : 'BUY STOP';
     const sellType = targetPrice >= curPrice ? 'SELL LIMIT' : 'SELL STOP';
     document.getElementById('ctxBuyPendingLabel').textContent = `${buyType} @ ${targetPrice.toFixed(2)}`;
@@ -2194,7 +2300,7 @@
     mCtx.font = 'bold 9px monospace';
     mCtx.textAlign = 'center';
     mCtx.fillText(targetPrice.toFixed(3), mid, size - 13);
-    mCtx.fillText(formatTHTime(targetTime).split(' ')[1], mid, size - 3);
+    mCtx.fillText(formatTHTimeShort(targetTime).split(' ')[1], mid, size - 3);
   }
 
   // Hit Testing
@@ -2762,7 +2868,7 @@
     isPlaying = true;
     const btn = document.getElementById('playBtn');
     btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg><span>Pause</span>';
-    btn.className = 'btn btn-orange';
+    btn.className = 'btn btn-orange play-main-btn';
     playTimer = setInterval(() => stepForward(), speedMs);
   }
   function stopPlay() {
@@ -2770,7 +2876,7 @@
     clearInterval(playTimer);
     const btn = document.getElementById('playBtn');
     btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg><span>Play</span>';
-    btn.className = 'btn btn-green';
+    btn.className = 'btn btn-green play-main-btn';
   }
 
   function updateDrawdownStats() {
@@ -2779,7 +2885,6 @@
     if (dd > maxDrawdownPct) maxDrawdownPct = dd;
   }
 
-  // Performance Analytics Computation (TradingView Strategy Tester Style)
   function computePerformanceMetrics() {
     const netProfit = balance - initialBalance;
     const netProfitPct = initialBalance > 0 ? (netProfit / initialBalance) * 100 : 0;
@@ -2879,7 +2984,7 @@
       list.innerHTML = orders.map((o, idx) => {
         const isBuy = o.type.includes('BUY');
         const pnl = o.triggered ? (isBuy ? curPrice - o.entry : o.entry - curPrice) * 100 * o.lot : 0;
-        const waitTxt = o.activateTime ? `WAIT >= ${formatTHTime(o.activateTime).split(' ')[1]}` : 'PENDING';
+        const waitTxt = o.activateTime ? `WAIT >= ${formatTHTimeShort(o.activateTime).split(' ')[1]}` : 'PENDING';
         return `<div class="order-row">
           <div>
             <b style="color:${isBuy ? 'var(--blue)' : 'var(--purple)'}">${o.type}</b> ${o.lot.toFixed(2)} @ ${o.entry.toFixed(3)}
