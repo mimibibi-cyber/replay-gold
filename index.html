@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="TV Replay Pro" />
@@ -44,7 +44,7 @@
     .tv-header {
       display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px;
       padding: 5px 8px; background: var(--panel); border-bottom: 1px solid var(--border);
-      padding-top: max(5px, env(safe-area-inset-top));
+      padding-top: max(6px, env(safe-area-inset-top));
       flex-shrink: 0;
     }
     .group { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
@@ -85,13 +85,13 @@
     }
     #gestureOverlay.interactive { pointer-events: auto; }
 
-    /* Top-Right Floating Controls: Pending Drag Shortcut + Single Portfolio/Orders Toggle */
+    /* Top-Right Floating Controls: Toggle Draw Toolbar + Pending Drag Shortcut + Single Portfolio/Orders Toggle */
     .top-right-trade-icons {
       position: absolute; top: 8px; right: 74px; z-index: 26;
       display: flex; align-items: center; gap: 5px;
     }
     .tr-icon-btn {
-      height: 28px; min-width: 30px; padding: 0 7px; border-radius: 6px; border: 1px solid var(--border);
+      height: 30px; min-width: 30px; padding: 0 7px; border-radius: 7px; border: 1px solid var(--border);
       background: var(--glass); backdrop-filter: blur(10px); color: var(--text);
       display: flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer;
       font-size: 11px; font-weight: 600;
@@ -146,7 +146,7 @@
       font-weight: 600; pointer-events: none; background: var(--glass); padding: 1px 5px; border-radius: 3px;
     }
 
-    /* Draggable Floating Favorite Toolbar */
+    /* Draggable Floating Favorite Toolbar (Collapsible on iPhone for 100% Clear Chart) */
     .fav-toolbar {
       position: absolute; right: 74px; top: 44px;
       background: var(--glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
@@ -154,6 +154,7 @@
       border-radius: 10px; padding: 4px; display: flex; flex-direction: column; gap: 3px;
       box-shadow: 0 8px 24px rgba(0,0,0,0.32); z-index: 30; touch-action: none;
     }
+    .fav-toolbar.collapsed { display: none; }
     .fav-drag-handle {
       display: flex; justify-content: center; align-items: center; color: var(--muted); cursor: grab;
       padding: 3px 0; border-bottom: 1px solid var(--border);
@@ -229,16 +230,27 @@
       display: flex; justify-content: space-between; align-items: center; margin-top: 6px; gap: 6px;
     }
 
-    /* Clean Replay Bar (Date & Time Display + Go To Date Trigger) */
+    /* Ergonomic Replay Bar for iPhone 15 Pro Max (Elevated above Home Indicator + Larger Tap Targets) */
     .replay-bar {
-      display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 5px 8px;
+      display: flex; align-items: center; justify-content: space-between; gap: 6px;
+      padding: 7px 10px;
+      padding-bottom: calc(env(safe-area-inset-bottom) + 14px);
       background: var(--panel); border-top: 1px solid var(--border);
-      padding-bottom: max(5px, env(safe-area-inset-bottom));
       flex-shrink: 0;
     }
+    .replay-bar .btn, .replay-bar select {
+      min-height: 36px;
+      padding: 6px 9px;
+      font-size: 12px;
+      border-radius: 7px;
+    }
+    .replay-bar .step-tap-btn {
+      min-width: 44px;
+      font-weight: 700;
+    }
     .date-status-pill {
-      flex: 1; background: var(--panel2); border: 1px solid var(--border);
-      border-radius: 5px; padding: 4px 8px; font-size: 11px; font-family: monospace;
+      flex: 1; min-height: 36px; background: var(--panel2); border: 1px solid var(--border);
+      border-radius: 7px; padding: 6px 8px; font-size: 11px; font-family: monospace;
       display: flex; align-items: center; justify-content: center; gap: 5px;
       overflow: hidden; white-space: nowrap; font-weight: 600; cursor: pointer;
     }
@@ -246,14 +258,14 @@
 
     /* Hidden Portfolio & Performance Bottom Sheet (Toggled via Top-Right Button) */
     .bottom-sheet {
-      display: none; height: 185px; background: var(--bg); border-top: 1px solid var(--border);
-      flex-direction: column; padding-bottom: env(safe-area-inset-bottom);
+      display: none; height: 195px; background: var(--bg); border-top: 1px solid var(--border);
+      flex-direction: column;
       flex-shrink: 0;
     }
     .bottom-sheet.visible { display: flex; }
     .tabs { display: flex; background: var(--panel); border-bottom: 1px solid var(--border); }
     .tab {
-      flex: 1; text-align: center; padding: 6px 4px; font-size: 11px;
+      flex: 1; text-align: center; padding: 7px 4px; font-size: 11px;
       font-weight: 600; color: var(--muted); cursor: pointer;
     }
     .tab.active { color: var(--text); border-bottom: 2px solid var(--blue); }
@@ -294,7 +306,7 @@
     </div>
 
     <div class="group">
-      <input type="date" id="startDateInput" min="2026-04-01" max="2026-11-30" value="2026-11-02" />
+      <input type="date" id="startDateInput" min="2026-01-01" max="2026-11-30" value="2026-11-02" />
       <button class="btn" id="openGoToModalBtn" title="Go To Date & Time">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="15" r="1.5" fill="currentColor"/></svg>
       </button>
@@ -311,11 +323,16 @@
       <button class="btn" id="openIndModalBtn" title="Indicators">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 17l6-6 4 4 8-8"/><path d="M17 7h4v4"/></svg>
       </button>
-      <button class="btn active" id="toggleMarkersBtn" title="Toggle Trade Markers">
+      <!-- Trade Markers Default OFF so Chart Starts 100% Clean -->
+      <button class="btn" id="toggleMarkersBtn" title="Show/Hide Trade Entry & Exit Arrows on Chart">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
       </button>
       <button class="btn" id="themeBtn" title="Light/Dark Theme">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      </button>
+      <!-- Force Clear Cache & App Update Button for iOS Home Screen PWA -->
+      <button class="btn" id="openCacheModalBtn" title="Clear Cache / Force App Update">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>
       </button>
       <label class="btn btn-blue" style="cursor:pointer;" title="Upload CSV">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -372,8 +389,11 @@
 
   <!-- Workspace -->
   <div class="workspace">
-    <!-- Top-Right Controls: Pending Order Shortcut + Single Portfolio/Orders Toggle -->
+    <!-- Top-Right Controls: Show/Hide Drawing Toolbar + Pending Order Shortcut + Portfolio Toggle -->
     <div class="top-right-trade-icons">
+      <button class="tr-icon-btn active" id="toggleDrawToolbarBtn" title="Show/Hide Drawing Toolbar">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/></svg>
+      </button>
       <button class="tr-icon-btn" id="dragPendingToolBtn" title="Place Pending Limit/Stop Order on Chart">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><polyline points="12 8 12 12 15 14"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/></svg>
       </button>
@@ -484,16 +504,16 @@
     <div class="ind-pane" id="paneSTOCH"><div class="ind-label" id="labelSTOCH" style="color:#f59e0b;">Stochastic (14, 3, 3)</div></div>
   </div>
 
-  <!-- Minimal Replay Bar (Date & Time Display - Tap to Open Go To Date) -->
+  <!-- Ergonomic Replay Bar for iPhone 15 Pro Max (Elevated above Home Indicator) -->
   <div class="replay-bar">
-    <div class="group" style="gap:4px;">
-      <button class="btn btn-green" id="playBtn" style="width:58px;">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    <div class="group" style="gap:5px;">
+      <button class="btn btn-green" id="playBtn" style="min-width:64px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
         <span>Play</span>
       </button>
 
-      <button class="btn" id="stepBackBtn" title="Step Backward">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="5" x2="5" y2="19"/><polygon points="19 4 9 12 19 20 19 4"/></svg>
+      <button class="btn step-tap-btn" id="stepBackBtn" title="Step Backward">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="5" x2="5" y2="19"/><polygon points="19 4 9 12 19 20 19 4"/></svg>
         <span>-1</span>
       </button>
 
@@ -506,9 +526,9 @@
         <option value="1440">1D</option>
       </select>
 
-      <button class="btn btn-blue" id="stepBtn" title="Step Forward">
+      <button class="btn btn-blue step-tap-btn" id="stepBtn" title="Step Forward">
         <span>+1</span>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
       </button>
     </div>
 
@@ -605,6 +625,29 @@
     </div>
   </div>
 
+  <!-- Modal 4: Clear Cache & Force App Update (For iOS Home Screen Web App) -->
+  <div class="modal-backdrop" id="cacheModal">
+    <div class="modal-card" style="max-width:340px;">
+      <div class="modal-header">
+        <b>App Update &amp; Cache Manager</b>
+        <button class="btn" id="closeCacheModalBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:9px; font-size:12px;">
+        <div style="color:var(--muted); font-size:11px; line-height:1.4;">
+          สำหรับแอปบนหน้าโฮม iPhone หากอัปเดตโค้ดใหม่แล้วยังค้างหน้าเดิม ให้กดปุ่มด้านล่างเพื่อบังคับโหลดเวอร์ชันล่าสุด:
+        </div>
+        <button class="btn btn-blue" id="forceReloadAppBtn" style="padding:9px; font-weight:600;">
+          1. Force Update App UI (เก็บข้อมูลเทรดและเส้นวาดไว้)
+        </button>
+        <button class="btn btn-orange" id="reloadCsvMasterBtn" style="padding:9px; font-weight:600;">
+          2. Reload CSV Data from Server (ดึงไฟล์ 202601-202611 ใหม่)
+        </button>
+      </div>
+    </div>
+  </div>
+
 <script>
 (() => {
   const mainPane = document.getElementById('mainChartPane');
@@ -614,7 +657,9 @@
   const mCtx = magCanvas.getContext('2d');
   const ctxMenu = document.getElementById('chartContextMenu');
 
+  // รองรับไฟล์ 202601 ถึง 202611 อัตโนมัติ (หากไฟล์ไหนยังไม่มีบน GitHub ระบบจะข้ามโดยไม่ Error)
   const GITHUB_DATA_FILES = [
+    '202601.csv', '202602.csv', '202603.csv',
     '202604.csv', '202605.csv', '202606.csv', '202607.csv',
     '202608.csv', '202609.csv', '202610.csv', '202611.csv'
   ];
@@ -1096,7 +1141,6 @@
                   entryLabel += ` [>=${formatTHTime(o.activateTime).split(' ')[1]}]`;
                 }
 
-                // Active orders show BE (Break-Even) and 50% (Partial Close) buttons directly on the chart tag
                 const eBox = drawInteractiveOrderTag(ctx, W, o.entry, entryLabel, entryColor, !o.triggered, {
                   showBE: o.triggered,
                   showHalf: o.triggered && o.lot >= 0.02,
@@ -1149,7 +1193,7 @@
   let profiles = {};
   let activeProfileId = 'Strategy A (SMC)';
   let current1mIndex = 1500;
-  let showTradeMarkers = true;
+  let showTradeMarkers = false; // Default OFF: Clean Chart without history arrows on startup
 
   let indConfig = {
     vol: false, rsi: false, rsiPeriod: 14, rsiOB: 70, rsiOS: 30,
@@ -1188,6 +1232,19 @@
       const tx = db.transaction(IDB_STORE, 'readwrite');
       tx.objectStore(IDB_STORE).put({ m1Time, m1Open, m1High, m1Low, m1Close, m1Vol }, 'xauusd_master');
     } catch (e) {}
+  }
+
+  async function clearMasterIDB() {
+    const db = await openMasterIDB();
+    if (!db) return;
+    return new Promise((resolve) => {
+      try {
+        const tx = db.transaction(IDB_STORE, 'readwrite');
+        tx.objectStore(IDB_STORE).delete('xauusd_master');
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => resolve(false);
+      } catch (e) { resolve(false); }
+    });
   }
 
   async function loadMasterFromIDB() {
@@ -1288,17 +1345,26 @@
     saveMasterToIDB();
   }
 
-  async function initMasterDatabase() {
-    document.getElementById('dateTimeStatusText').textContent = 'Loading...';
-    const loadedFromCache = await loadMasterFromIDB();
-    if (!loadedFromCache) {
-      let combined = [];
-      for (const f of GITHUB_DATA_FILES) {
-        try {
-          const res = await fetch(`./${f}`);
-          if (res.ok) combined = combined.concat(parseHistDataCSV(await res.text()));
-        } catch (e) {}
+  async function fetchAllServerCSVFiles() {
+    let combined = [];
+    for (const f of GITHUB_DATA_FILES) {
+      try {
+        const res = await fetch(`./${f}?t=${Date.now()}`, { cache: 'no-store' });
+        if (res.ok) {
+          combined = combined.concat(parseHistDataCSV(await res.text()));
+        }
+      } catch (e) {
+        // Missing CSV files (e.g., 202601-202603 not uploaded yet) are safely skipped without error
       }
+    }
+    return combined;
+  }
+
+  async function initMasterDatabase(forceFetch = false) {
+    document.getElementById('dateTimeStatusText').textContent = 'Loading...';
+    const loadedFromCache = forceFetch ? false : await loadMasterFromIDB();
+    if (!loadedFromCache) {
+      const combined = await fetchAllServerCSVFiles();
       if (combined.length > 50) loadMasterRows(combined);
     }
 
@@ -1515,7 +1581,7 @@
     }
     const curStr = formatTHTime(m1Time[current1mIndex]);
     const endStr = formatTHTime(m1Time[m1Count - 1]);
-    document.getElementById('dateTimeStatusText').textContent = `${curStr}  |  End ${endStr}`;
+    document.getElementById('dateTimeStatusText').textContent = `${curStr} | End ${endStr}`;
   }
 
   function rebuildAllCharts(fitView = false) {
@@ -1643,12 +1709,20 @@
   }
 
   // =========================================================================
-  // Top-Right Portfolio Panel Toggle, Pending Shortcut, BE & Partial Close
+  // Top-Right Toggles: Drawing Toolbar, Pending Shortcut, Portfolio, Cache Modal
   // =========================================================================
+  const toggleDrawToolbarBtn = document.getElementById('toggleDrawToolbarBtn');
+  const favToolbar = document.getElementById('favToolbar');
   const dragPendingBtn = document.getElementById('dragPendingToolBtn');
   const togglePortfolioBtn = document.getElementById('togglePortfolioBtn');
   const portfolioSubbar = document.getElementById('portfolioSubbar');
   const portfolioBottomSheet = document.getElementById('portfolioBottomSheet');
+
+  // Toggle Floating Drawing Toolbar (Useful on iPhone to see 100% of candles)
+  toggleDrawToolbarBtn.onclick = () => {
+    const isCollapsed = favToolbar.classList.toggle('collapsed');
+    toggleDrawToolbarBtn.classList.toggle('active', !isCollapsed);
+  };
 
   // Single Toggle Button at Top-Right: Shows/Hides Portfolio Subbar + Bottom Sheet (Clean Chart By Default)
   togglePortfolioBtn.onclick = () => {
@@ -1673,13 +1747,39 @@
     }
   };
 
+  // Cache & Force App Update Modal Handlers
+  document.getElementById('openCacheModalBtn').onclick = () => document.getElementById('cacheModal').classList.add('open');
+  document.getElementById('closeCacheModalBtn').onclick = () => document.getElementById('cacheModal').classList.remove('open');
+
+  document.getElementById('forceReloadAppBtn').onclick = async () => {
+    saveCurrentProfile();
+    try {
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map(k => caches.delete(k)));
+      }
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r => r.unregister()));
+      }
+    } catch (e) {}
+    const baseUrl = window.location.href.split('?')[0];
+    window.location.replace(`${baseUrl}?v=${Date.now()}`);
+  };
+
+  document.getElementById('reloadCsvMasterBtn').onclick = async () => {
+    document.getElementById('cacheModal').classList.remove('open');
+    await clearMasterIDB();
+    await initMasterDatabase(true);
+    alert('Reloaded CSV database from server.');
+  };
+
   // Break-Even Automation: Moves SL to Entry Price + Commission Offset
   function moveOrderToBreakEven(orderIdx) {
     const o = orders[orderIdx];
     if (!o || !o.triggered) return;
     const isBuy = o.type.includes('BUY');
     const commPerLot = parseFloat(document.getElementById('commInput').value) || 0;
-    // 1.0 price move on XAUUSD = $100 per 1.00 lot -> commission price offset = commPerLot / 100
     const commPriceOffset = commPerLot / 100;
     o.sl = isBuy ? +(o.entry + commPriceOffset).toFixed(3) : +(o.entry - commPriceOffset).toFixed(3);
     drawingsPrimitive.requestRedraw();
@@ -1751,7 +1851,6 @@
     if (!datePart || !timePart) return;
     const [y, m, d] = datePart.split('-').map(Number);
     const [hh, mm] = timePart.split(':').map(Number);
-    // Input is TH time (UTC+7), convert to UTC timestamp
     const targetUtcSec = Math.floor(Date.UTC(y, m - 1, d, hh - 7, mm, 0) / 1000);
 
     stopPlay();
@@ -2034,7 +2133,6 @@
   }
 
   // Draggable Favorite Toolbar
-  const favToolbar = document.getElementById('favToolbar');
   const favHandle = document.getElementById('favDragHandle');
   let isDraggingToolbar = false, tbStart = { x: 0, y: 0, left: 0, top: 0 };
 
@@ -2663,7 +2761,7 @@
     if (isPlaying) return;
     isPlaying = true;
     const btn = document.getElementById('playBtn');
-    btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg><span>Pause</span>';
+    btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg><span>Pause</span>';
     btn.className = 'btn btn-orange';
     playTimer = setInterval(() => stepForward(), speedMs);
   }
@@ -2671,7 +2769,7 @@
     isPlaying = false;
     clearInterval(playTimer);
     const btn = document.getElementById('playBtn');
-    btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg><span>Play</span>';
+    btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg><span>Play</span>';
     btn.className = 'btn btn-green';
   }
 
