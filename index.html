@@ -112,11 +112,32 @@
     }
     .tr-icon-btn:active { transform: scale(0.94); }
     .tr-icon-btn.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .tr-icon-btn.bot-armed { background: var(--green); border-color: var(--green); color: #fff; box-shadow: 0 0 12px rgba(8, 153, 129, 0.45); }
     .badge-pill {
       background: var(--red); color: #fff; font-size: 9px; font-weight: 700;
       padding: 1px 4px; border-radius: 8px; line-height: 1.2;
     }
     .badge-pill.zero { display: none; }
+
+    /* Floating Bot Status HUD Pill (Visible only when Bot is Armed) */
+    .bot-status-hud {
+      position: absolute; top: 44px; left: 8px; z-index: 25;
+      background: var(--glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--green); border-radius: 8px;
+      padding: 4px 8px; font-size: 10px; font-weight: 600;
+      display: none; align-items: center; gap: 6px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+      max-width: calc(100% - 125px);
+    }
+    .bot-status-hud.visible { display: flex; }
+    .bot-dot {
+      width: 7px; height: 7px; border-radius: 50%; background: var(--green);
+      animation: pulseBot 1.4s infinite;
+    }
+    @keyframes pulseBot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
 
     /* Long-Press Context Menu */
     .context-menu {
@@ -215,11 +236,11 @@
     }
     .point-hint.visible { display: block; }
 
-    /* Clean Wrapped OHLC Legend (Never collides with top-right buttons) */
+    /* Clean Wrapped OHLC Legend */
     .ohlc-legend {
       position: absolute; top: 6px; left: 8px; pointer-events: none; z-index: 15;
       font-size: 10.5px; line-height: 1.35;
-      max-width: calc(100% - 185px);
+      max-width: calc(100% - 210px);
     }
 
     /* Modals */
@@ -230,7 +251,7 @@
     .modal-backdrop.open { display: flex; }
     .modal-card {
       background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
-      width: 100%; max-width: 380px; max-height: 82dvh; overflow-y: auto; padding: 14px;
+      width: 100%; max-width: 390px; max-height: 84dvh; overflow-y: auto; padding: 14px;
     }
     .modal-header {
       display: flex; justify-content: space-between; align-items: center;
@@ -247,7 +268,22 @@
       display: flex; justify-content: space-between; align-items: center; margin-top: 6px; gap: 6px;
     }
 
-    /* Two-Tier Ergonomic Replay Deck (Row 1: Full Date/Time Ribbon | Row 2: Thumb-Zone Controls) */
+    /* Bot Engine Modal Styling */
+    .bot-card-box {
+      background: var(--panel2); border: 1px solid var(--border);
+      border-radius: 9px; padding: 10px; margin-bottom: 10px; font-size: 11.5px;
+    }
+    .bot-step-list {
+      margin: 6px 0 0 0; padding-left: 16px; color: var(--muted); font-size: 11px; line-height: 1.5;
+    }
+    .bot-step-list b { color: var(--text); }
+    .bot-log-box {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 7px;
+      padding: 7px; max-height: 105px; overflow-y: auto; font-family: monospace; font-size: 10px;
+      color: var(--muted); display: flex; flex-direction: column; gap: 3px;
+    }
+
+    /* Two-Tier Ergonomic Replay Deck */
     .replay-deck {
       display: flex; flex-direction: column; gap: 6px;
       padding: 6px 10px;
@@ -278,20 +314,10 @@
       border-radius: 8px;
       font-weight: 700;
     }
-    .replay-controls-row .play-main-btn {
-      flex: 1.25;
-    }
-    .replay-controls-row .step-tap-btn {
-      flex: 1.15;
-    }
-    .replay-controls-row .unit-select {
-      flex: 0.85;
-      text-align: center;
-    }
-    .replay-controls-row .speed-select {
-      flex: 0.85;
-      text-align: center;
-    }
+    .replay-controls-row .play-main-btn { flex: 1.25; }
+    .replay-controls-row .step-tap-btn { flex: 1.15; }
+    .replay-controls-row .unit-select { flex: 0.85; text-align: center; }
+    .replay-controls-row .speed-select { flex: 0.85; text-align: center; }
 
     /* Hidden Portfolio & Performance Bottom Sheet */
     .bottom-sheet {
@@ -434,8 +460,12 @@
 
   <!-- Workspace -->
   <div class="workspace">
-    <!-- Top-Right Controls: Show/Hide Drawing Toolbar + Pending Order Shortcut + Portfolio Toggle -->
+    <!-- Top-Right Controls: Bot Engine + Drawing Toolbar Toggle + Pending Shortcut + Portfolio Toggle -->
     <div class="top-right-trade-icons">
+      <button class="tr-icon-btn" id="openBotModalBtn" title="Strategy Bot Engine (Auto-Trade Rules)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 2v6"/><circle cx="12" cy="2" r="1.5" fill="currentColor"/><circle cx="9" cy="13" r="1.3" fill="currentColor"/><circle cx="15" cy="13" r="1.3" fill="currentColor"/><path d="M9 17h6"/></svg>
+        <span style="font-size:10px;">Bot</span>
+      </button>
       <button class="tr-icon-btn" id="toggleDrawToolbarBtn" title="Show/Hide Drawing Toolbar">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/></svg>
       </button>
@@ -446,6 +476,12 @@
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
         <span class="badge-pill zero" id="topOrderBadge">0</span>
       </button>
+    </div>
+
+    <!-- Floating Bot Live Status Pill (Shown when Bot is Armed) -->
+    <div class="bot-status-hud" id="botStatusHud">
+      <span class="bot-dot"></span>
+      <span id="botHudText">BOT ARMED: Scanning M15 BOS &rarr; M5 OB...</span>
     </div>
 
     <!-- Long-Press Context Menu (Cut & Rewind / Pending Limit-Stop Orders) -->
@@ -549,12 +585,10 @@
     <div class="ind-pane" id="paneSTOCH"><div class="ind-label" id="labelSTOCH" style="color:#f59e0b;">Stochastic (14, 3, 3)</div></div>
   </div>
 
-  <!-- Two-Tier Ergonomic Replay Deck for iPhone 15 Pro Max -->
+  <!-- Two-Tier Ergonomic Replay Deck -->
   <div class="replay-deck">
-    <!-- Row 1: Full-Width Date & Time Ribbon (Shows e.g. 12/04/2026 16:32 | End 06/12/2026 in full) -->
     <div class="date-ribbon-full" id="dateTimeStatusText" title="Tap to Go To Date & Time">--/--/---- --:-- | End --/--/----</div>
 
-    <!-- Row 2: Wide Thumb-Zone Playback & Step Controls -->
     <div class="replay-controls-row">
       <button class="btn btn-green play-main-btn" id="playBtn">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
@@ -589,7 +623,7 @@
     </div>
   </div>
 
-  <!-- Hidden Portfolio & Performance Bottom Sheet (Toggled via Top-Right Button) -->
+  <!-- Hidden Portfolio & Performance Bottom Sheet -->
   <div class="bottom-sheet" id="portfolioBottomSheet">
     <div class="tabs">
       <div class="tab active" id="tabOverview">Overview</div>
@@ -653,7 +687,7 @@
     </div>
   </div>
 
-  <!-- Modal 3: Go To Date & Time (Jump to Specific Candle) -->
+  <!-- Modal 3: Go To Date & Time -->
   <div class="modal-backdrop" id="goToDateModal">
     <div class="modal-card" style="max-width:320px;">
       <div class="modal-header">
@@ -695,6 +729,59 @@
     </div>
   </div>
 
+  <!-- Modal 5: Automated Strategy Bot Engine (Modular Hub for Multiple Strategies) -->
+  <div class="modal-backdrop" id="botModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:6px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#089981" stroke-width="2"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 2v6"/><circle cx="12" cy="2" r="1.5" fill="#089981"/><circle cx="9" cy="13" r="1.3" fill="#089981"/><circle cx="15" cy="13" r="1.3" fill="#089981"/><path d="M9 17h6"/></svg>
+          <b>Strategy Bot Engine</b>
+        </div>
+        <button class="btn" id="closeBotModalBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="bot-card-box">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <b>เลือกกลยุทธ์บอท (Strategy Preset):</b>
+        </div>
+        <select id="botStrategySelect" style="width:100%; padding:6px; font-size:12px; font-weight:600;">
+          <option value="smc_m15_m5" selected>1. SMC M15 BOS &rarr; M5 OB + Premium/Discount + TL Break</option>
+        </select>
+
+        <ol class="bot-step-list">
+          <li><b>M15 Main Trend (BOS):</b> หาโครงสร้างหลัก M15 ขาขึ้น/ขาลง พร้อมแบ่งโซน 50% (Premium / Discount)</li>
+          <li><b>Zone Filter:</b> ขาลงรอราคาพักตัวเข้าโซน <b>Premium (&gt;50%)</b> / ขาขึ้นรอโซน <b>Discount (&lt;50%)</b></li>
+          <li><b>M5 Order Block (OB):</b> ตรวจจับแท่ง OB ใน M5 และรอราคาวิ่งเข้ามาชนกรอบ OB</li>
+          <li><b>M5 Trendline Break:</b> รอแท่ง M5 ปิดทะลุเส้นเทรนไลน์ย่อย &rarr; <b>วาดโซน + เทรนไลน์ + กล่อง RR 1:2 + ออกออเดอร์จริง</b></li>
+        </ol>
+      </div>
+
+      <div class="bot-card-box">
+        <div class="ind-setting-row" style="margin-top:0;">
+          <span>Target RR: <input type="number" id="botRRInput" value="2.0" step="0.5" min="1" style="width:48px;" /></span>
+          <span>Risk ($): <input type="number" id="botRiskInput" value="100" step="10" min="10" style="width:56px;" /></span>
+          <span>Max/Day: <input type="number" id="botMaxTradesDay" value="2" min="1" max="10" style="width:40px;" /></span>
+        </div>
+        <div class="ind-setting-row">
+          <label style="cursor:pointer;"><input type="checkbox" id="botAutoDrawChk" checked /> <b>วาด OB, เทรนไลน์, BOS และกล่อง RR โชว์บนกราฟ</b></label>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:6px; margin-bottom:8px;">
+        <button class="btn btn-green" id="toggleBotArmBtn" style="flex:1; padding:9px; font-size:12px; font-weight:700;">
+          เปิดบอท &amp; เริ่มรันอัตโนมัติ (Start Bot)
+        </button>
+      </div>
+
+      <div style="font-size:10.5px; font-weight:600; color:var(--muted); margin-bottom:4px;">Bot Execution Log (บันทึกการทำงานเรียลไทม์):</div>
+      <div class="bot-log-box" id="botLogBox">
+        <div>[Ready] กด "เปิดบอท &amp; เริ่มรันอัตโนมัติ" บอทจะสแกนกราฟและเปิดออเดอร์ตามเงื่อนไขจริง</div>
+      </div>
+    </div>
+  </div>
+
 <script>
 (() => {
   // Generate High-Res PNG Apple Touch Icon (180x180) dynamically for iOS Home Screen
@@ -709,14 +796,12 @@
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, 180, 180);
 
-      // Subtle Grid
       ctx.strokeStyle = 'rgba(255,255,255,0.07)';
       ctx.lineWidth = 1.5;
       [48, 90, 132].forEach(y => {
         ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(180, y); ctx.stroke();
       });
 
-      // Trend Curve
       ctx.strokeStyle = 'rgba(41, 98, 255, 0.5)';
       ctx.lineWidth = 5;
       ctx.lineCap = 'round';
@@ -724,7 +809,6 @@
       ctx.moveTo(28, 128); ctx.lineTo(68, 98); ctx.lineTo(104, 110); ctx.lineTo(152, 48);
       ctx.stroke();
 
-      // Candlesticks
       const candles = [
         { x: 40, wickTop: 88, wickBot: 145, bodyTop: 100, bodyH: 32, col: '#089981' },
         { x: 73, wickTop: 72, wickBot: 128, bodyTop: 85, bodyH: 28, col: '#f23645' },
@@ -934,6 +1018,18 @@
   function priceToY(p) { return candleSeries.priceToCoordinate(p) ?? 0; }
   function yToPrice(y) { return candleSeries.coordinateToPrice(y) ?? 0; }
 
+  // Calculate Proportional Vertical SL Distance based on Visible Chart Height (Prevents flat rectangle RR boxes)
+  function getProportionalSLDist() {
+    const paneH = mainPane.getBoundingClientRect().height || 400;
+    const topP = yToPrice(20);
+    const botP = yToPrice(paneH - 30);
+    const visibleSpan = Math.abs(topP - botP);
+    if (visibleSpan > 0.1 && isFinite(visibleSpan)) {
+      return +(visibleSpan * 0.11).toFixed(3);
+    }
+    return 5.0;
+  }
+
   function applyMagnetSnap(x, y) {
     const rawTime = xToTime(x);
     const rawPrice = yToPrice(y);
@@ -1076,9 +1172,11 @@
                 ctx.lineWidth = lw;
 
                 if (d.tool === 'hline') {
+                  if (d.dashed) ctx.setLineDash([4, 4]);
                   ctx.beginPath(); ctx.moveTo(0, y2); ctx.lineTo(W, y2); ctx.stroke();
+                  ctx.setLineDash([]);
                   ctx.fillStyle = col; ctx.font = 'bold 10px monospace';
-                  ctx.fillText(d.p2.toFixed(3), 8, y2 - 4);
+                  ctx.fillText(d.label ? `${d.label} (${d.p2.toFixed(2)})` : d.p2.toFixed(3), 8, y2 - 4);
                   if (isSelected) {
                     drawControlDot(ctx, W * 0.25, y2);
                     drawControlDot(ctx, W * 0.50, y2, '#2962ff', '#ffffff');
@@ -1097,6 +1195,10 @@
                   }
                 } else if (d.tool === 'trend') {
                   ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+                  if (d.label) {
+                    ctx.fillStyle = col; ctx.font = 'bold 9px sans-serif';
+                    ctx.fillText(d.label, midX + 4, midY - 4);
+                  }
                   if (isSelected) {
                     drawControlDot(ctx, x1, y1);
                     drawControlDot(ctx, midX, midY, '#2962ff', '#ffffff');
@@ -1162,10 +1264,14 @@
                   }
                 } else if (d.tool === 'box') {
                   const left = Math.min(x1, x2), top = Math.min(y1, y2);
-                  const w = Math.abs(x2 - x1), h = Math.abs(y2 - y1);
-                  ctx.fillStyle = col + '20';
+                  const w = Math.max(12, Math.abs(x2 - x1)), h = Math.max(6, Math.abs(y2 - y1));
+                  ctx.fillStyle = col + '26';
                   ctx.fillRect(left, top, w, h);
                   ctx.strokeRect(left, top, w, h);
+                  if (d.label) {
+                    ctx.fillStyle = col; ctx.font = 'bold 9px sans-serif';
+                    ctx.fillText(d.label, left + 4, top - 3);
+                  }
                   if (isSelected) {
                     drawControlDot(ctx, x1, y1); drawControlDot(ctx, x2, y2);
                     drawControlDot(ctx, x1, y2); drawControlDot(ctx, x2, y1);
@@ -1190,19 +1296,19 @@
                   }
                 } else if (d.tool === 'long' || d.tool === 'short') {
                   const yEntry = priceToY(d.midP), ySL = priceToY(d.p1), yTP = priceToY(d.p2);
-                  const left = x1, right = Math.max(x1 + 85, x2), w = right - left;
+                  const left = x1, right = Math.max(x1 + 52, x2), w = right - left;
 
-                  ctx.fillStyle = 'rgba(8, 153, 129, 0.13)';
+                  ctx.fillStyle = 'rgba(8, 153, 129, 0.14)';
                   ctx.fillRect(left, Math.min(yEntry, yTP), w, Math.abs(yTP - yEntry));
-                  ctx.strokeStyle = '#089981'; ctx.lineWidth = 1;
+                  ctx.strokeStyle = '#089981'; ctx.lineWidth = 1.2;
                   ctx.strokeRect(left, Math.min(yEntry, yTP), w, Math.abs(yTP - yEntry));
 
-                  ctx.fillStyle = 'rgba(242, 54, 69, 0.13)';
+                  ctx.fillStyle = 'rgba(242, 54, 69, 0.14)';
                   ctx.fillRect(left, Math.min(yEntry, ySL), w, Math.abs(ySL - yEntry));
-                  ctx.strokeStyle = '#f23645'; ctx.lineWidth = 1;
+                  ctx.strokeStyle = '#f23645'; ctx.lineWidth = 1.2;
                   ctx.strokeRect(left, Math.min(yEntry, ySL), w, Math.abs(ySL - yEntry));
 
-                  ctx.strokeStyle = '#2962ff'; ctx.lineWidth = 1.2;
+                  ctx.strokeStyle = '#2962ff'; ctx.lineWidth = 1.4;
                   ctx.beginPath(); ctx.moveTo(left, yEntry); ctx.lineTo(right, yEntry); ctx.stroke();
 
                   const riskDiff = Math.abs(d.midP - d.p1), rewardDiff = Math.abs(d.p2 - d.midP);
@@ -1234,7 +1340,7 @@
               orders.forEach((o, oIdx) => {
                 const isBuy = o.type.includes('BUY');
                 const entryColor = isBuy ? '#2962ff' : '#9c27b0';
-                let entryLabel = `${o.type} ${o.lot.toFixed(2)}`;
+                let entryLabel = `${o.botTag ? '[BOT] ' : ''}${o.type} ${o.lot.toFixed(2)}`;
                 if (o.triggered) {
                   const pnl = (isBuy ? curClose - o.entry : o.entry - curClose) * 100 * o.lot;
                   entryLabel += ` (${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)})`;
@@ -1314,6 +1420,447 @@
   let history = [];
   let selectedTool = 'cursor';
 
+  // =========================================================================
+  // MODULAR STRATEGY BOT ENGINE (SMC M15 BOS + M5 OB + Premium/Discount + TL Break)
+  // =========================================================================
+  let botState = {
+    armed: false,
+    strategy: 'smc_m15_m5',
+    lastEvaluatedM5Time: 0,
+    lastSignalM5Time: 0,
+    tradesTodayCount: 0,
+    currentDayStr: '',
+    logs: []
+  };
+
+  function appendBotLog(msg) {
+    const ts = m1Count > 0 ? formatTHTimeShort(m1Time[current1mIndex]).split(' ')[1] : '--:--';
+    botState.logs.unshift(`[${ts}] ${msg}`);
+    if (botState.logs.length > 35) botState.logs.pop();
+    const box = document.getElementById('botLogBox');
+    if (box) {
+      box.innerHTML = botState.logs.map(l => `<div>${l}</div>`).join('');
+    }
+    const hud = document.getElementById('botHudText');
+    if (hud) hud.textContent = `BOT: ${msg}`;
+  }
+
+  // Helper: Build completed M5 and M15 candles up to current1mIndex
+  function getCompletedHTFBars(tfMin, lookbackBars = 65) {
+    if (m1Count === 0) return [];
+    const tfSec = tfMin * 60;
+    const curT = m1Time[current1mIndex];
+    const curBucketStart = Math.floor(curT / tfSec) * tfSec;
+    const cached = tfAggregatedCache[tfMin] || [];
+
+    // Binary search last completed bucket strictly before curBucketStart
+    let lo = 0, hi = cached.length - 1, found = -1;
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      if (cached[mid].time < curBucketStart) {
+        found = mid;
+        lo = mid + 1;
+      } else {
+        hi = mid - 1;
+      }
+    }
+    if (found < 20) return [];
+    const startIdx = Math.max(0, found - lookbackBars + 1);
+    return cached.slice(startIdx, found + 1);
+  }
+
+  // Step 1 & 2: M15 Market Structure (BOS) + Dealing Range (Premium / Discount 50% Equilibrium)
+  function analyzeM15Structure(m15Bars) {
+    if (m15Bars.length < 30) return null;
+    const swingHighs = [];
+    const swingLows = [];
+
+    for (let i = 2; i < m15Bars.length - 2; i++) {
+      const b = m15Bars[i];
+      if (b.high > m15Bars[i - 1].high && b.high > m15Bars[i - 2].high &&
+          b.high >= m15Bars[i + 1].high && b.high >= m15Bars[i + 2].high) {
+        swingHighs.push({ idx: i, price: b.high, time: b.time });
+      }
+      if (b.low < m15Bars[i - 1].low && b.low < m15Bars[i - 2].low &&
+          b.low <= m15Bars[i + 1].low && b.low <= m15Bars[i + 2].low) {
+        swingLows.push({ idx: i, price: b.low, time: b.time });
+      }
+    }
+    if (swingHighs.length < 2 || swingLows.length < 2) return null;
+
+    const lastSH = swingHighs[swingHighs.length - 1];
+    const lastSL = swingLows[swingLows.length - 1];
+    const recentBars = m15Bars.slice(-16);
+
+    // Check Bearish BOS (M15 candle closes below recent swing low)
+    let bearishBOS = false, bullishBOS = false;
+    let bosLevel = 0, bosTime = 0;
+
+    for (let i = recentBars.length - 1; i >= 1; i--) {
+      if (recentBars[i].close < lastSL.price && recentBars[i - 1].close >= lastSL.price) {
+        bearishBOS = true;
+        bosLevel = lastSL.price;
+        bosTime = recentBars[i].time;
+        break;
+      }
+      if (recentBars[i].close > lastSH.price && recentBars[i - 1].close <= lastSH.price) {
+        bullishBOS = true;
+        bosLevel = lastSH.price;
+        bosTime = recentBars[i].time;
+        break;
+      }
+    }
+
+    if (!bearishBOS && !bullishBOS) {
+      // Fallback: compare latest close against latest swing structure
+      const lastClose = m15Bars[m15Bars.length - 1].close;
+      if (lastClose < lastSL.price) {
+        bearishBOS = true; bosLevel = lastSL.price; bosTime = m15Bars[m15Bars.length - 1].time;
+      } else if (lastClose > lastSH.price) {
+        bullishBOS = true; bosLevel = lastSH.price; bosTime = m15Bars[m15Bars.length - 1].time;
+      } else {
+        return null;
+      }
+    }
+
+    // Dealing Range High & Low for Premium / Discount 50% Equilibrium
+    const rangeBars = m15Bars.slice(-24);
+    let rangeHigh = -Infinity, rangeLow = Infinity;
+    rangeBars.forEach(b => {
+      if (b.high > rangeHigh) rangeHigh = b.high;
+      if (b.low < rangeLow) rangeLow = b.low;
+    });
+    const eq50 = (rangeHigh + rangeLow) / 2;
+
+    return {
+      bias: bearishBOS ? 'BEARISH' : 'BULLISH',
+      bosLevel,
+      bosTime,
+      rangeHigh,
+      rangeLow,
+      eq50
+    };
+  }
+
+  // Step 3 & 4: M5 Order Block (OB) in Premium/Discount + Counter-Trendline Break Confirmation
+  function evaluateSMCM15M5Bot() {
+    if (!botState.armed || m1Count === 0) return;
+
+    const curT = m1Time[current1mIndex];
+    const m5Sec = 5 * 60;
+    const curM5Bucket = Math.floor(curT / m5Sec) * m5Sec;
+
+    // Evaluate once per newly closed M5 candle
+    if (curM5Bucket <= botState.lastEvaluatedM5Time) return;
+    botState.lastEvaluatedM5Time = curM5Bucket;
+
+    const dayStr = formatTHDateFull(curT);
+    if (botState.currentDayStr !== dayStr) {
+      botState.currentDayStr = dayStr;
+      botState.tradesTodayCount = 0;
+    }
+
+    const maxPerDay = parseInt(document.getElementById('botMaxTradesDay').value, 10) || 2;
+    if (botState.tradesTodayCount >= maxPerDay) return;
+
+    // Avoid overlapping bot orders
+    if (orders.some(o => o.botTag)) return;
+
+    const m15Bars = getCompletedHTFBars(15, 60);
+    const m5Bars = getCompletedHTFBars(5, 50);
+    if (m15Bars.length < 30 || m5Bars.length < 25) return;
+
+    const m15Struct = analyzeM15Structure(m15Bars);
+    if (!m15Struct) {
+      appendBotLog('Scanning M15 Structure (No clear BOS yet)');
+      return;
+    }
+
+    const lastM5 = m5Bars[m5Bars.length - 1];
+    const prevM5 = m5Bars[m5Bars.length - 2];
+
+    if (m15Struct.bias === 'BEARISH') {
+      // Condition 2: Price must be in M15 Premium Zone (> 50% Equilibrium)
+      if (lastM5.high < m15Struct.eq50) {
+        appendBotLog(`M15 Bearish BOS | Price (${lastM5.close.toFixed(1)}) in Discount (< ${m15Struct.eq50.toFixed(1)}) - Waiting Premium`);
+        return;
+      }
+
+      // Condition 3: Find Bearish M5 Order Block (Last bullish candle before sharp bearish displacement) in Premium Zone
+      let obZone = null;
+      for (let i = m5Bars.length - 5; i >= m5Bars.length - 24; i--) {
+        const c0 = m5Bars[i];
+        const c1 = m5Bars[i + 1];
+        const c2 = m5Bars[i + 2];
+        const isBullishCandle = c0.close > c0.open;
+        const strongDrop = (c1.close < c0.low) || (c2.close < c0.low && c1.close < c1.open);
+        if (isBullishCandle && strongDrop && c0.high >= m15Struct.eq50) {
+          // Verify price recently mitigated (touched) this M5 OB
+          const recentSlice = m5Bars.slice(i + 2);
+          const touchedOB = recentSlice.some(b => b.high >= c0.low && b.low <= c0.high);
+          if (touchedOB) {
+            obZone = { high: c0.high, low: c0.low, time: c0.time };
+            break;
+          }
+        }
+      }
+
+      if (!obZone) {
+        appendBotLog(`M15 Bearish BOS + Premium Zone | Waiting M5 OB Mitigation`);
+        return;
+      }
+
+      // Condition 4: Counter-Trendline Break (Pullback rising lows broken downward on M5)
+      const pullbackSlice = m5Bars.slice(-8, -1);
+      let minPullbackLow = Infinity, minLowTime = 0;
+      pullbackSlice.forEach(b => {
+        if (b.low < minPullbackLow) {
+          minPullbackLow = b.low;
+          minLowTime = b.time;
+        }
+      });
+
+      const tlBrokenDown = lastM5.close < prevM5.low && lastM5.close < lastM5.open && prevM5.high >= obZone.low * 0.9995;
+      if (!tlBrokenDown) {
+        appendBotLog(`M5 OB Mitigated (${obZone.low.toFixed(1)}-${obZone.high.toFixed(1)}) | Waiting TL Break`);
+        return;
+      }
+
+      // ALL CONDITIONS MET -> Execute Short Setup (RR 1:2) + Visual Drawings on Chart
+      const entryPrice = lastM5.close;
+      const slPrice = +(Math.max(obZone.high, prevM5.high) + 0.8).toFixed(3);
+      const riskDist = Math.abs(slPrice - entryPrice);
+      if (riskDist < 0.8) return;
+
+      const rrTarget = parseFloat(document.getElementById('botRRInput').value) || 2.0;
+      const riskUsd = parseFloat(document.getElementById('botRiskInput').value) || 100;
+      const tpPrice = +(entryPrice - riskDist * rrTarget).toFixed(3);
+      const calcLot = Math.max(0.01, +(riskUsd / (riskDist * 100)).toFixed(2));
+      const drawId = Date.now();
+
+      if (document.getElementById('botAutoDrawChk').checked) {
+        // Remove previous bot drawings so chart stays clean & readable
+        drawings = drawings.filter(d => !d.isBotDraw);
+
+        // 1. M15 BOS Level Line
+        drawings.push({
+          id: drawId + 1, isBotDraw: true, tool: 'hline',
+          t1: m15Struct.bosTime, t2: lastM5.time, p1: m15Struct.bosLevel, p2: m15Struct.bosLevel,
+          color: '#f23645', width: 1, dashed: true, label: 'M15 BOS (Bearish)', visibleTFs: [...ALL_TFS]
+        });
+
+        // 2. M15 50% Equilibrium Line (Premium Threshold)
+        drawings.push({
+          id: drawId + 2, isBotDraw: true, tool: 'hline',
+          t1: m15Struct.bosTime, t2: lastM5.time, p1: m15Struct.eq50, p2: m15Struct.eq50,
+          color: '#f59e0b', width: 1, dashed: true, label: 'M15 50% EQ (Premium Above)', visibleTFs: [...ALL_TFS]
+        });
+
+        // 3. M5 Order Block Zone Rectangle
+        drawings.push({
+          id: drawId + 3, isBotDraw: true, tool: 'box',
+          t1: obZone.time, t2: barIndexToTime(timeToBarIndex(lastM5.time) + 8),
+          p1: obZone.high, p2: obZone.low,
+          color: '#9c27b0', width: 1, label: 'M5 Supply OB (Premium)', visibleTFs: [...ALL_TFS]
+        });
+
+        // 4. M5 Counter-Trendline (Broken)
+        drawings.push({
+          id: drawId + 4, isBotDraw: true, tool: 'trend',
+          t1: minLowTime || m5Bars[m5Bars.length - 5].time, t2: lastM5.time,
+          p1: minPullbackLow, p2: prevM5.low,
+          color: '#06b6d4', width: 2, label: 'M5 TL Break', visibleTFs: [...ALL_TFS]
+        });
+
+        // 5. Short Position RR Box (1:2)
+        drawings.push({
+          id: drawId, isBotDraw: true, tool: 'short',
+          t1: lastM5.time, t2: barIndexToTime(timeToBarIndex(lastM5.time) + 10),
+          p1: slPrice, p2: tpPrice, midP: entryPrice,
+          color: '#f23645', width: 1, visibleTFs: [...ALL_TFS]
+        });
+      }
+
+      // Place real Pending Limit/Stop Order
+      const curPrice = m1Close[current1mIndex];
+      const orderType = entryPrice >= curPrice ? 'SELL LIMIT' : 'SELL STOP';
+      orders.push({
+        id: drawId + 10,
+        botTag: true,
+        linkedDrawId: drawId,
+        type: orderType,
+        triggered: false,
+        activateTime: curT,
+        entry: entryPrice,
+        sl: slPrice,
+        tp: tpPrice,
+        lot: calcLot,
+        riskMoney: riskDist * 100 * calcLot,
+        entryTime: null
+      });
+
+      botState.tradesTodayCount++;
+      botState.lastSignalM5Time = curM5Bucket;
+      gestureOverlay.classList.add('interactive');
+      appendBotLog(`SIGNAL SELL! M15 BOS + Premium M5 OB + TL Break -> ${orderType} @ ${entryPrice.toFixed(2)} (Lot ${calcLot})`);
+      drawingsPrimitive.requestRedraw();
+      updateUI();
+      saveCurrentProfile();
+
+    } else if (m15Struct.bias === 'BULLISH') {
+      // Condition 2: Price must be in M15 Discount Zone (< 50% Equilibrium)
+      if (lastM5.low > m15Struct.eq50) {
+        appendBotLog(`M15 Bullish BOS | Price (${lastM5.close.toFixed(1)}) in Premium (> ${m15Struct.eq50.toFixed(1)}) - Waiting Discount`);
+        return;
+      }
+
+      // Condition 3: Find Bullish M5 Order Block in Discount Zone
+      let obZone = null;
+      for (let i = m5Bars.length - 5; i >= m5Bars.length - 24; i--) {
+        const c0 = m5Bars[i];
+        const c1 = m5Bars[i + 1];
+        const c2 = m5Bars[i + 2];
+        const isBearishCandle = c0.close < c0.open;
+        const strongRally = (c1.close > c0.high) || (c2.close > c0.high && c1.close > c1.open);
+        if (isBearishCandle && strongRally && c0.low <= m15Struct.eq50) {
+          const recentSlice = m5Bars.slice(i + 2);
+          const touchedOB = recentSlice.some(b => b.low <= c0.high && b.high >= c0.low);
+          if (touchedOB) {
+            obZone = { high: c0.high, low: c0.low, time: c0.time };
+            break;
+          }
+        }
+      }
+
+      if (!obZone) {
+        appendBotLog(`M15 Bullish BOS + Discount Zone | Waiting M5 OB Mitigation`);
+        return;
+      }
+
+      // Condition 4: Counter-Trendline Break (Pullback falling highs broken upward on M5)
+      const pullbackSlice = m5Bars.slice(-8, -1);
+      let maxPullbackHigh = -Infinity, maxHighTime = 0;
+      pullbackSlice.forEach(b => {
+        if (b.high > maxPullbackHigh) {
+          maxPullbackHigh = b.high;
+          maxHighTime = b.time;
+        }
+      });
+
+      const tlBrokenUp = lastM5.close > prevM5.high && lastM5.close > lastM5.open && prevM5.low <= obZone.high * 1.0005;
+      if (!tlBrokenUp) {
+        appendBotLog(`M5 Demand OB Mitigated (${obZone.low.toFixed(1)}-${obZone.high.toFixed(1)}) | Waiting TL Break`);
+        return;
+      }
+
+      // ALL CONDITIONS MET -> Execute Long Setup (RR 1:2) + Visual Drawings on Chart
+      const entryPrice = lastM5.close;
+      const slPrice = +(Math.min(obZone.low, prevM5.low) - 0.8).toFixed(3);
+      const riskDist = Math.abs(entryPrice - slPrice);
+      if (riskDist < 0.8) return;
+
+      const rrTarget = parseFloat(document.getElementById('botRRInput').value) || 2.0;
+      const riskUsd = parseFloat(document.getElementById('botRiskInput').value) || 100;
+      const tpPrice = +(entryPrice + riskDist * rrTarget).toFixed(3);
+      const calcLot = Math.max(0.01, +(riskUsd / (riskDist * 100)).toFixed(2));
+      const drawId = Date.now();
+
+      if (document.getElementById('botAutoDrawChk').checked) {
+        drawings = drawings.filter(d => !d.isBotDraw);
+
+        drawings.push({
+          id: drawId + 1, isBotDraw: true, tool: 'hline',
+          t1: m15Struct.bosTime, t2: lastM5.time, p1: m15Struct.bosLevel, p2: m15Struct.bosLevel,
+          color: '#089981', width: 1, dashed: true, label: 'M15 BOS (Bullish)', visibleTFs: [...ALL_TFS]
+        });
+
+        drawings.push({
+          id: drawId + 2, isBotDraw: true, tool: 'hline',
+          t1: m15Struct.bosTime, t2: lastM5.time, p1: m15Struct.eq50, p2: m15Struct.eq50,
+          color: '#f59e0b', width: 1, dashed: true, label: 'M15 50% EQ (Discount Below)', visibleTFs: [...ALL_TFS]
+        });
+
+        drawings.push({
+          id: drawId + 3, isBotDraw: true, tool: 'box',
+          t1: obZone.time, t2: barIndexToTime(timeToBarIndex(lastM5.time) + 8),
+          p1: obZone.high, p2: obZone.low,
+          color: '#9c27b0', width: 1, label: 'M5 Demand OB (Discount)', visibleTFs: [...ALL_TFS]
+        });
+
+        drawings.push({
+          id: drawId + 4, isBotDraw: true, tool: 'trend',
+          t1: maxHighTime || m5Bars[m5Bars.length - 5].time, t2: lastM5.time,
+          p1: maxPullbackHigh, p2: prevM5.high,
+          color: '#06b6d4', width: 2, label: 'M5 TL Break', visibleTFs: [...ALL_TFS]
+        });
+
+        drawings.push({
+          id: drawId, isBotDraw: true, tool: 'long',
+          t1: lastM5.time, t2: barIndexToTime(timeToBarIndex(lastM5.time) + 10),
+          p1: slPrice, p2: tpPrice, midP: entryPrice,
+          color: '#089981', width: 1, visibleTFs: [...ALL_TFS]
+        });
+      }
+
+      const curPrice = m1Close[current1mIndex];
+      const orderType = entryPrice <= curPrice ? 'BUY LIMIT' : 'BUY STOP';
+      orders.push({
+        id: drawId + 10,
+        botTag: true,
+        linkedDrawId: drawId,
+        type: orderType,
+        triggered: false,
+        activateTime: curT,
+        entry: entryPrice,
+        sl: slPrice,
+        tp: tpPrice,
+        lot: calcLot,
+        riskMoney: riskDist * 100 * calcLot,
+        entryTime: null
+      });
+
+      botState.tradesTodayCount++;
+      botState.lastSignalM5Time = curM5Bucket;
+      gestureOverlay.classList.add('interactive');
+      appendBotLog(`SIGNAL BUY! M15 BOS + Discount M5 OB + TL Break -> ${orderType} @ ${entryPrice.toFixed(2)} (Lot ${calcLot})`);
+      drawingsPrimitive.requestRedraw();
+      updateUI();
+      saveCurrentProfile();
+    }
+  }
+
+  // Bot Engine Modal Controls
+  const openBotModalBtn = document.getElementById('openBotModalBtn');
+  const toggleBotArmBtn = document.getElementById('toggleBotArmBtn');
+  const botStatusHud = document.getElementById('botStatusHud');
+
+  openBotModalBtn.onclick = () => document.getElementById('botModal').classList.add('open');
+  document.getElementById('closeBotModalBtn').onclick = () => document.getElementById('botModal').classList.remove('open');
+
+  toggleBotArmBtn.onclick = () => {
+    botState.armed = !botState.armed;
+    openBotModalBtn.classList.toggle('bot-armed', botState.armed);
+    botStatusHud.classList.toggle('visible', botState.armed);
+
+    if (botState.armed) {
+      toggleBotArmBtn.textContent = 'หยุดการทำงานบอท (Stop Bot)';
+      toggleBotArmBtn.className = 'btn btn-red';
+      botState.lastEvaluatedM5Time = 0;
+      document.getElementById('botModal').classList.remove('open');
+      appendBotLog('Armed! Auto-playing chart & scanning M15 BOS -> M5 OB + TL Break...');
+      evaluateSMCM15M5Bot();
+      if (!isPlaying) startPlay();
+    } else {
+      toggleBotArmBtn.textContent = 'เปิดบอท & เริ่มรันอัตโนมัติ (Start Bot)';
+      toggleBotArmBtn.className = 'btn btn-green';
+      appendBotLog('Bot Stopped.');
+      stopPlay();
+    }
+  };
+
+  // =========================================================================
+  // IndexedDB & CSV Data Loading
+  // =========================================================================
   function openMasterIDB() {
     return new Promise((resolve) => {
       try {
@@ -1519,7 +2066,7 @@
       orders: orders.map(o => ({
         id: o.id, type: o.type, triggered: o.triggered, activateTime: o.activateTime,
         entry: o.entry, sl: o.sl, tp: o.tp, lot: o.lot, entryTime: o.entryTime, linkedDrawId: o.linkedDrawId,
-        riskMoney: o.riskMoney
+        riskMoney: o.riskMoney, botTag: o.botTag
       })),
       history, drawings
     };
@@ -1673,7 +2220,6 @@
     resizeAllCharts();
   }
 
-  // Formatters: Full DD/MM/YYYY HH:MM and DD/MM/YYYY
   function formatTHTimeFull(utcSec) {
     const d = new Date((utcSec + 7 * 3600) * 1000);
     const pad = n => String(n).padStart(2, '0');
@@ -1821,7 +2367,7 @@
   }
 
   // =========================================================================
-  // Top-Right Toggles: Drawing Toolbar, Pending Shortcut, Portfolio, Cache Modal
+  // Top-Right Toggles
   // =========================================================================
   const toggleDrawToolbarBtn = document.getElementById('toggleDrawToolbarBtn');
   const favToolbar = document.getElementById('favToolbar');
@@ -2046,9 +2592,10 @@
     const curPrice = m1Close[current1mIndex];
     const curTime = m1Time[current1mIndex];
     const rr = parseFloat(document.getElementById('rrTargetInput').value) || 2.0;
-    const slDist = 5.0, tpDist = slDist * rr;
-    const slPrice = isBuy ? targetPrice - slDist : targetPrice + slDist;
-    const tpPrice = isBuy ? targetPrice + tpDist : targetPrice - tpDist;
+    const slDist = getProportionalSLDist();
+    const tpDist = +(slDist * rr).toFixed(3);
+    const slPrice = isBuy ? +(targetPrice - slDist).toFixed(3) : +(targetPrice + slDist).toFixed(3);
+    const tpPrice = isBuy ? +(targetPrice + tpDist).toFixed(3) : +(targetPrice - tpDist).toFixed(3);
 
     let orderType = isBuy ? 'BUY LIMIT' : 'SELL LIMIT';
     if (isBuy) orderType = targetPrice <= curPrice ? 'BUY LIMIT' : 'BUY STOP';
@@ -2348,7 +2895,7 @@
       const midX = (x1 + x2) / 2, midY = (y1 + y2) / 2;
 
       if (d.tool === 'long' || d.tool === 'short') {
-        const left = x1, right = Math.max(x1 + 85, x2), boxMidX = (left + right) / 2;
+        const left = x1, right = Math.max(x1 + 52, x2), boxMidX = (left + right) / 2;
         const yTP = priceToY(d.p2), ySL = priceToY(d.p1), yEntry = priceToY(d.midP);
         if (Math.hypot(pos.x - boxMidX, pos.y - yTP) < 18) return { idx: i, part: 'tp' };
         if (Math.hypot(pos.x - boxMidX, pos.y - ySL) < 18) return { idx: i, part: 'sl' };
@@ -2477,7 +3024,7 @@
   };
 
   // =========================================================================
-  // Pointer Handling
+  // Pointer Handling (Proportional Vertical RR Box Placement)
   // =========================================================================
   let editingTarget = null, draggingOrderTarget = null, lastPos = { x: 0, y: 0 }, pointerDownPos = { x: 0, y: 0 };
 
@@ -2563,14 +3110,15 @@
 
     if (meta && meta.onePoint) {
       const rrTarget = parseFloat(document.getElementById('rrTargetInput').value) || 2.0;
-      const slDist = 5.0, tpDist = slDist * rrTarget;
+      const slDist = getProportionalSLDist();
+      const tpDist = +(slDist * rrTarget).toFixed(3);
       const newObj = {
         id: Date.now(),
         tool: selectedTool,
         t1: tNow,
-        t2: barIndexToTime(timeToBarIndex(tNow) + 12),
-        p1: selectedTool === 'long' ? pNow - slDist : (selectedTool === 'short' ? pNow + slDist : pNow),
-        p2: selectedTool === 'long' ? pNow + tpDist : (selectedTool === 'short' ? pNow - tpDist : pNow),
+        t2: barIndexToTime(timeToBarIndex(tNow) + 7),
+        p1: selectedTool === 'long' ? +(pNow - slDist).toFixed(3) : (selectedTool === 'short' ? +(pNow + slDist).toFixed(3) : pNow),
+        p2: selectedTool === 'long' ? +(pNow + tpDist).toFixed(3) : (selectedTool === 'short' ? +(pNow - tpDist).toFixed(3) : pNow),
         midP: pNow,
         color: meta.defaultColor,
         width: meta.defaultWidth,
@@ -2766,7 +3314,7 @@
   });
 
   // =========================================================================
-  // Incremental Step Engine
+  // Incremental Step Engine (Hooks into Bot Engine when Armed)
   // =========================================================================
   function stepForward(customMinutes = null) {
     const stepMinutes = customMinutes || Number(document.getElementById('stepUnitSelect').value) || 1;
@@ -2788,6 +3336,7 @@
           if (timeReached && priceTouched) {
             o.triggered = true;
             o.entryTime = bTime;
+            if (o.botTag) appendBotLog(`FILLED: ${o.type} ${o.lot}L @ ${o.entry.toFixed(2)}`);
           }
         }
 
@@ -2806,6 +3355,7 @@
             const netPnl = rawPnl - (commPerLot * o.lot);
             balance += netPnl;
             updateDrawdownStats();
+            if (o.botTag) appendBotLog(`CLOSED (${reason}): ${netPnl >= 0 ? '+' : ''}$${netPnl.toFixed(2)}`);
             history.unshift({
               type: o.type, entry: o.entry, exit: exitP, pnl: netPnl, lot: o.lot,
               riskMoney: o.riskMoney || (o.sl ? Math.abs(o.entry - o.sl) * 100 * o.lot : 0),
@@ -2820,6 +3370,11 @@
     }
 
     current1mIndex += stepMinutes;
+
+    // Evaluate Strategy Bot Rules on Candle Close
+    if (botState.armed) {
+      evaluateSMCM15M5Bot();
+    }
 
     if (stepMinutes <= 15 && visibleCandles.length > 20) {
       const tfSec = timeframeMin * 60;
@@ -2987,7 +3542,7 @@
         const waitTxt = o.activateTime ? `WAIT >= ${formatTHTimeShort(o.activateTime).split(' ')[1]}` : 'PENDING';
         return `<div class="order-row">
           <div>
-            <b style="color:${isBuy ? 'var(--blue)' : 'var(--purple)'}">${o.type}</b> ${o.lot.toFixed(2)} @ ${o.entry.toFixed(3)}
+            <b style="color:${isBuy ? 'var(--blue)' : 'var(--purple)'}">${o.botTag ? '[BOT] ' : ''}${o.type}</b> ${o.lot.toFixed(2)} @ ${o.entry.toFixed(3)}
             <div style="font-size:10px; color:var(--muted);">SL: ${o.sl ? o.sl.toFixed(2) : '-'} | TP: ${o.tp ? o.tp.toFixed(2) : '-'}</div>
           </div>
           <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; justify-content:flex-end;">
@@ -2997,7 +3552,7 @@
             <button class="btn btn-red" data-close-order="${idx}" style="padding:2px 6px; font-size:10px;">${o.triggered ? 'Close' : 'Cancel'}</button>
           </div>
         </div>`;
-      }).join('') || '<div style="color:var(--muted);text-align:center;margin-top:14px;">No active or pending orders (Use RR Position box or Long-Press chart)</div>';
+      }).join('') || '<div style="color:var(--muted);text-align:center;margin-top:14px;">No active or pending orders (Use RR Position box, Long-Press chart, or Bot)</div>';
 
       list.querySelectorAll('[data-be-order]').forEach(btn => {
         btn.onclick = () => moveOrderToBreakEven(Number(btn.dataset.beOrder));
