@@ -67,14 +67,14 @@
     .btn-blue { background: var(--blue); color: #fff; }
     .btn-orange { background: #ea580c; color: #fff; }
 
-    /* Brand Symbol Badge with Mini Candlestick Icon */
+    /* Brand Symbol Badge */
     .brand-badge {
       display: inline-flex; align-items: center; gap: 5px;
       font-size: 12px; font-weight: 800; letter-spacing: 0.4px;
       padding-right: 2px;
     }
 
-    /* Subbar (Hidden by default for Clean Chart, toggled via Top-Right Portfolio Button) */
+    /* Subbar */
     .tv-subbar {
       display: none; justify-content: space-between; align-items: center;
       padding: 4px 8px; background: var(--bg); border-bottom: 1px solid var(--border);
@@ -119,7 +119,7 @@
     }
     .badge-pill.zero { display: none; }
 
-    /* Floating Bot Status HUD Pill (Visible only when Bot is Armed) */
+    /* Floating Bot Status HUD Pill */
     .bot-status-hud {
       position: absolute; top: 44px; left: 8px; z-index: 25;
       background: var(--glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
@@ -127,11 +127,12 @@
       padding: 4px 8px; font-size: 10px; font-weight: 600;
       display: none; align-items: center; gap: 6px;
       box-shadow: 0 4px 14px rgba(0,0,0,0.35);
-      max-width: calc(100% - 125px);
+      max-width: calc(100% - 110px);
     }
     .bot-status-hud.visible { display: flex; }
     .bot-dot {
       width: 7px; height: 7px; border-radius: 50%; background: var(--green);
+      flex-shrink: 0;
       animation: pulseBot 1.4s infinite;
     }
     @keyframes pulseBot {
@@ -182,7 +183,7 @@
       font-weight: 600; pointer-events: none; background: var(--glass); padding: 1px 5px; border-radius: 3px;
     }
 
-    /* Draggable Floating Favorite Toolbar (Hidden by default for 100% unobstructed chart) */
+    /* Draggable Floating Favorite Toolbar */
     .fav-toolbar {
       position: absolute; right: 74px; top: 44px;
       background: var(--glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
@@ -251,7 +252,7 @@
     .modal-backdrop.open { display: flex; }
     .modal-card {
       background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
-      width: 100%; max-width: 390px; max-height: 84dvh; overflow-y: auto; padding: 14px;
+      width: 100%; max-width: 400px; max-height: 85dvh; overflow-y: auto; padding: 14px;
     }
     .modal-header {
       display: flex; justify-content: space-between; align-items: center;
@@ -279,7 +280,7 @@
     .bot-step-list b { color: var(--text); }
     .bot-log-box {
       background: var(--bg); border: 1px solid var(--border); border-radius: 7px;
-      padding: 7px; max-height: 105px; overflow-y: auto; font-family: monospace; font-size: 10px;
+      padding: 7px; max-height: 110px; overflow-y: auto; font-family: monospace; font-size: 10px;
       color: var(--muted); display: flex; flex-direction: column; gap: 3px;
     }
 
@@ -481,10 +482,10 @@
     <!-- Floating Bot Live Status Pill (Shown when Bot is Armed) -->
     <div class="bot-status-hud" id="botStatusHud">
       <span class="bot-dot"></span>
-      <span id="botHudText">BOT ARMED: Scanning M15 BOS &rarr; M5 OB...</span>
+      <span id="botHudText">BOT ARMED: Scanning M15 ChoCh &rarr; $$$ &rarr; SZ/OB...</span>
     </div>
 
-    <!-- Long-Press Context Menu (Cut & Rewind / Pending Limit-Stop Orders) -->
+    <!-- Long-Press Context Menu -->
     <div class="context-menu" id="chartContextMenu">
       <div class="ctx-header" id="ctxInfoText">17/11/2026 21:25 @ 3863.500</div>
       <button class="ctx-item" id="ctxCutRewindBtn" style="color:#38bdf8;">
@@ -550,7 +551,7 @@
     <!-- Point-by-Point Guidance Pill -->
     <div class="point-hint" id="pointHint">Select Point 1</div>
 
-    <!-- Draggable Floating Favorite Toolbar (Collapsed by default for clean chart) -->
+    <!-- Draggable Floating Favorite Toolbar -->
     <div class="fav-toolbar collapsed" id="favToolbar">
       <div class="fav-drag-handle" id="favDragHandle">
         <svg width="14" height="10" viewBox="0 0 24 12" fill="currentColor"><circle cx="8" cy="3" r="1.5"/><circle cx="16" cy="3" r="1.5"/><circle cx="8" cy="9" r="1.5"/><circle cx="16" cy="9" r="1.5"/></svg>
@@ -595,7 +596,7 @@
         <span>Play</span>
       </button>
 
-      <button class="btn step-tap-btn" id="stepBackBtn" title="Step Backward">
+      <button class="btn step-tap-btn" id="stepBackBtn" title="Step Backward (Rewinds Bot State)">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="5" y1="5" x2="5" y2="19"/><polygon points="19 4 9 12 19 20 19 4"/></svg>
         <span>-1</span>
       </button>
@@ -729,13 +730,13 @@
     </div>
   </div>
 
-  <!-- Modal 5: Automated Strategy Bot Engine (Modular Hub for Multiple Strategies) -->
+  <!-- Modal 5: Automated Strategy Bot Engine (Modular Hub + Time-Travel Sync) -->
   <div class="modal-backdrop" id="botModal">
     <div class="modal-card">
       <div class="modal-header">
         <div style="display:flex; align-items:center; gap:6px;">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#089981" stroke-width="2"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 2v6"/><circle cx="12" cy="2" r="1.5" fill="#089981"/><circle cx="9" cy="13" r="1.3" fill="#089981"/><circle cx="15" cy="13" r="1.3" fill="#089981"/><path d="M9 17h6"/></svg>
-          <b>Strategy Bot Engine</b>
+          <b>Strategy Bot Engine (Time-Travel Sync)</b>
         </div>
         <button class="btn" id="closeBotModalBtn">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -743,48 +744,60 @@
       </div>
 
       <div class="bot-card-box">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-          <b>เลือกกลยุทธ์บอท (Strategy Preset):</b>
-        </div>
-        <select id="botStrategySelect" style="width:100%; padding:6px; font-size:12px; font-weight:600;">
-          <option value="smc_m15_m5" selected>1. SMC M15 BOS &rarr; M5 OB + Premium/Discount + TL Break</option>
+        <div style="margin-bottom:5px;"><b>เลือกกลยุทธ์บอท (Strategy Preset):</b></div>
+        <select id="botStrategySelect" style="width:100%; padding:6px; font-size:11.5px; font-weight:700;">
+          <option value="smc_sniper_v2" selected>1. SMC Sniper (M15 ChoCh + OB/SZ + $$$ Sweep &rarr; M1 Reject)</option>
+          <option value="smc_m15_m5">2. SMC Trend (M15 BOS + Premium/Discount + M5 OB &amp; TL Break)</option>
         </select>
 
-        <ol class="bot-step-list">
-          <li><b>M15 Main Trend (BOS):</b> หาโครงสร้างหลัก M15 ขาขึ้น/ขาลง พร้อมแบ่งโซน 50% (Premium / Discount)</li>
-          <li><b>Zone Filter:</b> ขาลงรอราคาพักตัวเข้าโซน <b>Premium (&gt;50%)</b> / ขาขึ้นรอโซน <b>Discount (&lt;50%)</b></li>
-          <li><b>M5 Order Block (OB):</b> ตรวจจับแท่ง OB ใน M5 และรอราคาวิ่งเข้ามาชนกรอบ OB</li>
-          <li><b>M5 Trendline Break:</b> รอแท่ง M5 ปิดทะลุเส้นเทรนไลน์ย่อย &rarr; <b>วาดโซน + เทรนไลน์ + กล่อง RR 1:2 + ออกออเดอร์จริง</b></li>
-        </ol>
+        <div id="botDescSniper">
+          <ol class="bot-step-list">
+            <li><b>M15 ChoCh &amp; 2 Zones:</b> ตรวจจับจุดเปลี่ยนเทรนด์ <b>ChoCh</b> บน M15 ตีกรอบ <b>OB M15</b> (จุดสูงสุด/ต่ำสุด) และ <b>SZ / DZ</b> (โซนส่งกราฟ)</li>
+            <li><b>Liquidity Sweep ($$$):</b> มาร์คจุดสภาพคล่อง <b>$$$</b> หน้าโซน และวาดลูกศรแผนรอราคากวาด $$$ เข้าโซน</li>
+            <li><b>M1 Sniper Trigger:</b> ซูมดู M1 รอเกิด <b>M1 MSS + Reject ทำไฮต่ำลง / โลวสูงขึ้น</b> แล้วเข้าออเดอร์ทันที</li>
+            <li><b>TP1 / TP2 Swing &amp; Auto BE:</b> วาง <b>SL</b> เหนือสวิง M1, วัดเป้า <b>TP1</b> (โลว/ไฮเดิม) และลูกศรวัดระยะสวิง HTF <b>TP2</b> พร้อมกันหน้าทุน <b>BE</b></li>
+          </ol>
+        </div>
+
+        <div id="botDescTrend" style="display:none;">
+          <ol class="bot-step-list">
+            <li><b>M15 Main Trend (BOS):</b> หาโครงสร้างหลัก M15 ขาขึ้น/ขาลง พร้อมแบ่งเส้น 50% (Premium / Discount)</li>
+            <li><b>Zone Filter:</b> ขาลงรอโซน <b>Premium (&gt;50%)</b> / ขาขึ้นรอโซน <b>Discount (&lt;50%)</b></li>
+            <li><b>M5 OB &amp; TL Break:</b> รอราคาชน M5 OB และปิดทะลุเส้นเทรนไลน์ย่อยแล้วเปิดออเดอร์ตาม Risk ($)</li>
+          </ol>
+        </div>
       </div>
 
       <div class="bot-card-box">
         <div class="ind-setting-row" style="margin-top:0;">
-          <span>Target RR: <input type="number" id="botRRInput" value="2.0" step="0.5" min="1" style="width:48px;" /></span>
-          <span>Risk ($): <input type="number" id="botRiskInput" value="100" step="10" min="10" style="width:56px;" /></span>
-          <span>Max/Day: <input type="number" id="botMaxTradesDay" value="2" min="1" max="10" style="width:40px;" /></span>
+          <span>Risk ($): <input type="number" id="botRiskInput" value="100" step="10" min="10" style="width:54px;" /></span>
+          <span>Max/Day: <input type="number" id="botMaxTradesDay" value="3" min="1" max="10" style="width:40px;" /></span>
+          <span>Target RR: <input type="number" id="botRRInput" value="2.0" step="0.5" min="1" style="width:44px;" /></span>
         </div>
         <div class="ind-setting-row">
-          <label style="cursor:pointer;"><input type="checkbox" id="botAutoDrawChk" checked /> <b>วาด OB, เทรนไลน์, BOS และกล่อง RR โชว์บนกราฟ</b></label>
+          <label style="cursor:pointer;"><input type="checkbox" id="botSplitTPChk" checked /> <b>แบ่ง 2 ไม้ (TP1 โลว/ไฮเดิม + TP2 ปลายลูกศรสวิง)</b></label>
+        </div>
+        <div class="ind-setting-row">
+          <label style="cursor:pointer;"><input type="checkbox" id="botFailedSwingExitChk" checked /> <b>โดดหนีอัตโนมัติถ้าเด้งแล้วกดลงไม่ทำ New Low/High</b></label>
         </div>
       </div>
 
       <div style="display:flex; gap:6px; margin-bottom:8px;">
         <button class="btn btn-green" id="toggleBotArmBtn" style="flex:1; padding:9px; font-size:12px; font-weight:700;">
-          เปิดบอท &amp; เริ่มรันอัตโนมัติ (Start Bot)
+          เปิดโหมดบอท (Arm Bot &mdash; พร้อมรันตามปุ่ม Play / -1 / +1)
         </button>
       </div>
 
-      <div style="font-size:10.5px; font-weight:600; color:var(--muted); margin-bottom:4px;">Bot Execution Log (บันทึกการทำงานเรียลไทม์):</div>
+      <div style="font-size:10.5px; font-weight:600; color:var(--muted); margin-bottom:4px;">Bot Live Execution Log:</div>
       <div class="bot-log-box" id="botLogBox">
-        <div>[Ready] กด "เปิดบอท &amp; เริ่มรันอัตโนมัติ" บอทจะสแกนกราฟและเปิดออเดอร์ตามเงื่อนไขจริง</div>
+        <div>[Ready] กด "เปิดโหมดบอท" แล้วกด Play หรือ +1 / -1 บอทจะทำงานและย้อนเวลาตามกราฟอัตโนมัติ</div>
       </div>
     </div>
   </div>
 
 <script>
 (() => {
-  // Generate High-Res PNG Apple Touch Icon (180x180) dynamically for iOS Home Screen
+  // Generate High-Res PNG Apple Touch Icon (180x180)
   (function generateAppleTouchIcon() {
     try {
       const c = document.createElement('canvas');
@@ -839,7 +852,7 @@
     '202604.csv', '202605.csv', '202606.csv', '202607.csv',
     '202608.csv', '202609.csv', '202610.csv', '202611.csv'
   ];
-  const PROFILES_STORAGE_KEY = 'tv_replay_profiles_v10';
+  const PROFILES_STORAGE_KEY = 'tv_replay_profiles_v11';
   const IDB_NAME = 'TVReplayMasterDB_v1';
   const IDB_STORE = 'csv_cache';
   const ALL_TFS = [1, 5, 15, 60, 240, 1440];
@@ -956,7 +969,7 @@
   });
 
   // =========================================================================
-  // LOGICAL BAR-INDEX HELPERS & 60FPS RAF THROTTLED PRIMITIVE
+  // LOGICAL BAR-INDEX HELPERS & 60FPS RAF THROTTLED PRIMITIVE (WITH ARROWS & BADGES)
   // =========================================================================
   let drawings = [];
   let selectedDrawingIdx = -1;
@@ -1018,7 +1031,6 @@
   function priceToY(p) { return candleSeries.priceToCoordinate(p) ?? 0; }
   function yToPrice(y) { return candleSeries.coordinateToPrice(y) ?? 0; }
 
-  // Calculate Proportional Vertical SL Distance based on Visible Chart Height (Prevents flat rectangle RR boxes)
   function getProportionalSLDist() {
     const paneH = mainPane.getBoundingClientRect().height || 400;
     const topP = yToPrice(20);
@@ -1047,6 +1059,17 @@
   function drawControlDot(ctx, x, y, fill = '#ffffff', stroke = '#2962ff', radius = 4.8) {
     ctx.fillStyle = fill; ctx.strokeStyle = stroke; ctx.lineWidth = 1.6;
     ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  }
+
+  function drawArrowHead(ctx, fromX, fromY, toX, toY, color, size = 8) {
+    const angle = Math.atan2(toY - fromY, toX - fromX);
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(toX, toY);
+    ctx.lineTo(toX - size * Math.cos(angle - Math.PI / 6), toY - size * Math.sin(angle - Math.PI / 6));
+    ctx.lineTo(toX - size * Math.cos(angle + Math.PI / 6), toY - size * Math.sin(angle + Math.PI / 6));
+    ctx.closePath();
+    ctx.fill();
   }
 
   function drawInteractiveOrderTag(ctx, W, price, text, color, dashed, actions = {}) {
@@ -1182,6 +1205,32 @@
                     drawControlDot(ctx, W * 0.50, y2, '#2962ff', '#ffffff');
                     drawControlDot(ctx, W * 0.75, y2);
                   }
+                } else if (d.tool === 'choch') {
+                  ctx.setLineDash([3, 3]);
+                  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y1); ctx.stroke();
+                  ctx.setLineDash([]);
+                  ctx.fillStyle = col; ctx.font = 'bold 10px sans-serif';
+                  ctx.fillText(d.label || 'ChoCh', (x1 + x2) / 2 - 14, y1 - 4);
+                } else if (d.tool === 'badge') {
+                  ctx.font = '800 11px monospace';
+                  const tw = ctx.measureText(d.label || '$$$').width;
+                  ctx.fillStyle = 'rgba(19, 23, 34, 0.85)';
+                  ctx.beginPath();
+                  ctx.roundRect(x1 - tw / 2 - 5, y1 - 18, tw + 10, 16, 4);
+                  ctx.fill();
+                  ctx.strokeStyle = col; ctx.lineWidth = 1; ctx.stroke();
+                  ctx.fillStyle = col;
+                  ctx.textBaseline = 'middle';
+                  ctx.fillText(d.label || '$$$', x1 - tw / 2, y1 - 10);
+                } else if (d.tool === 'arrow') {
+                  if (d.dashed) ctx.setLineDash([4, 3]);
+                  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+                  ctx.setLineDash([]);
+                  drawArrowHead(ctx, x1, y1, x2, y2, col, 8);
+                  if (d.label) {
+                    ctx.fillStyle = col; ctx.font = 'bold 9.5px sans-serif';
+                    ctx.fillText(d.label, x2 + 5, y2 + 3);
+                  }
                 } else if (d.tool === 'vline') {
                   ctx.beginPath(); ctx.moveTo(x2, 0); ctx.lineTo(x2, H); ctx.stroke();
                   if (d.label) {
@@ -1195,6 +1244,7 @@
                   }
                 } else if (d.tool === 'trend') {
                   ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+                  if (d.arrowEnd) drawArrowHead(ctx, x1, y1, x2, y2, col, 7);
                   if (d.label) {
                     ctx.fillStyle = col; ctx.font = 'bold 9px sans-serif';
                     ctx.fillText(d.label, midX + 4, midY - 4);
@@ -1264,12 +1314,12 @@
                   }
                 } else if (d.tool === 'box') {
                   const left = Math.min(x1, x2), top = Math.min(y1, y2);
-                  const w = Math.max(12, Math.abs(x2 - x1)), h = Math.max(6, Math.abs(y2 - y1));
-                  ctx.fillStyle = col + '26';
+                  const w = Math.max(14, Math.abs(x2 - x1)), h = Math.max(6, Math.abs(y2 - y1));
+                  ctx.fillStyle = col + '28';
                   ctx.fillRect(left, top, w, h);
                   ctx.strokeRect(left, top, w, h);
                   if (d.label) {
-                    ctx.fillStyle = col; ctx.font = 'bold 9px sans-serif';
+                    ctx.fillStyle = col; ctx.font = 'bold 9.5px sans-serif';
                     ctx.fillText(d.label, left + 4, top - 3);
                   }
                   if (isSelected) {
@@ -1340,7 +1390,7 @@
               orders.forEach((o, oIdx) => {
                 const isBuy = o.type.includes('BUY');
                 const entryColor = isBuy ? '#2962ff' : '#9c27b0';
-                let entryLabel = `${o.botTag ? '[BOT] ' : ''}${o.type} ${o.lot.toFixed(2)}`;
+                let entryLabel = `${o.botTag ? `[${o.botTag}] ` : ''}${o.type} ${o.lot.toFixed(2)}`;
                 if (o.triggered) {
                   const pnl = (isBuy ? curClose - o.entry : o.entry - curClose) * 100 * o.lot;
                   entryLabel += ` (${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)})`;
@@ -1365,7 +1415,8 @@
 
                 if (o.tp) {
                   const gain = Math.abs(o.tp - o.entry) * 100 * o.lot;
-                  const tpBox = drawInteractiveOrderTag(ctx, W, o.tp, `TP +$${gain.toFixed(0)}`, '#089981', true, {});
+                  const tpLabel = o.tpTag ? `${o.tpTag} +$${gain.toFixed(0)}` : `TP +$${gain.toFixed(0)}`;
+                  const tpBox = drawInteractiveOrderTag(ctx, W, o.tp, tpLabel, '#089981', true, {});
                   if (tpBox) orderTagHitboxes.push({ orderIdx: oIdx, field: 'tp', ...tpBox });
                 }
               });
@@ -1421,39 +1472,100 @@
   let selectedTool = 'cursor';
 
   // =========================================================================
-  // MODULAR STRATEGY BOT ENGINE (SMC M15 BOS + M5 OB + Premium/Discount + TL Break)
+  // TIME-TRAVEL / REWIND-SYNC BOT ENGINE (Supports Forward, Step Back & Jump)
   // =========================================================================
   let botState = {
     armed: false,
-    strategy: 'smc_m15_m5',
-    lastEvaluatedM5Time: 0,
-    lastSignalM5Time: 0,
+    strategy: 'smc_sniper_v2',
+    activeSetup: null,
+    lastEvaluatedM15: 0,
+    lastEvaluatedM1: 0,
     tradesTodayCount: 0,
     currentDayStr: '',
     logs: []
   };
 
+  let botSnapshots = [];
+
+  function saveBotTimelineSnapshot() {
+    if (!botState.armed || m1Count === 0) return;
+    const curT = m1Time[current1mIndex];
+    botSnapshots = botSnapshots.filter(s => s.time < curT);
+    botSnapshots.push({
+      time: curT,
+      index: current1mIndex,
+      balance,
+      peakEquity,
+      maxDrawdownPct,
+      orders: JSON.parse(JSON.stringify(orders)),
+      history: JSON.parse(JSON.stringify(history)),
+      drawings: JSON.parse(JSON.stringify(drawings)),
+      botState: JSON.parse(JSON.stringify({
+        activeSetup: botState.activeSetup,
+        lastEvaluatedM15: botState.lastEvaluatedM15,
+        lastEvaluatedM1: botState.lastEvaluatedM1,
+        tradesTodayCount: botState.tradesTodayCount,
+        currentDayStr: botState.currentDayStr
+      }))
+    });
+    if (botSnapshots.length > 250) botSnapshots.shift();
+  }
+
+  function restoreBotTimelineToTime(targetTime) {
+    drawings = drawings.filter(d => !d.createdAtTime || d.createdAtTime <= targetTime);
+
+    let bestSnap = null;
+    for (let i = botSnapshots.length - 1; i >= 0; i--) {
+      if (botSnapshots[i].time <= targetTime) {
+        bestSnap = botSnapshots[i];
+        break;
+      }
+    }
+
+    if (bestSnap) {
+      botSnapshots = botSnapshots.filter(s => s.time <= targetTime);
+      balance = bestSnap.balance;
+      peakEquity = bestSnap.peakEquity;
+      maxDrawdownPct = bestSnap.maxDrawdownPct;
+      orders = JSON.parse(JSON.stringify(bestSnap.orders));
+      history = JSON.parse(JSON.stringify(bestSnap.history));
+      drawings = JSON.parse(JSON.stringify(bestSnap.drawings));
+      botState.activeSetup = bestSnap.botState.activeSetup;
+      botState.lastEvaluatedM15 = bestSnap.botState.lastEvaluatedM15;
+      botState.lastEvaluatedM1 = bestSnap.botState.lastEvaluatedM1;
+      botState.tradesTodayCount = bestSnap.botState.tradesTodayCount;
+      botState.currentDayStr = bestSnap.botState.currentDayStr;
+    } else {
+      botSnapshots = [];
+      botState.activeSetup = null;
+      botState.lastEvaluatedM15 = 0;
+      botState.lastEvaluatedM1 = 0;
+      botState.tradesTodayCount = 0;
+      drawings = drawings.filter(d => !d.isBotDraw);
+      orders = orders.filter(o => !o.botTag);
+    }
+    if (botState.armed) {
+      appendBotLog(`Rewound to ${formatTHTimeShort(targetTime)} (Bot synced)`);
+    }
+  }
+
   function appendBotLog(msg) {
     const ts = m1Count > 0 ? formatTHTimeShort(m1Time[current1mIndex]).split(' ')[1] : '--:--';
     botState.logs.unshift(`[${ts}] ${msg}`);
-    if (botState.logs.length > 35) botState.logs.pop();
+    if (botState.logs.length > 40) botState.logs.pop();
     const box = document.getElementById('botLogBox');
-    if (box) {
-      box.innerHTML = botState.logs.map(l => `<div>${l}</div>`).join('');
-    }
+    if (box) box.innerHTML = botState.logs.map(l => `<div>${l}</div>`).join('');
     const hud = document.getElementById('botHudText');
     if (hud) hud.textContent = `BOT: ${msg}`;
   }
 
-  // Helper: Build completed M5 and M15 candles up to current1mIndex
-  function getCompletedHTFBars(tfMin, lookbackBars = 65) {
+  function getCompletedHTFBars(tfMin, lookbackBars = 70) {
     if (m1Count === 0) return [];
     const tfSec = tfMin * 60;
     const curT = m1Time[current1mIndex];
     const curBucketStart = Math.floor(curT / tfSec) * tfSec;
     const cached = tfAggregatedCache[tfMin] || [];
 
-    // Binary search last completed bucket strictly before curBucketStart
     let lo = 0, hi = cached.length - 1, found = -1;
     while (lo <= hi) {
       const mid = (lo + hi) >> 1;
@@ -1464,16 +1576,18 @@
         hi = mid - 1;
       }
     }
-    if (found < 20) return [];
+    if (found < 25) return [];
     const startIdx = Math.max(0, found - lookbackBars + 1);
     return cached.slice(startIdx, found + 1);
   }
 
-  // Step 1 & 2: M15 Market Structure (BOS) + Dealing Range (Premium / Discount 50% Equilibrium)
-  function analyzeM15Structure(m15Bars) {
-    if (m15Bars.length < 30) return null;
-    const swingHighs = [];
-    const swingLows = [];
+  // =========================================================================
+  // STRATEGY 1: SMC SNIPER (M15 ChoCh + OB/SZ + $$$ Sweep -> M1 MSS & Reject)
+  // Symmetric for BOTH Bearish (Sell) & Bullish (Buy)
+  // =========================================================================
+  function scanM15SniperSetup(m15Bars, curT) {
+    if (m15Bars.length < 35) return null;
+    const swingHighs = [], swingLows = [];
 
     for (let i = 2; i < m15Bars.length - 2; i++) {
       const b = m15Bars[i];
@@ -1488,71 +1602,144 @@
     }
     if (swingHighs.length < 2 || swingLows.length < 2) return null;
 
+    const lastM15 = m15Bars[m15Bars.length - 1];
+    const prevM15 = m15Bars[m15Bars.length - 2];
     const lastSH = swingHighs[swingHighs.length - 1];
     const lastSL = swingLows[swingLows.length - 1];
-    const recentBars = m15Bars.slice(-16);
 
-    // Check Bearish BOS (M15 candle closes below recent swing low)
-    let bearishBOS = false, bullishBOS = false;
-    let bosLevel = 0, bosTime = 0;
+    // Bearish ChoCh (Sell Setup)
+    if (lastM15.close < lastSL.price && prevM15.close >= lastSL.price && lastSH.idx > lastSL.idx - 12) {
+      const obBar = m15Bars[lastSH.idx];
+      const extremeOB = { high: obBar.high, low: Math.min(obBar.open, obBar.close), time: obBar.time };
 
-    for (let i = recentBars.length - 1; i >= 1; i--) {
-      if (recentBars[i].close < lastSL.price && recentBars[i - 1].close >= lastSL.price) {
-        bearishBOS = true;
-        bosLevel = lastSL.price;
-        bosTime = recentBars[i].time;
-        break;
+      let szIdx = Math.max(lastSH.idx + 1, m15Bars.length - 4);
+      for (let k = m15Bars.length - 2; k > lastSH.idx; k--) {
+        if (m15Bars[k].close > m15Bars[k].open) { szIdx = k; break; }
       }
-      if (recentBars[i].close > lastSH.price && recentBars[i - 1].close <= lastSH.price) {
-        bullishBOS = true;
-        bosLevel = lastSH.price;
-        bosTime = recentBars[i].time;
-        break;
+      const szBar = m15Bars[szIdx];
+      const szZone = { high: szBar.high, low: Math.min(szBar.open, szBar.close), time: szBar.time };
+
+      if (szZone.high >= extremeOB.low) {
+        szZone.high = +(extremeOB.low - 0.5).toFixed(3);
+        szZone.low = +(szZone.high - 2.2).toFixed(3);
       }
+
+      const tp1Low = lastM15.low;
+      const swingLength = Math.max(8.0, lastSH.price - tp1Low);
+
+      return {
+        side: 'SELL',
+        chochPrice: lastSL.price,
+        chochStartTime: lastSL.time,
+        chochEndTime: lastM15.time,
+        extremeOB,
+        szZone,
+        tp1Price: tp1Low,
+        tp1Time: lastM15.time,
+        swingLength,
+        liqPoint: null,
+        sweptSZ: false,
+        executed: false,
+        createdAt: curT
+      };
     }
 
-    if (!bearishBOS && !bullishBOS) {
-      // Fallback: compare latest close against latest swing structure
-      const lastClose = m15Bars[m15Bars.length - 1].close;
-      if (lastClose < lastSL.price) {
-        bearishBOS = true; bosLevel = lastSL.price; bosTime = m15Bars[m15Bars.length - 1].time;
-      } else if (lastClose > lastSH.price) {
-        bullishBOS = true; bosLevel = lastSH.price; bosTime = m15Bars[m15Bars.length - 1].time;
-      } else {
-        return null;
+    // Bullish ChoCh (Buy Setup)
+    if (lastM15.close > lastSH.price && prevM15.close <= lastSH.price && lastSL.idx > lastSH.idx - 12) {
+      const obBar = m15Bars[lastSL.idx];
+      const extremeOB = { high: Math.max(obBar.open, obBar.close), low: obBar.low, time: obBar.time };
+
+      let dzIdx = Math.max(lastSL.idx + 1, m15Bars.length - 4);
+      for (let k = m15Bars.length - 2; k > lastSL.idx; k--) {
+        if (m15Bars[k].close < m15Bars[k].open) { dzIdx = k; break; }
       }
+      const dzBar = m15Bars[dzIdx];
+      const dzZone = { high: Math.max(dzBar.open, dzBar.close), low: dzBar.low, time: dzBar.time };
+
+      if (dzZone.low <= extremeOB.high) {
+        dzZone.low = +(extremeOB.high + 0.5).toFixed(3);
+        dzZone.high = +(dzZone.low + 2.2).toFixed(3);
+      }
+
+      const tp1High = lastM15.high;
+      const swingLength = Math.max(8.0, tp1High - lastSL.price);
+
+      return {
+        side: 'BUY',
+        chochPrice: lastSH.price,
+        chochStartTime: lastSH.time,
+        chochEndTime: lastM15.time,
+        extremeOB,
+        szZone: dzZone,
+        tp1Price: tp1High,
+        tp1Time: lastM15.time,
+        swingLength,
+        liqPoint: null,
+        sweptSZ: false,
+        executed: false,
+        createdAt: curT
+      };
     }
 
-    // Dealing Range High & Low for Premium / Discount 50% Equilibrium
-    const rangeBars = m15Bars.slice(-24);
-    let rangeHigh = -Infinity, rangeLow = Infinity;
-    rangeBars.forEach(b => {
-      if (b.high > rangeHigh) rangeHigh = b.high;
-      if (b.low < rangeLow) rangeLow = b.low;
-    });
-    const eq50 = (rangeHigh + rangeLow) / 2;
-
-    return {
-      bias: bearishBOS ? 'BEARISH' : 'BULLISH',
-      bosLevel,
-      bosTime,
-      rangeHigh,
-      rangeLow,
-      eq50
-    };
+    return null;
   }
 
-  // Step 3 & 4: M5 Order Block (OB) in Premium/Discount + Counter-Trendline Break Confirmation
-  function evaluateSMCM15M5Bot() {
-    if (!botState.armed || m1Count === 0) return;
+  function renderSniperPlanDrawings(setup, curT) {
+    drawings = drawings.filter(d => !d.isBotDraw);
+    const futureT = barIndexToTime(timeToBarIndex(curT) + 18);
+    const isSell = setup.side === 'SELL';
 
+    drawings.push({
+      id: Date.now() + 1, isBotDraw: true, createdAtTime: setup.createdAt,
+      tool: 'choch', t1: setup.chochStartTime, t2: setup.chochEndTime,
+      p1: setup.chochPrice, p2: setup.chochPrice,
+      color: isSell ? '#f23645' : '#089981', width: 1.5, label: 'ChoCh', visibleTFs: [...ALL_TFS]
+    });
+
+    drawings.push({
+      id: Date.now() + 2, isBotDraw: true, createdAtTime: setup.createdAt,
+      tool: 'box', t1: setup.extremeOB.time, t2: futureT,
+      p1: setup.extremeOB.high, p2: setup.extremeOB.low,
+      color: isSell ? '#ef4444' : '#10b981', width: 1.2,
+      label: isSell ? 'OB Sell M15' : 'OB Buy M15', visibleTFs: [...ALL_TFS]
+    });
+
+    drawings.push({
+      id: Date.now() + 3, isBotDraw: true, createdAtTime: setup.createdAt,
+      tool: 'box', t1: setup.szZone.time, t2: futureT,
+      p1: setup.szZone.high, p2: setup.szZone.low,
+      color: '#f59e0b', width: 1.2,
+      label: isSell ? 'SZ' : 'DZ', visibleTFs: [...ALL_TFS]
+    });
+
+    if (setup.liqPoint) {
+      drawings.push({
+        id: Date.now() + 4, isBotDraw: true, createdAtTime: setup.liqPoint.time,
+        tool: 'badge', t1: setup.liqPoint.time, t2: setup.liqPoint.time,
+        p1: setup.liqPoint.price, p2: setup.liqPoint.price,
+        color: '#eab308', label: '$$$', visibleTFs: [...ALL_TFS]
+      });
+
+      const targetZoneMid = (setup.szZone.high + setup.szZone.low) / 2;
+      drawings.push({
+        id: Date.now() + 5, isBotDraw: true, createdAtTime: setup.liqPoint.time,
+        tool: 'arrow', dashed: true,
+        t1: setup.liqPoint.startSweepTime || setup.liqPoint.time,
+        t2: barIndexToTime(timeToBarIndex(setup.liqPoint.time) + 4),
+        p1: setup.liqPoint.startSweepPrice || setup.tp1Price,
+        p2: targetZoneMid,
+        color: isSell ? '#f23645' : '#089981', width: 1.4,
+        label: 'Sweep $$$ -> Zone', visibleTFs: [...ALL_TFS]
+      });
+    }
+  }
+
+  function evaluateSMCSniperBot() {
+    if (!botState.armed || m1Count < 60) return;
     const curT = m1Time[current1mIndex];
-    const m5Sec = 5 * 60;
-    const curM5Bucket = Math.floor(curT / m5Sec) * m5Sec;
-
-    // Evaluate once per newly closed M5 candle
-    if (curM5Bucket <= botState.lastEvaluatedM5Time) return;
-    botState.lastEvaluatedM5Time = curM5Bucket;
+    const curPrice = m1Close[current1mIndex];
+    const curHigh = m1High[current1mIndex];
+    const curLow = m1Low[current1mIndex];
 
     const dayStr = formatTHDateFull(curT);
     if (botState.currentDayStr !== dayStr) {
@@ -1560,279 +1747,410 @@
       botState.tradesTodayCount = 0;
     }
 
-    const maxPerDay = parseInt(document.getElementById('botMaxTradesDay').value, 10) || 2;
-    if (botState.tradesTodayCount >= maxPerDay) return;
+    if (document.getElementById('botFailedSwingExitChk').checked && orders.some(o => o.botTag && o.triggered)) {
+      const botActiveOrders = orders.filter(o => o.botTag && o.triggered);
+      const firstOrd = botActiveOrders[0];
+      const isSell = firstOrd.type.includes('SELL');
+      const profitPts = isSell ? (firstOrd.entry - curPrice) : (curPrice - firstOrd.entry);
+      const riskPts = Math.abs(firstOrd.entry - firstOrd.sl);
 
-    // Avoid overlapping bot orders
-    if (orders.some(o => o.botTag)) return;
+      if (profitPts >= riskPts * 1.2) {
+        const commOffset = (parseFloat(document.getElementById('commInput').value) || 0) / 100;
+        orders.forEach(o => {
+          if (o.botTag && o.triggered) {
+            const beLevel = isSell ? +(o.entry - commOffset).toFixed(3) : +(o.entry + commOffset).toFixed(3);
+            if ((isSell && o.sl > beLevel) || (!isSell && o.sl < beLevel)) {
+              o.sl = beLevel;
+              appendBotLog(`Auto BE Locked @ ${beLevel.toFixed(2)}`);
+            }
+          }
+        });
+      }
+    }
 
-    const m15Bars = getCompletedHTFBars(15, 60);
-    const m5Bars = getCompletedHTFBars(5, 50);
-    if (m15Bars.length < 30 || m5Bars.length < 25) return;
+    const m15Sec = 15 * 60;
+    const curM15Bucket = Math.floor(curT / m15Sec) * m15Sec;
+    if (curM15Bucket > botState.lastEvaluatedM15) {
+      botState.lastEvaluatedM15 = curM15Bucket;
+      const m15Bars = getCompletedHTFBars(15, 65);
+      const newSetup = scanM15SniperSetup(m15Bars, curT);
+      if (newSetup && (!botState.activeSetup || botState.activeSetup.executed)) {
+        botState.activeSetup = newSetup;
+        renderSniperPlanDrawings(newSetup, curT);
+        appendBotLog(`M15 ${newSetup.side} ChoCh! Marked OB M15 & ${newSetup.side === 'SELL' ? 'SZ' : 'DZ'}`);
+        drawingsPrimitive.requestRedraw();
+      }
+    }
 
-    const m15Struct = analyzeM15Structure(m15Bars);
-    if (!m15Struct) {
-      appendBotLog('Scanning M15 Structure (No clear BOS yet)');
+    const setup = botState.activeSetup;
+    if (!setup || setup.executed) return;
+
+    if (setup.side === 'SELL' && curClose > setup.extremeOB.high + 2.5) {
+      appendBotLog('Setup Invalidated (Broke above Extreme OB M15)');
+      botState.activeSetup = null;
+      return;
+    }
+    if (setup.side === 'BUY' && curClose < setup.extremeOB.low - 2.5) {
+      appendBotLog('Setup Invalidated (Broke below Extreme OB M15)');
+      botState.activeSetup = null;
       return;
     }
 
-    const lastM5 = m5Bars[m5Bars.length - 1];
-    const prevM5 = m5Bars[m5Bars.length - 2];
-
-    if (m15Struct.bias === 'BEARISH') {
-      // Condition 2: Price must be in M15 Premium Zone (> 50% Equilibrium)
-      if (lastM5.high < m15Struct.eq50) {
-        appendBotLog(`M15 Bearish BOS | Price (${lastM5.close.toFixed(1)}) in Discount (< ${m15Struct.eq50.toFixed(1)}) - Waiting Premium`);
-        return;
+    if (!setup.liqPoint && current1mIndex > 20) {
+      const recent15mSlice = [];
+      for (let k = current1mIndex - 15; k < current1mIndex; k++) {
+        recent15mSlice.push({ t: m1Time[k], h: m1High[k], l: m1Low[k] });
       }
-
-      // Condition 3: Find Bearish M5 Order Block (Last bullish candle before sharp bearish displacement) in Premium Zone
-      let obZone = null;
-      for (let i = m5Bars.length - 5; i >= m5Bars.length - 24; i--) {
-        const c0 = m5Bars[i];
-        const c1 = m5Bars[i + 1];
-        const c2 = m5Bars[i + 2];
-        const isBullishCandle = c0.close > c0.open;
-        const strongDrop = (c1.close < c0.low) || (c2.close < c0.low && c1.close < c1.open);
-        if (isBullishCandle && strongDrop && c0.high >= m15Struct.eq50) {
-          // Verify price recently mitigated (touched) this M5 OB
-          const recentSlice = m5Bars.slice(i + 2);
-          const touchedOB = recentSlice.some(b => b.high >= c0.low && b.low <= c0.high);
-          if (touchedOB) {
-            obZone = { high: c0.high, low: c0.low, time: c0.time };
-            break;
-          }
+      if (setup.side === 'SELL') {
+        let localMax = -Infinity, localMaxT = 0;
+        recent15mSlice.forEach(b => { if (b.h > localMax) { localMax = b.h; localMaxT = b.t; } });
+        if (localMax < setup.szZone.low && localMax > setup.tp1Price + 2.0 && curLow < localMax - 1.5) {
+          setup.liqPoint = {
+            price: localMax,
+            time: localMaxT,
+            startSweepTime: curT,
+            startSweepPrice: curLow
+          };
+          renderSniperPlanDrawings(setup, curT);
+          appendBotLog(`Liquidity $$$ Detected @ ${localMax.toFixed(2)} below SZ`);
+          drawingsPrimitive.requestRedraw();
+        }
+      } else {
+        let localMin = Infinity, localMinT = 0;
+        recent15mSlice.forEach(b => { if (b.l < localMin) { localMin = b.l; localMinT = b.t; } });
+        if (localMin > setup.szZone.high && localMin < setup.tp1Price - 2.0 && curHigh > localMin + 1.5) {
+          setup.liqPoint = {
+            price: localMin,
+            time: localMinT,
+            startSweepTime: curT,
+            startSweepPrice: curHigh
+          };
+          renderSniperPlanDrawings(setup, curT);
+          appendBotLog(`Liquidity $$$ Detected @ ${localMin.toFixed(2)} above DZ`);
+          drawingsPrimitive.requestRedraw();
         }
       }
+    }
 
-      if (!obZone) {
-        appendBotLog(`M15 Bearish BOS + Premium Zone | Waiting M5 OB Mitigation`);
-        return;
+    if (setup.side === 'SELL' && curHigh >= setup.szZone.low) {
+      if (!setup.sweptSZ) {
+        setup.sweptSZ = true;
+        appendBotLog(`Price Swept $$$ into SZ (${setup.szZone.low.toFixed(1)})! Watching M1 MSS & Lower High...`);
       }
+    } else if (setup.side === 'BUY' && curLow <= setup.szZone.high) {
+      if (!setup.sweptSZ) {
+        setup.sweptSZ = true;
+        appendBotLog(`Price Swept $$$ into DZ (${setup.szZone.high.toFixed(1)})! Watching M1 MSS & Higher Low...`);
+      }
+    }
 
-      // Condition 4: Counter-Trendline Break (Pullback rising lows broken downward on M5)
-      const pullbackSlice = m5Bars.slice(-8, -1);
-      let minPullbackLow = Infinity, minLowTime = 0;
-      pullbackSlice.forEach(b => {
-        if (b.low < minPullbackLow) {
-          minPullbackLow = b.low;
-          minLowTime = b.time;
-        }
+    if (!setup.sweptSZ) return;
+    if (curT <= botState.lastEvaluatedM1) return;
+    botState.lastEvaluatedM1 = curT;
+
+    const maxPerDay = parseInt(document.getElementById('botMaxTradesDay').value, 10) || 3;
+    if (botState.tradesTodayCount >= maxPerDay) return;
+    if (orders.some(o => o.botTag)) return;
+
+    const m1Window = [];
+    for (let k = current1mIndex - 9; k <= current1mIndex; k++) {
+      m1Window.push({ t: m1Time[k], o: m1Open[k], h: m1High[k], l: m1Low[k], c: m1Close[k] });
+    }
+    const cNow = m1Window[m1Window.length - 1];
+    const cPrev = m1Window[m1Window.length - 2];
+
+    if (setup.side === 'SELL') {
+      let peakH = -Infinity, peakT = 0, peakIdx = 0;
+      m1Window.forEach((b, idx) => {
+        if (b.h > peakH) { peakH = b.h; peakT = b.t; peakIdx = idx; }
       });
+      const isLowerHighReject = peakIdx <= 7 && cPrev.h < peakH && cNow.h <= cPrev.h && cNow.c < cNow.o && cNow.c < cPrev.l;
+      if (!isLowerHighReject) return;
 
-      const tlBrokenDown = lastM5.close < prevM5.low && lastM5.close < lastM5.open && prevM5.high >= obZone.low * 0.9995;
-      if (!tlBrokenDown) {
-        appendBotLog(`M5 OB Mitigated (${obZone.low.toFixed(1)}-${obZone.high.toFixed(1)}) | Waiting TL Break`);
-        return;
-      }
-
-      // ALL CONDITIONS MET -> Execute Short Setup (RR 1:2) + Visual Drawings on Chart
-      const entryPrice = lastM5.close;
-      const slPrice = +(Math.max(obZone.high, prevM5.high) + 0.8).toFixed(3);
+      const entryPrice = cNow.c;
+      const slPrice = +(peakH + 0.6).toFixed(3);
       const riskDist = Math.abs(slPrice - entryPrice);
-      if (riskDist < 0.8) return;
+      if (riskDist < 0.6 || riskDist > 8.0) return;
 
-      const rrTarget = parseFloat(document.getElementById('botRRInput').value) || 2.0;
+      const tp1 = +(Math.min(setup.tp1Price, entryPrice - riskDist * 1.8)).toFixed(3);
+      const tp2 = +(slPrice - setup.swingLength).toFixed(3);
       const riskUsd = parseFloat(document.getElementById('botRiskInput').value) || 100;
-      const tpPrice = +(entryPrice - riskDist * rrTarget).toFixed(3);
-      const calcLot = Math.max(0.01, +(riskUsd / (riskDist * 100)).toFixed(2));
+      const totalLot = Math.max(0.02, +(riskUsd / (riskDist * 100)).toFixed(2));
+      const splitTP = document.getElementById('botSplitTPChk').checked;
       const drawId = Date.now();
 
-      if (document.getElementById('botAutoDrawChk').checked) {
-        // Remove previous bot drawings so chart stays clean & readable
-        drawings = drawings.filter(d => !d.isBotDraw);
+      drawings.push({
+        id: drawId + 1, isBotDraw: true, createdAtTime: curT,
+        tool: 'trend', arrowEnd: true,
+        t1: peakT, t2: cNow.t, p1: peakH, p2: cPrev.h,
+        color: '#06b6d4', width: 2, label: 'M1 MSS + LH Reject', visibleTFs: [...ALL_TFS]
+      });
 
-        // 1. M15 BOS Level Line
-        drawings.push({
-          id: drawId + 1, isBotDraw: true, tool: 'hline',
-          t1: m15Struct.bosTime, t2: lastM5.time, p1: m15Struct.bosLevel, p2: m15Struct.bosLevel,
-          color: '#f23645', width: 1, dashed: true, label: 'M15 BOS (Bearish)', visibleTFs: [...ALL_TFS]
+      const projX1 = barIndexToTime(timeToBarIndex(cNow.t) + 2);
+      const projX2 = barIndexToTime(timeToBarIndex(cNow.t) + 10);
+      drawings.push({
+        id: drawId + 2, isBotDraw: true, createdAtTime: curT,
+        tool: 'arrow', t1: projX1, t2: projX1, p1: slPrice, p2: tp1,
+        color: '#38bdf8', width: 2, label: 'TP1', visibleTFs: [...ALL_TFS]
+      });
+      drawings.push({
+        id: drawId + 3, isBotDraw: true, createdAtTime: curT,
+        tool: 'arrow', t1: projX2, t2: projX2, p1: slPrice, p2: tp2,
+        color: '#2962ff', width: 2, label: 'TP2 (HTF Swing)', visibleTFs: [...ALL_TFS]
+      });
+
+      drawings.push({
+        id: drawId, isBotDraw: true, createdAtTime: curT,
+        tool: 'short', t1: cNow.t, t2: barIndexToTime(timeToBarIndex(cNow.t) + 8),
+        p1: slPrice, p2: splitTP ? tp2 : tp1, midP: entryPrice,
+        color: '#f23645', width: 1, visibleTFs: [...ALL_TFS]
+      });
+
+      if (splitTP) {
+        const lot1 = +(totalLot / 2).toFixed(2);
+        const lot2 = +(totalLot - lot1).toFixed(2);
+        orders.push({
+          id: drawId + 10, botTag: 'SNIPER-1', tpTag: 'TP1', linkedDrawId: drawId,
+          type: 'SELL', triggered: true, activateTime: curT,
+          entry: entryPrice, sl: slPrice, tp: tp1, lot: lot1,
+          riskMoney: riskDist * 100 * lot1, entryTime: curT
         });
-
-        // 2. M15 50% Equilibrium Line (Premium Threshold)
-        drawings.push({
-          id: drawId + 2, isBotDraw: true, tool: 'hline',
-          t1: m15Struct.bosTime, t2: lastM5.time, p1: m15Struct.eq50, p2: m15Struct.eq50,
-          color: '#f59e0b', width: 1, dashed: true, label: 'M15 50% EQ (Premium Above)', visibleTFs: [...ALL_TFS]
+        orders.push({
+          id: drawId + 11, botTag: 'SNIPER-2', tpTag: 'TP2', linkedDrawId: drawId,
+          type: 'SELL', triggered: true, activateTime: curT,
+          entry: entryPrice, sl: slPrice, tp: tp2, lot: lot2,
+          riskMoney: riskDist * 100 * lot2, entryTime: curT
         });
-
-        // 3. M5 Order Block Zone Rectangle
-        drawings.push({
-          id: drawId + 3, isBotDraw: true, tool: 'box',
-          t1: obZone.time, t2: barIndexToTime(timeToBarIndex(lastM5.time) + 8),
-          p1: obZone.high, p2: obZone.low,
-          color: '#9c27b0', width: 1, label: 'M5 Supply OB (Premium)', visibleTFs: [...ALL_TFS]
-        });
-
-        // 4. M5 Counter-Trendline (Broken)
-        drawings.push({
-          id: drawId + 4, isBotDraw: true, tool: 'trend',
-          t1: minLowTime || m5Bars[m5Bars.length - 5].time, t2: lastM5.time,
-          p1: minPullbackLow, p2: prevM5.low,
-          color: '#06b6d4', width: 2, label: 'M5 TL Break', visibleTFs: [...ALL_TFS]
-        });
-
-        // 5. Short Position RR Box (1:2)
-        drawings.push({
-          id: drawId, isBotDraw: true, tool: 'short',
-          t1: lastM5.time, t2: barIndexToTime(timeToBarIndex(lastM5.time) + 10),
-          p1: slPrice, p2: tpPrice, midP: entryPrice,
-          color: '#f23645', width: 1, visibleTFs: [...ALL_TFS]
+      } else {
+        orders.push({
+          id: drawId + 10, botTag: 'SNIPER', tpTag: 'TP', linkedDrawId: drawId,
+          type: 'SELL', triggered: true, activateTime: curT,
+          entry: entryPrice, sl: slPrice, tp: tp1, lot: totalLot,
+          riskMoney: riskDist * 100 * totalLot, entryTime: curT
         });
       }
 
-      // Place real Pending Limit/Stop Order
-      const curPrice = m1Close[current1mIndex];
-      const orderType = entryPrice >= curPrice ? 'SELL LIMIT' : 'SELL STOP';
-      orders.push({
-        id: drawId + 10,
-        botTag: true,
-        linkedDrawId: drawId,
-        type: orderType,
-        triggered: false,
-        activateTime: curT,
-        entry: entryPrice,
-        sl: slPrice,
-        tp: tpPrice,
-        lot: calcLot,
-        riskMoney: riskDist * 100 * calcLot,
-        entryTime: null
-      });
-
+      setup.executed = true;
       botState.tradesTodayCount++;
-      botState.lastSignalM5Time = curM5Bucket;
       gestureOverlay.classList.add('interactive');
-      appendBotLog(`SIGNAL SELL! M15 BOS + Premium M5 OB + TL Break -> ${orderType} @ ${entryPrice.toFixed(2)} (Lot ${calcLot})`);
+      appendBotLog(`SNIPER SELL @ ${entryPrice.toFixed(2)} | SL ${slPrice.toFixed(2)} | TP1 ${tp1.toFixed(2)} | TP2 ${tp2.toFixed(2)}`);
       drawingsPrimitive.requestRedraw();
       updateUI();
       saveCurrentProfile();
 
-    } else if (m15Struct.bias === 'BULLISH') {
-      // Condition 2: Price must be in M15 Discount Zone (< 50% Equilibrium)
-      if (lastM5.low > m15Struct.eq50) {
-        appendBotLog(`M15 Bullish BOS | Price (${lastM5.close.toFixed(1)}) in Premium (> ${m15Struct.eq50.toFixed(1)}) - Waiting Discount`);
-        return;
-      }
-
-      // Condition 3: Find Bullish M5 Order Block in Discount Zone
-      let obZone = null;
-      for (let i = m5Bars.length - 5; i >= m5Bars.length - 24; i--) {
-        const c0 = m5Bars[i];
-        const c1 = m5Bars[i + 1];
-        const c2 = m5Bars[i + 2];
-        const isBearishCandle = c0.close < c0.open;
-        const strongRally = (c1.close > c0.high) || (c2.close > c0.high && c1.close > c1.open);
-        if (isBearishCandle && strongRally && c0.low <= m15Struct.eq50) {
-          const recentSlice = m5Bars.slice(i + 2);
-          const touchedOB = recentSlice.some(b => b.low <= c0.high && b.high >= c0.low);
-          if (touchedOB) {
-            obZone = { high: c0.high, low: c0.low, time: c0.time };
-            break;
-          }
-        }
-      }
-
-      if (!obZone) {
-        appendBotLog(`M15 Bullish BOS + Discount Zone | Waiting M5 OB Mitigation`);
-        return;
-      }
-
-      // Condition 4: Counter-Trendline Break (Pullback falling highs broken upward on M5)
-      const pullbackSlice = m5Bars.slice(-8, -1);
-      let maxPullbackHigh = -Infinity, maxHighTime = 0;
-      pullbackSlice.forEach(b => {
-        if (b.high > maxPullbackHigh) {
-          maxPullbackHigh = b.high;
-          maxHighTime = b.time;
-        }
+    } else if (setup.side === 'BUY') {
+      let troughL = Infinity, troughT = 0, troughIdx = 0;
+      m1Window.forEach((b, idx) => {
+        if (b.l < troughL) { troughL = b.l; troughT = b.t; troughIdx = idx; }
       });
+      const isHigherLowReject = troughIdx <= 7 && cPrev.l > troughL && cNow.l >= cPrev.l && cNow.c > cNow.o && cNow.c > cPrev.h;
+      if (!isHigherLowReject) return;
 
-      const tlBrokenUp = lastM5.close > prevM5.high && lastM5.close > lastM5.open && prevM5.low <= obZone.high * 1.0005;
-      if (!tlBrokenUp) {
-        appendBotLog(`M5 Demand OB Mitigated (${obZone.low.toFixed(1)}-${obZone.high.toFixed(1)}) | Waiting TL Break`);
-        return;
-      }
-
-      // ALL CONDITIONS MET -> Execute Long Setup (RR 1:2) + Visual Drawings on Chart
-      const entryPrice = lastM5.close;
-      const slPrice = +(Math.min(obZone.low, prevM5.low) - 0.8).toFixed(3);
+      const entryPrice = cNow.c;
+      const slPrice = +(troughL - 0.6).toFixed(3);
       const riskDist = Math.abs(entryPrice - slPrice);
-      if (riskDist < 0.8) return;
+      if (riskDist < 0.6 || riskDist > 8.0) return;
 
-      const rrTarget = parseFloat(document.getElementById('botRRInput').value) || 2.0;
+      const tp1 = +(Math.max(setup.tp1Price, entryPrice + riskDist * 1.8)).toFixed(3);
+      const tp2 = +(slPrice + setup.swingLength).toFixed(3);
       const riskUsd = parseFloat(document.getElementById('botRiskInput').value) || 100;
-      const tpPrice = +(entryPrice + riskDist * rrTarget).toFixed(3);
-      const calcLot = Math.max(0.01, +(riskUsd / (riskDist * 100)).toFixed(2));
+      const totalLot = Math.max(0.02, +(riskUsd / (riskDist * 100)).toFixed(2));
+      const splitTP = document.getElementById('botSplitTPChk').checked;
       const drawId = Date.now();
 
-      if (document.getElementById('botAutoDrawChk').checked) {
-        drawings = drawings.filter(d => !d.isBotDraw);
+      drawings.push({
+        id: drawId + 1, isBotDraw: true, createdAtTime: curT,
+        tool: 'trend', arrowEnd: true,
+        t1: troughT, t2: cNow.t, p1: troughL, p2: cPrev.l,
+        color: '#06b6d4', width: 2, label: 'M1 MSS + HL Reject', visibleTFs: [...ALL_TFS]
+      });
 
-        drawings.push({
-          id: drawId + 1, isBotDraw: true, tool: 'hline',
-          t1: m15Struct.bosTime, t2: lastM5.time, p1: m15Struct.bosLevel, p2: m15Struct.bosLevel,
-          color: '#089981', width: 1, dashed: true, label: 'M15 BOS (Bullish)', visibleTFs: [...ALL_TFS]
+      const projX1 = barIndexToTime(timeToBarIndex(cNow.t) + 2);
+      const projX2 = barIndexToTime(timeToBarIndex(cNow.t) + 10);
+      drawings.push({
+        id: drawId + 2, isBotDraw: true, createdAtTime: curT,
+        tool: 'arrow', t1: projX1, t2: projX1, p1: slPrice, p2: tp1,
+        color: '#38bdf8', width: 2, label: 'TP1', visibleTFs: [...ALL_TFS]
+      });
+      drawings.push({
+        id: drawId + 3, isBotDraw: true, createdAtTime: curT,
+        tool: 'arrow', t1: projX2, t2: projX2, p1: slPrice, p2: tp2,
+        color: '#2962ff', width: 2, label: 'TP2 (HTF Swing)', visibleTFs: [...ALL_TFS]
+      });
+
+      drawings.push({
+        id: drawId, isBotDraw: true, createdAtTime: curT,
+        tool: 'long', t1: cNow.t, t2: barIndexToTime(timeToBarIndex(cNow.t) + 8),
+        p1: slPrice, p2: splitTP ? tp2 : tp1, midP: entryPrice,
+        color: '#089981', width: 1, visibleTFs: [...ALL_TFS]
+      });
+
+      if (splitTP) {
+        const lot1 = +(totalLot / 2).toFixed(2);
+        const lot2 = +(totalLot - lot1).toFixed(2);
+        orders.push({
+          id: drawId + 10, botTag: 'SNIPER-1', tpTag: 'TP1', linkedDrawId: drawId,
+          type: 'BUY', triggered: true, activateTime: curT,
+          entry: entryPrice, sl: slPrice, tp: tp1, lot: lot1,
+          riskMoney: riskDist * 100 * lot1, entryTime: curT
         });
-
-        drawings.push({
-          id: drawId + 2, isBotDraw: true, tool: 'hline',
-          t1: m15Struct.bosTime, t2: lastM5.time, p1: m15Struct.eq50, p2: m15Struct.eq50,
-          color: '#f59e0b', width: 1, dashed: true, label: 'M15 50% EQ (Discount Below)', visibleTFs: [...ALL_TFS]
+        orders.push({
+          id: drawId + 11, botTag: 'SNIPER-2', tpTag: 'TP2', linkedDrawId: drawId,
+          type: 'BUY', triggered: true, activateTime: curT,
+          entry: entryPrice, sl: slPrice, tp: tp2, lot: lot2,
+          riskMoney: riskDist * 100 * lot2, entryTime: curT
         });
-
-        drawings.push({
-          id: drawId + 3, isBotDraw: true, tool: 'box',
-          t1: obZone.time, t2: barIndexToTime(timeToBarIndex(lastM5.time) + 8),
-          p1: obZone.high, p2: obZone.low,
-          color: '#9c27b0', width: 1, label: 'M5 Demand OB (Discount)', visibleTFs: [...ALL_TFS]
-        });
-
-        drawings.push({
-          id: drawId + 4, isBotDraw: true, tool: 'trend',
-          t1: maxHighTime || m5Bars[m5Bars.length - 5].time, t2: lastM5.time,
-          p1: maxPullbackHigh, p2: prevM5.high,
-          color: '#06b6d4', width: 2, label: 'M5 TL Break', visibleTFs: [...ALL_TFS]
-        });
-
-        drawings.push({
-          id: drawId, isBotDraw: true, tool: 'long',
-          t1: lastM5.time, t2: barIndexToTime(timeToBarIndex(lastM5.time) + 10),
-          p1: slPrice, p2: tpPrice, midP: entryPrice,
-          color: '#089981', width: 1, visibleTFs: [...ALL_TFS]
+      } else {
+        orders.push({
+          id: drawId + 10, botTag: 'SNIPER', tpTag: 'TP', linkedDrawId: drawId,
+          type: 'BUY', triggered: true, activateTime: curT,
+          entry: entryPrice, sl: slPrice, tp: tp1, lot: totalLot,
+          riskMoney: riskDist * 100 * totalLot, entryTime: curT
         });
       }
 
-      const curPrice = m1Close[current1mIndex];
-      const orderType = entryPrice <= curPrice ? 'BUY LIMIT' : 'BUY STOP';
-      orders.push({
-        id: drawId + 10,
-        botTag: true,
-        linkedDrawId: drawId,
-        type: orderType,
-        triggered: false,
-        activateTime: curT,
-        entry: entryPrice,
-        sl: slPrice,
-        tp: tpPrice,
-        lot: calcLot,
-        riskMoney: riskDist * 100 * calcLot,
-        entryTime: null
-      });
-
+      setup.executed = true;
       botState.tradesTodayCount++;
-      botState.lastSignalM5Time = curM5Bucket;
       gestureOverlay.classList.add('interactive');
-      appendBotLog(`SIGNAL BUY! M15 BOS + Discount M5 OB + TL Break -> ${orderType} @ ${entryPrice.toFixed(2)} (Lot ${calcLot})`);
+      appendBotLog(`SNIPER BUY @ ${entryPrice.toFixed(2)} | SL ${slPrice.toFixed(2)} | TP1 ${tp1.toFixed(2)} | TP2 ${tp2.toFixed(2)}`);
       drawingsPrimitive.requestRedraw();
       updateUI();
       saveCurrentProfile();
     }
   }
 
-  // Bot Engine Modal Controls
+  // =========================================================================
+  // STRATEGY 2: SMC M15 BOS + PREMIUM/DISCOUNT + M5 OB & TL BREAK
+  // =========================================================================
+  function evaluateSMCM15M5Bot() {
+    if (!botState.armed || m1Count === 0) return;
+    const curT = m1Time[current1mIndex];
+    const m5Sec = 5 * 60;
+    const curM5Bucket = Math.floor(curT / m5Sec) * m5Sec;
+    if (curM5Bucket <= botState.lastEvaluatedM15) return;
+    botState.lastEvaluatedM15 = curM5Bucket;
+
+    const dayStr = formatTHDateFull(curT);
+    if (botState.currentDayStr !== dayStr) {
+      botState.currentDayStr = dayStr;
+      botState.tradesTodayCount = 0;
+    }
+    const maxPerDay = parseInt(document.getElementById('botMaxTradesDay').value, 10) || 3;
+    if (botState.tradesTodayCount >= maxPerDay || orders.some(o => o.botTag)) return;
+
+    const m15Bars = getCompletedHTFBars(15, 60);
+    const m5Bars = getCompletedHTFBars(5, 50);
+    if (m15Bars.length < 30 || m5Bars.length < 25) return;
+
+    const swingHighs = [], swingLows = [];
+    for (let i = 2; i < m15Bars.length - 2; i++) {
+      const b = m15Bars[i];
+      if (b.high > m15Bars[i - 1].high && b.high >= m15Bars[i + 1].high) swingHighs.push({ idx: i, price: b.high, time: b.time });
+      if (b.low < m15Bars[i - 1].low && b.low <= m15Bars[i + 1].low) swingLows.push({ idx: i, price: b.low, time: b.time });
+    }
+    if (!swingHighs.length || !swingLows.length) return;
+
+    const lastSH = swingHighs[swingHighs.length - 1];
+    const lastSL = swingLows[swingLows.length - 1];
+    const lastM15Close = m15Bars[m15Bars.length - 1].close;
+    const bias = lastM15Close < lastSL.price ? 'BEARISH' : (lastM15Close > lastSH.price ? 'BULLISH' : null);
+    if (!bias) return;
+
+    let rangeHigh = -Infinity, rangeLow = Infinity;
+    m15Bars.slice(-24).forEach(b => { if (b.high > rangeHigh) rangeHigh = b.high; if (b.low < rangeLow) rangeLow = b.low; });
+    const eq50 = (rangeHigh + rangeLow) / 2;
+
+    const lastM5 = m5Bars[m5Bars.length - 1];
+    const prevM5 = m5Bars[m5Bars.length - 2];
+
+    if (bias === 'BEARISH' && lastM5.high >= eq50 && lastM5.close < prevM5.low && lastM5.close < lastM5.open) {
+      const entryPrice = lastM5.close;
+      const slPrice = +(prevM5.high + 0.8).toFixed(3);
+      const riskDist = Math.abs(slPrice - entryPrice);
+      const rrTarget = parseFloat(document.getElementById('botRRInput').value) || 2.0;
+      const riskUsd = parseFloat(document.getElementById('botRiskInput').value) || 100;
+      const tpPrice = +(entryPrice - riskDist * rrTarget).toFixed(3);
+      const calcLot = Math.max(0.01, +(riskUsd / (riskDist * 100)).toFixed(2));
+      const drawId = Date.now();
+
+      drawings = drawings.filter(d => !d.isBotDraw);
+      drawings.push({
+        id: drawId + 1, isBotDraw: true, createdAtTime: curT, tool: 'hline',
+        t1: lastSL.time, t2: lastM5.time, p1: eq50, p2: eq50,
+        color: '#f59e0b', width: 1, dashed: true, label: 'M15 50% EQ (Premium)', visibleTFs: [...ALL_TFS]
+      });
+      drawings.push({
+        id: drawId, isBotDraw: true, createdAtTime: curT, tool: 'short',
+        t1: lastM5.time, t2: barIndexToTime(timeToBarIndex(lastM5.time) + 8),
+        p1: slPrice, p2: tpPrice, midP: entryPrice,
+        color: '#f23645', width: 1, visibleTFs: [...ALL_TFS]
+      });
+      orders.push({
+        id: drawId + 10, botTag: 'SMC-M5', linkedDrawId: drawId,
+        type: 'SELL', triggered: true, activateTime: curT,
+        entry: entryPrice, sl: slPrice, tp: tpPrice, lot: calcLot,
+        riskMoney: riskDist * 100 * calcLot, entryTime: curT
+      });
+      botState.tradesTodayCount++;
+      gestureOverlay.classList.add('interactive');
+      appendBotLog(`SMC-M5 SELL @ ${entryPrice.toFixed(2)} (Premium + TL Break)`);
+      drawingsPrimitive.requestRedraw();
+      updateUI();
+      saveCurrentProfile();
+    } else if (bias === 'BULLISH' && lastM5.low <= eq50 && lastM5.close > prevM5.high && lastM5.close > lastM5.open) {
+      const entryPrice = lastM5.close;
+      const slPrice = +(prevM5.low - 0.8).toFixed(3);
+      const riskDist = Math.abs(entryPrice - slPrice);
+      const rrTarget = parseFloat(document.getElementById('botRRInput').value) || 2.0;
+      const riskUsd = parseFloat(document.getElementById('botRiskInput').value) || 100;
+      const tpPrice = +(entryPrice + riskDist * rrTarget).toFixed(3);
+      const calcLot = Math.max(0.01, +(riskUsd / (riskDist * 100)).toFixed(2));
+      const drawId = Date.now();
+
+      drawings = drawings.filter(d => !d.isBotDraw);
+      drawings.push({
+        id: drawId + 1, isBotDraw: true, createdAtTime: curT, tool: 'hline',
+        t1: lastSH.time, t2: lastM5.time, p1: eq50, p2: eq50,
+        color: '#f59e0b', width: 1, dashed: true, label: 'M15 50% EQ (Discount)', visibleTFs: [...ALL_TFS]
+      });
+      drawings.push({
+        id: drawId, isBotDraw: true, createdAtTime: curT, tool: 'long',
+        t1: lastM5.time, t2: barIndexToTime(timeToBarIndex(lastM5.time) + 8),
+        p1: slPrice, p2: tpPrice, midP: entryPrice,
+        color: '#089981', width: 1, visibleTFs: [...ALL_TFS]
+      });
+      orders.push({
+        id: drawId + 10, botTag: 'SMC-M5', linkedDrawId: drawId,
+        type: 'BUY', triggered: true, activateTime: curT,
+        entry: entryPrice, sl: slPrice, tp: tpPrice, lot: calcLot,
+        riskMoney: riskDist * 100 * calcLot, entryTime: curT
+      });
+      botState.tradesTodayCount++;
+      gestureOverlay.classList.add('interactive');
+      appendBotLog(`SMC-M5 BUY @ ${entryPrice.toFixed(2)} (Discount + TL Break)`);
+      drawingsPrimitive.requestRedraw();
+      updateUI();
+      saveCurrentProfile();
+    }
+  }
+
+  function runActiveBotStrategy() {
+    if (!botState.armed) return;
+    if (botState.strategy === 'smc_sniper_v2') evaluateSMCSniperBot();
+    else evaluateSMCM15M5Bot();
+  }
+
+  // Bot Modal Controls
   const openBotModalBtn = document.getElementById('openBotModalBtn');
   const toggleBotArmBtn = document.getElementById('toggleBotArmBtn');
   const botStatusHud = document.getElementById('botStatusHud');
+  const botStrategySelect = document.getElementById('botStrategySelect');
+
+  botStrategySelect.onchange = e => {
+    botState.strategy = e.target.value;
+    document.getElementById('botDescSniper').style.display = botState.strategy === 'smc_sniper_v2' ? 'block' : 'none';
+    document.getElementById('botDescTrend').style.display = botState.strategy === 'smc_m15_m5' ? 'block' : 'none';
+  };
 
   openBotModalBtn.onclick = () => document.getElementById('botModal').classList.add('open');
   document.getElementById('closeBotModalBtn').onclick = () => document.getElementById('botModal').classList.remove('open');
@@ -1843,17 +2161,20 @@
     botStatusHud.classList.toggle('visible', botState.armed);
 
     if (botState.armed) {
-      toggleBotArmBtn.textContent = 'หยุดการทำงานบอท (Stop Bot)';
+      toggleBotArmBtn.textContent = 'ปิดโหมดบอท (Disarm Bot)';
       toggleBotArmBtn.className = 'btn btn-red';
-      botState.lastEvaluatedM5Time = 0;
+      botState.lastEvaluatedM15 = 0;
+      botState.lastEvaluatedM1 = 0;
+      botSnapshots = [];
+      saveBotTimelineSnapshot();
       document.getElementById('botModal').classList.remove('open');
-      appendBotLog('Armed! Auto-playing chart & scanning M15 BOS -> M5 OB + TL Break...');
-      evaluateSMCM15M5Bot();
-      if (!isPlaying) startPlay();
+      appendBotLog('Armed! Press Play or +1/-1 to run & rewind with full chart sync.');
+      runActiveBotStrategy();
+      drawingsPrimitive.requestRedraw();
     } else {
-      toggleBotArmBtn.textContent = 'เปิดบอท & เริ่มรันอัตโนมัติ (Start Bot)';
+      toggleBotArmBtn.textContent = 'เปิดโหมดบอท (Arm Bot — พร้อมรันตามปุ่ม Play / -1 / +1)';
       toggleBotArmBtn.className = 'btn btn-green';
-      appendBotLog('Bot Stopped.');
+      appendBotLog('Bot Disarmed.');
       stopPlay();
     }
   };
@@ -2066,7 +2387,7 @@
       orders: orders.map(o => ({
         id: o.id, type: o.type, triggered: o.triggered, activateTime: o.activateTime,
         entry: o.entry, sl: o.sl, tp: o.tp, lot: o.lot, entryTime: o.entryTime, linkedDrawId: o.linkedDrawId,
-        riskMoney: o.riskMoney, botTag: o.botTag
+        riskMoney: o.riskMoney, botTag: o.botTag, tpTag: o.tpTag
       })),
       history, drawings
     };
@@ -2094,6 +2415,7 @@
     orders = st.orders || [];
     selectedDrawingIdx = -1;
     pendingFirstPoint = null;
+    botSnapshots = [];
     updateSelectionBar();
     updatePointHint();
 
@@ -2511,7 +2833,11 @@
       const mid = (lo + hi) >> 1;
       if (m1Time[mid] < targetUtcSec) lo = mid + 1; else hi = mid;
     }
-    current1mIndex = Math.max(30, Math.min(m1Count - 1, lo));
+    const newIdx = Math.max(30, Math.min(m1Count - 1, lo));
+    if (newIdx < current1mIndex) {
+      restoreBotTimelineToTime(m1Time[newIdx]);
+    }
+    current1mIndex = newIdx;
     document.getElementById('startDateInput').value = datePart;
     document.getElementById('goToDateModal').classList.remove('open');
     rebuildAllCharts(true);
@@ -2580,7 +2906,11 @@
       const mid = (lo + hi) >> 1;
       if (m1Time[mid] < longPressTarget.time) lo = mid + 1; else hi = mid;
     }
-    current1mIndex = Math.max(30, Math.min(m1Count - 1, lo));
+    const newIdx = Math.max(30, Math.min(m1Count - 1, lo));
+    if (newIdx < current1mIndex) {
+      restoreBotTimelineToTime(m1Time[newIdx]);
+    }
+    current1mIndex = newIdx;
     hideContextMenu();
     rebuildAllCharts(false);
     updateUI();
@@ -2656,7 +2986,9 @@
       if (m1Time[mid] < targetUtcSec) lo = mid + 1; else hi = mid;
     }
 
-    current1mIndex = Math.max(50, Math.min(m1Count - 1, lo));
+    const newIdx = Math.max(50, Math.min(m1Count - 1, lo));
+    if (newIdx < current1mIndex) restoreBotTimelineToTime(m1Time[newIdx]);
+    current1mIndex = newIdx;
     const exactTime = m1Time[current1mIndex];
 
     drawings = drawings.filter(item => !item.isSessionMarker);
@@ -3024,7 +3356,7 @@
   };
 
   // =========================================================================
-  // Pointer Handling (Proportional Vertical RR Box Placement)
+  // Pointer Handling
   // =========================================================================
   let editingTarget = null, draggingOrderTarget = null, lastPos = { x: 0, y: 0 }, pointerDownPos = { x: 0, y: 0 };
 
@@ -3054,7 +3386,12 @@
         const mid = (lo + hi) >> 1;
         if (m1Time[mid] < targetTs) lo = mid + 1; else hi = mid;
       }
-      if (lo > 30) { current1mIndex = lo; rebuildAllCharts(); saveCurrentProfile(); }
+      if (lo > 30) {
+        if (lo < current1mIndex) restoreBotTimelineToTime(m1Time[lo]);
+        current1mIndex = lo;
+        rebuildAllCharts();
+        saveCurrentProfile();
+      }
       setTool('cursor');
       return;
     }
@@ -3314,11 +3651,13 @@
   });
 
   // =========================================================================
-  // Incremental Step Engine (Hooks into Bot Engine when Armed)
+  // Incremental Step Engine (With Time-Travel Snapshot Sync)
   // =========================================================================
   function stepForward(customMinutes = null) {
     const stepMinutes = customMinutes || Number(document.getElementById('stepUnitSelect').value) || 1;
     if (current1mIndex + stepMinutes >= m1Count) { stopPlay(); return; }
+
+    if (botState.armed) saveBotTimelineSnapshot();
 
     const commPerLot = parseFloat(document.getElementById('commInput').value) || 0;
 
@@ -3355,11 +3694,12 @@
             const netPnl = rawPnl - (commPerLot * o.lot);
             balance += netPnl;
             updateDrawdownStats();
-            if (o.botTag) appendBotLog(`CLOSED (${reason}): ${netPnl >= 0 ? '+' : ''}$${netPnl.toFixed(2)}`);
+            if (o.botTag) appendBotLog(`CLOSED (${o.tpTag || reason}): ${netPnl >= 0 ? '+' : ''}$${netPnl.toFixed(2)}`);
             history.unshift({
               type: o.type, entry: o.entry, exit: exitP, pnl: netPnl, lot: o.lot,
               riskMoney: o.riskMoney || (o.sl ? Math.abs(o.entry - o.sl) * 100 * o.lot : 0),
-              reason, entryTime: o.entryTime, exitTime: bTime
+              reason: o.tpTag ? `${o.tpTag} (${reason})` : reason,
+              entryTime: o.entryTime, exitTime: bTime
             });
             continue;
           }
@@ -3371,9 +3711,8 @@
 
     current1mIndex += stepMinutes;
 
-    // Evaluate Strategy Bot Rules on Candle Close
     if (botState.armed) {
-      evaluateSMCM15M5Bot();
+      runActiveBotStrategy();
     }
 
     if (stepMinutes <= 15 && visibleCandles.length > 20) {
@@ -3413,6 +3752,9 @@
     stopPlay();
     const stepMinutes = Number(document.getElementById('stepUnitSelect').value) || 1;
     current1mIndex = Math.max(30, current1mIndex - stepMinutes);
+    if (m1Count > 0) {
+      restoreBotTimelineToTime(m1Time[current1mIndex]);
+    }
     rebuildAllCharts(false);
     updateUI();
     saveCurrentProfile();
@@ -3542,7 +3884,7 @@
         const waitTxt = o.activateTime ? `WAIT >= ${formatTHTimeShort(o.activateTime).split(' ')[1]}` : 'PENDING';
         return `<div class="order-row">
           <div>
-            <b style="color:${isBuy ? 'var(--blue)' : 'var(--purple)'}">${o.botTag ? '[BOT] ' : ''}${o.type}</b> ${o.lot.toFixed(2)} @ ${o.entry.toFixed(3)}
+            <b style="color:${isBuy ? 'var(--blue)' : 'var(--purple)'}">${o.botTag ? `[${o.botTag}] ` : ''}${o.type}</b> ${o.lot.toFixed(2)} @ ${o.entry.toFixed(3)}
             <div style="font-size:10px; color:var(--muted);">SL: ${o.sl ? o.sl.toFixed(2) : '-'} | TP: ${o.tp ? o.tp.toFixed(2) : '-'}</div>
           </div>
           <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; justify-content:flex-end;">
@@ -3627,6 +3969,8 @@
     maxDrawdownPct = 0;
     orders = [];
     history = [];
+    botSnapshots = [];
+    botState.activeSetup = null;
     updateTradeMarkers();
     drawingsPrimitive.requestRedraw();
     updateUI();
@@ -3814,7 +4158,9 @@
         const mid = (lo + hi) >> 1;
         if (m1Time[mid] < targetSec) lo = mid + 1; else hi = mid;
       }
-      current1mIndex = Math.max(50, Math.min(m1Count - 1, lo));
+      const newIdx = Math.max(50, Math.min(m1Count - 1, lo));
+      if (newIdx < current1mIndex) restoreBotTimelineToTime(m1Time[newIdx]);
+      current1mIndex = newIdx;
       rebuildAllCharts(true); updateUI(); saveCurrentProfile();
     }
   };
