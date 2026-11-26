@@ -252,7 +252,7 @@
     .modal-backdrop.open { display: flex; }
     .modal-card {
       background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
-      width: 100%; max-width: 400px; max-height: 85dvh; overflow-y: auto; padding: 14px;
+      width: 100%; max-width: 410px; max-height: 86dvh; overflow-y: auto; padding: 14px;
     }
     .modal-header {
       display: flex; justify-content: space-between; align-items: center;
@@ -266,21 +266,21 @@
       background: var(--panel2); padding: 9px; border-radius: 8px; margin-bottom: 8px; font-size: 11px;
     }
     .ind-setting-row {
-      display: flex; justify-content: space-between; align-items: center; margin-top: 6px; gap: 6px;
+      display: flex; justify-content: space-between; align-items: center; margin-top: 6px; gap: 6px; flex-wrap: wrap;
     }
 
     /* Bot Engine Modal Styling */
     .bot-card-box {
       background: var(--panel2); border: 1px solid var(--border);
-      border-radius: 9px; padding: 10px; margin-bottom: 10px; font-size: 11.5px;
+      border-radius: 9px; padding: 10px; margin-bottom: 9px; font-size: 11.5px;
     }
     .bot-step-list {
-      margin: 6px 0 0 0; padding-left: 16px; color: var(--muted); font-size: 11px; line-height: 1.5;
+      margin: 6px 0 0 0; padding-left: 16px; color: var(--muted); font-size: 11px; line-height: 1.48;
     }
     .bot-step-list b { color: var(--text); }
     .bot-log-box {
       background: var(--bg); border: 1px solid var(--border); border-radius: 7px;
-      padding: 7px; max-height: 110px; overflow-y: auto; font-family: monospace; font-size: 10px;
+      padding: 7px; max-height: 105px; overflow-y: auto; font-family: monospace; font-size: 10px;
       color: var(--muted); display: flex; flex-direction: column; gap: 3px;
     }
 
@@ -730,13 +730,13 @@
     </div>
   </div>
 
-  <!-- Modal 5: Automated Strategy Bot Engine (Modular Hub + Time-Travel Sync) -->
+  <!-- Modal 5: Automated Strategy Bot Engine (Pro SMC/ICT Filters + Time-Travel Sync) -->
   <div class="modal-backdrop" id="botModal">
     <div class="modal-card">
       <div class="modal-header">
         <div style="display:flex; align-items:center; gap:6px;">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#089981" stroke-width="2"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 2v6"/><circle cx="12" cy="2" r="1.5" fill="#089981"/><circle cx="9" cy="13" r="1.3" fill="#089981"/><circle cx="15" cy="13" r="1.3" fill="#089981"/><path d="M9 17h6"/></svg>
-          <b>Strategy Bot Engine (Time-Travel Sync)</b>
+          <b>Strategy Bot Engine (A+ SMC Filter)</b>
         </div>
         <button class="btn" id="closeBotModalBtn">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -746,16 +746,16 @@
       <div class="bot-card-box">
         <div style="margin-bottom:5px;"><b>เลือกกลยุทธ์บอท (Strategy Preset):</b></div>
         <select id="botStrategySelect" style="width:100%; padding:6px; font-size:11.5px; font-weight:700;">
-          <option value="smc_sniper_v2" selected>1. SMC Sniper (M15 ChoCh + OB/SZ + $$$ Sweep &rarr; M1 Reject)</option>
+          <option value="smc_sniper_v3" selected>1. SMC Sniper A+ (M15 ChoCh + Breaker/OB + $$$ + M1/M5 Reject)</option>
           <option value="smc_m15_m5">2. SMC Trend (M15 BOS + Premium/Discount + M5 OB &amp; TL Break)</option>
         </select>
 
         <div id="botDescSniper">
           <ol class="bot-step-list">
-            <li><b>M15 ChoCh &amp; 2 Zones:</b> ตรวจจับจุดเปลี่ยนเทรนด์ <b>ChoCh</b> บน M15 ตีกรอบ <b>OB M15</b> (จุดสูงสุด/ต่ำสุด) และ <b>SZ / DZ</b> (โซนส่งกราฟ)</li>
-            <li><b>Liquidity Sweep ($$$):</b> มาร์คจุดสภาพคล่อง <b>$$$</b> หน้าโซน และวาดลูกศรแผนรอราคากวาด $$$ เข้าโซน</li>
-            <li><b>M1 Sniper Trigger:</b> ซูมดู M1 รอเกิด <b>M1 MSS + Reject ทำไฮต่ำลง / โลวสูงขึ้น</b> แล้วเข้าออเดอร์ทันที</li>
-            <li><b>TP1 / TP2 Swing &amp; Auto BE:</b> วาง <b>SL</b> เหนือสวิง M1, วัดเป้า <b>TP1</b> (โลว/ไฮเดิม) และลูกศรวัดระยะสวิง HTF <b>TP2</b> พร้อมกันหน้าทุน <b>BE</b></li>
+            <li><b>M15 ChoCh + Breaker Flip (SZ/DZ):</b> หาฐานรับ/ต้านเดิมที่โดนทำลาย + <b>Extreme OB M15</b> ในโซน Premium/Discount</li>
+            <li><b>Zone Proximity Filter:</b> ถ้าโซน 1 กับ 2 ใกล้กันเกินไป บอทจะยุบไปรอเฉพาะ <b>Extreme OB</b> ป้องกันการโดนกวาด 2 รอบ</li>
+            <li><b>Liquidity Sweep ($$$):</b> ตรวจจับ <b>IDM / Equal Highs-Lows / Trendline $$$</b> หน้าโซน ต้องกวาดก่อนเข้าเสมอ</li>
+            <li><b>4-Mode Rejection + Dynamic TP1/TP2:</b> ยืนยัน <b>M1/M5 MSS + Lower High / Higher Low / Wick / Engulfing</b> + วัดระยะสวิง HTF 100%</li>
           </ol>
         </div>
 
@@ -770,15 +770,21 @@
 
       <div class="bot-card-box">
         <div class="ind-setting-row" style="margin-top:0;">
-          <span>Risk ($): <input type="number" id="botRiskInput" value="100" step="10" min="10" style="width:54px;" /></span>
-          <span>Max/Day: <input type="number" id="botMaxTradesDay" value="3" min="1" max="10" style="width:40px;" /></span>
-          <span>Target RR: <input type="number" id="botRRInput" value="2.0" step="0.5" min="1" style="width:44px;" /></span>
+          <span>Risk ($): <input type="number" id="botRiskInput" value="100" step="10" min="10" style="width:52px;" /></span>
+          <span>Max/Day: <input type="number" id="botMaxTradesDay" value="3" min="1" max="10" style="width:38px;" /></span>
+          <span>Target RR: <input type="number" id="botRRInput" value="2.0" step="0.5" min="1" style="width:42px;" /></span>
         </div>
         <div class="ind-setting-row">
-          <label style="cursor:pointer;"><input type="checkbox" id="botSplitTPChk" checked /> <b>แบ่ง 2 ไม้ (TP1 โลว/ไฮเดิม + TP2 ปลายลูกศรสวิง)</b></label>
+          <label style="cursor:pointer;"><input type="checkbox" id="botKillzoneChk" /> <b>กรองเฉพาะ Killzones (LDN 14:00-17:30 / NY 19:00-23:30)</b></label>
         </div>
         <div class="ind-setting-row">
-          <label style="cursor:pointer;"><input type="checkbox" id="botFailedSwingExitChk" checked /> <b>โดดหนีอัตโนมัติถ้าเด้งแล้วกดลงไม่ทำ New Low/High</b></label>
+          <label style="cursor:pointer;"><input type="checkbox" id="botProximityChk" checked /> <b>ยุบโซนซ้อน (ข้าม DZ1/SZ1 ถ้าอยู่ใกล้ Extreme OB เกินไป)</b></label>
+        </div>
+        <div class="ind-setting-row">
+          <label style="cursor:pointer;"><input type="checkbox" id="botSplitTPChk" checked /> <b>แบ่ง 2 ไม้ (TP1 โลว/ไฮเดิมหรือฐานโซน + TP2 ปลายลูกศร 100%)</b></label>
+        </div>
+        <div class="ind-setting-row">
+          <label style="cursor:pointer;"><input type="checkbox" id="botFailedSwingExitChk" checked /> <b>กันหน้าทุน Auto BE + โดดหนีถ้ากดลงไม่ทำ New Low/High</b></label>
         </div>
       </div>
 
@@ -852,7 +858,7 @@
     '202604.csv', '202605.csv', '202606.csv', '202607.csv',
     '202608.csv', '202609.csv', '202610.csv', '202611.csv'
   ];
-  const PROFILES_STORAGE_KEY = 'tv_replay_profiles_v11';
+  const PROFILES_STORAGE_KEY = 'tv_replay_profiles_v12';
   const IDB_NAME = 'TVReplayMasterDB_v1';
   const IDB_STORE = 'csv_cache';
   const ALL_TFS = [1, 5, 15, 60, 240, 1440];
@@ -1472,11 +1478,11 @@
   let selectedTool = 'cursor';
 
   // =========================================================================
-  // TIME-TRAVEL / REWIND-SYNC BOT ENGINE (Non-Blocking & Crash-Safe)
+  // TIME-TRAVEL / REWIND-SYNC BOT ENGINE (Pro SMC/ICT A+ Filters)
   // =========================================================================
   let botState = {
     armed: false,
-    strategy: 'smc_sniper_v2',
+    strategy: 'smc_sniper_v3',
     activeSetup: null,
     lastEvaluatedM15: 0,
     lastEvaluatedM1: 0,
@@ -1568,6 +1574,15 @@
     }
   }
 
+  function isWithinKillzoneTH(utcSec) {
+    if (!document.getElementById('botKillzoneChk').checked) return true;
+    const d = new Date((utcSec + 7 * 3600) * 1000);
+    const mins = d.getUTCHours() * 60 + d.getUTCMinutes();
+    // London Killzone: 14:00 - 17:30 TH (840 - 1050)
+    // NY Killzone: 19:00 - 23:30 TH (1140 - 1410)
+    return (mins >= 840 && mins <= 1050) || (mins >= 1140 && mins <= 1410);
+  }
+
   function getCompletedHTFBars(tfMin, lookbackBars = 70) {
     if (m1Count === 0) return [];
     const tfSec = tfMin * 60;
@@ -1591,7 +1606,7 @@
   }
 
   // =========================================================================
-  // STRATEGY 1: SMC SNIPER (M15 ChoCh + OB/SZ + $$$ Sweep -> M1 MSS & Reject)
+  // STRATEGY 1: SMC SNIPER A+ (M15 ChoCh + Breaker/OB + Proximity Filter + $$$ + 4-Mode Reject)
   // =========================================================================
   function scanM15SniperSetup(m15Bars, curT) {
     if (m15Bars.length < 35) return null;
@@ -1614,20 +1629,32 @@
     const prevM15 = m15Bars[m15Bars.length - 2];
     const lastSH = swingHighs[swingHighs.length - 1];
     const lastSL = swingLows[swingLows.length - 1];
+    const useProximityMerge = document.getElementById('botProximityChk').checked;
 
     // Bearish ChoCh (Sell Setup)
     if (lastM15.close < lastSL.price && prevM15.close >= lastSL.price && lastSH.idx > lastSL.idx - 12) {
       const obBar = m15Bars[lastSH.idx];
       const extremeOB = { high: obBar.high, low: Math.min(obBar.open, obBar.close), time: obBar.time };
 
+      // Find Breaker / Decision Supply Zone (SZ) where prior Demand failed
       let szIdx = Math.max(lastSH.idx + 1, m15Bars.length - 4);
       for (let k = m15Bars.length - 2; k > lastSH.idx; k--) {
         if (m15Bars[k].close > m15Bars[k].open) { szIdx = k; break; }
       }
       const szBar = m15Bars[szIdx];
-      const szZone = { high: szBar.high, low: Math.min(szBar.open, szBar.close), time: szBar.time };
+      let szZone = { high: szBar.high, low: Math.min(szBar.open, szBar.close), time: szBar.time };
 
-      if (szZone.high >= extremeOB.low) {
+      // Check M15 FVG Confluence below SZ
+      const hasFVG = (szIdx + 2 < m15Bars.length) && (m15Bars[szIdx + 2].high < szBar.low);
+
+      // Proximity Rule: If SZ1 is too close to Extreme OB2, skip SZ1 (treat SZ1 as liquidity bait for Extreme OB2)
+      const obSpan = Math.max(1.2, extremeOB.high - extremeOB.low);
+      const gapBetweenZones = extremeOB.low - szZone.high;
+      let mergedToExtreme = false;
+      if (useProximityMerge && gapBetweenZones < obSpan * 1.5) {
+        szZone = { ...extremeOB };
+        mergedToExtreme = true;
+      } else if (szZone.high >= extremeOB.low) {
         szZone.high = +(extremeOB.low - 0.5).toFixed(3);
         szZone.low = +(szZone.high - 2.2).toFixed(3);
       }
@@ -1642,10 +1669,13 @@
         chochEndTime: lastM15.time,
         extremeOB,
         szZone,
+        hasFVG,
+        mergedToExtreme,
         tp1Price: tp1Low,
         tp1Time: lastM15.time,
         swingLength,
         liqPoint: null,
+        liqType: '',
         sweptSZ: false,
         executed: false,
         createdAt: curT
@@ -1662,9 +1692,16 @@
         if (m15Bars[k].close < m15Bars[k].open) { dzIdx = k; break; }
       }
       const dzBar = m15Bars[dzIdx];
-      const dzZone = { high: Math.max(dzBar.open, dzBar.close), low: dzBar.low, time: dzBar.time };
+      let dzZone = { high: Math.max(dzBar.open, dzBar.close), low: dzBar.low, time: dzBar.time };
 
-      if (dzZone.low <= extremeOB.high) {
+      const hasFVG = (dzIdx + 2 < m15Bars.length) && (m15Bars[dzIdx + 2].low > dzBar.high);
+      const obSpan = Math.max(1.2, extremeOB.high - extremeOB.low);
+      const gapBetweenZones = dzZone.low - extremeOB.high;
+      let mergedToExtreme = false;
+      if (useProximityMerge && gapBetweenZones < obSpan * 1.5) {
+        dzZone = { ...extremeOB };
+        mergedToExtreme = true;
+      } else if (dzZone.low <= extremeOB.high) {
         dzZone.low = +(extremeOB.high + 0.5).toFixed(3);
         dzZone.high = +(dzZone.low + 2.2).toFixed(3);
       }
@@ -1679,10 +1716,13 @@
         chochEndTime: lastM15.time,
         extremeOB,
         szZone: dzZone,
+        hasFVG,
+        mergedToExtreme,
         tp1Price: tp1High,
         tp1Time: lastM15.time,
         swingLength,
         liqPoint: null,
+        liqType: '',
         sweptSZ: false,
         executed: false,
         createdAt: curT
@@ -1709,23 +1749,26 @@
       tool: 'box', t1: setup.extremeOB.time, t2: futureT,
       p1: setup.extremeOB.high, p2: setup.extremeOB.low,
       color: isSell ? '#ef4444' : '#10b981', width: 1.2,
-      label: isSell ? 'OB Sell M15' : 'OB Buy M15', visibleTFs: [...ALL_TFS]
+      label: isSell ? 'OB Sell M15 (Extreme)' : 'OB Buy M15 (Extreme)', visibleTFs: [...ALL_TFS]
     });
 
-    drawings.push({
-      id: Date.now() + 3, isBotDraw: true, createdAtTime: setup.createdAt,
-      tool: 'box', t1: setup.szZone.time, t2: futureT,
-      p1: setup.szZone.high, p2: setup.szZone.low,
-      color: '#f59e0b', width: 1.2,
-      label: isSell ? 'SZ' : 'DZ', visibleTFs: [...ALL_TFS]
-    });
+    if (!setup.mergedToExtreme) {
+      const fvgSuffix = setup.hasFVG ? ' + FVG' : '';
+      drawings.push({
+        id: Date.now() + 3, isBotDraw: true, createdAtTime: setup.createdAt,
+        tool: 'box', t1: setup.szZone.time, t2: futureT,
+        p1: setup.szZone.high, p2: setup.szZone.low,
+        color: '#f59e0b', width: 1.2,
+        label: isSell ? `SZ Breaker${fvgSuffix}` : `DZ Breaker${fvgSuffix}`, visibleTFs: [...ALL_TFS]
+      });
+    }
 
     if (setup.liqPoint) {
       drawings.push({
         id: Date.now() + 4, isBotDraw: true, createdAtTime: setup.liqPoint.time,
         tool: 'badge', t1: setup.liqPoint.time, t2: setup.liqPoint.time,
         p1: setup.liqPoint.price, p2: setup.liqPoint.price,
-        color: '#eab308', label: '$$$', visibleTFs: [...ALL_TFS]
+        color: '#eab308', label: `$$$ (${setup.liqType || 'IDM'})`, visibleTFs: [...ALL_TFS]
       });
 
       const targetZoneMid = (setup.szZone.high + setup.szZone.low) / 2;
@@ -1742,6 +1785,58 @@
     }
   }
 
+  // Detect 4-Mode Rejection on M1/M5 inside Zone (M1 Lower High/Higher Low, Wick Pinbar, Engulfing, Fakeout Close-Back)
+  function checkMultiModeRejection(m1Window, setup) {
+    const cNow = m1Window[m1Window.length - 1];
+    const cPrev = m1Window[m1Window.length - 2];
+
+    if (setup.side === 'SELL') {
+      let peakH = -Infinity, peakT = 0, peakIdx = 0;
+      m1Window.forEach((b, idx) => {
+        if (b.h > peakH) { peakH = b.h; peakT = b.t; peakIdx = idx; }
+      });
+
+      // Mode 1: M1 MSS + Lower High Reject (Video setup)
+      const isLHReject = peakIdx <= 7 && cPrev.h < peakH && cNow.h <= cPrev.h && cNow.c < cNow.o && cNow.c < cPrev.l;
+      if (isLHReject) return { type: 'M1 LH Reject', peakPrice: peakH, peakTime: peakT, trendEndPrice: cPrev.h };
+
+      // Mode 2: Bearish Engulfing inside Zone
+      const isBearEngulf = cPrev.c > cPrev.o && cNow.c < cNow.o && cNow.o >= cPrev.c && cNow.c < cPrev.o && cPrev.h >= setup.szZone.low;
+      if (isBearEngulf) return { type: 'Bear Engulfing', peakPrice: Math.max(cNow.h, cPrev.h), peakTime: cPrev.t, trendEndPrice: cNow.h };
+
+      // Mode 3: Long Upper Wick Rejection (>= 2.2x body)
+      const body = Math.max(0.05, Math.abs(cNow.c - cNow.o));
+      const upperWick = cNow.h - Math.max(cNow.o, cNow.c);
+      if (cNow.c < cNow.o && upperWick >= body * 2.2 && cNow.h >= setup.szZone.low) {
+        return { type: 'Wick Reject', peakPrice: cNow.h, peakTime: cNow.t, trendEndPrice: cNow.h };
+      }
+
+      return null;
+    } else {
+      let troughL = Infinity, troughT = 0, troughIdx = 0;
+      m1Window.forEach((b, idx) => {
+        if (b.l < troughL) { troughL = b.l; troughT = b.t; troughIdx = idx; }
+      });
+
+      // Mode 1: M1 MSS + Higher Low Reject
+      const isHLReject = troughIdx <= 7 && cPrev.l > troughL && cNow.l >= cPrev.l && cNow.c > cNow.o && cNow.c > cPrev.h;
+      if (isHLReject) return { type: 'M1 HL Reject', peakPrice: troughL, peakTime: troughT, trendEndPrice: cPrev.l };
+
+      // Mode 2: Bullish Engulfing inside Zone
+      const isBullEngulf = cPrev.c < cPrev.o && cNow.c > cNow.o && cNow.o <= cPrev.c && cNow.c > cPrev.o && cPrev.l <= setup.szZone.high;
+      if (isBullEngulf) return { type: 'Bull Engulfing', peakPrice: Math.min(cNow.l, cPrev.l), peakTime: cPrev.t, trendEndPrice: cNow.l };
+
+      // Mode 3: Long Lower Wick Rejection (>= 2.2x body)
+      const body = Math.max(0.05, Math.abs(cNow.c - cNow.o));
+      const lowerWick = Math.min(cNow.o, cNow.c) - cNow.l;
+      if (cNow.c > cNow.o && lowerWick >= body * 2.2 && cNow.l <= setup.szZone.high) {
+        return { type: 'Wick Reject', peakPrice: cNow.l, peakTime: cNow.t, trendEndPrice: cNow.l };
+      }
+
+      return null;
+    }
+  }
+
   function evaluateSMCSniperBot() {
     if (!botState.armed || m1Count < 60) return;
     const curT = m1Time[current1mIndex];
@@ -1755,6 +1850,7 @@
       botState.tradesTodayCount = 0;
     }
 
+    // Auto Break-Even & Failed-Swing Protection
     if (document.getElementById('botFailedSwingExitChk').checked && orders.some(o => o.botTag && o.triggered)) {
       const botActiveOrders = orders.filter(o => o.botTag && o.triggered);
       const firstOrd = botActiveOrders[0];
@@ -1776,6 +1872,7 @@
       }
     }
 
+    // 1. Scan M15 ChoCh Setup on every closed M15 candle
     const m15Sec = 15 * 60;
     const curM15Bucket = Math.floor(curT / m15Sec) * m15Sec;
     if (curM15Bucket > botState.lastEvaluatedM15) {
@@ -1785,7 +1882,8 @@
       if (newSetup && (!botState.activeSetup || botState.activeSetup.executed)) {
         botState.activeSetup = newSetup;
         renderSniperPlanDrawings(newSetup, curT);
-        appendBotLog(`M15 ${newSetup.side} ChoCh! Marked OB M15 & ${newSetup.side === 'SELL' ? 'SZ' : 'DZ'}`);
+        const zoneDesc = newSetup.mergedToExtreme ? 'Extreme OB (Merged)' : (newSetup.side === 'SELL' ? 'SZ Breaker + OB' : 'DZ Breaker + OB');
+        appendBotLog(`M15 ${newSetup.side} ChoCh! Marked ${zoneDesc}`);
         drawingsPrimitive.requestRedraw();
       }
     }
@@ -1793,7 +1891,6 @@
     const setup = botState.activeSetup;
     if (!setup || setup.executed) return;
 
-    // Fixed: use curPrice instead of undefined curClose
     if (setup.side === 'SELL' && curPrice > setup.extremeOB.high + 2.5) {
       appendBotLog('Setup Invalidated (Broke above Extreme OB M15)');
       botState.activeSetup = null;
@@ -1805,15 +1902,21 @@
       return;
     }
 
+    // 2. Detect Liquidity $$$ (IDM / Equal Highs-Lows) forming in front of SZ / DZ
     if (!setup.liqPoint && current1mIndex > 20) {
       const recent15mSlice = [];
       for (let k = current1mIndex - 15; k < current1mIndex; k++) {
         recent15mSlice.push({ t: m1Time[k], h: m1High[k], l: m1Low[k] });
       }
       if (setup.side === 'SELL') {
-        let localMax = -Infinity, localMaxT = 0;
-        recent15mSlice.forEach(b => { if (b.h > localMax) { localMax = b.h; localMaxT = b.t; } });
+        let localMax = -Infinity, secondMax = -Infinity, localMaxT = 0;
+        recent15mSlice.forEach(b => {
+          if (b.h > localMax) { secondMax = localMax; localMax = b.h; localMaxT = b.t; }
+          else if (b.h > secondMax) { secondMax = b.h; }
+        });
         if (localMax < setup.szZone.low && localMax > setup.tp1Price + 2.0 && curLow < localMax - 1.5) {
+          const isEQH = Math.abs(localMax - secondMax) <= 0.6;
+          setup.liqType = isEQH ? 'EQH' : 'IDM';
           setup.liqPoint = {
             price: localMax,
             time: localMaxT,
@@ -1821,13 +1924,18 @@
             startSweepPrice: curLow
           };
           renderSniperPlanDrawings(setup, curT);
-          appendBotLog(`Liquidity $$$ Detected @ ${localMax.toFixed(2)} below SZ`);
+          appendBotLog(`Liquidity $$$ (${setup.liqType}) @ ${localMax.toFixed(2)} below Zone`);
           drawingsPrimitive.requestRedraw();
         }
       } else {
-        let localMin = Infinity, localMinT = 0;
-        recent15mSlice.forEach(b => { if (b.l < localMin) { localMin = b.l; localMinT = b.t; } });
+        let localMin = Infinity, secondMin = Infinity, localMinT = 0;
+        recent15mSlice.forEach(b => {
+          if (b.l < localMin) { secondMin = localMin; localMin = b.l; localMinT = b.t; }
+          else if (b.l < secondMin) { secondMin = b.l; }
+        });
         if (localMin > setup.szZone.high && localMin < setup.tp1Price - 2.0 && curHigh > localMin + 1.5) {
+          const isEQL = Math.abs(localMin - secondMin) <= 0.6;
+          setup.liqType = isEQL ? 'EQL' : 'IDM';
           setup.liqPoint = {
             price: localMin,
             time: localMinT,
@@ -1835,25 +1943,28 @@
             startSweepPrice: curHigh
           };
           renderSniperPlanDrawings(setup, curT);
-          appendBotLog(`Liquidity $$$ Detected @ ${localMin.toFixed(2)} above DZ`);
+          appendBotLog(`Liquidity $$$ (${setup.liqType}) @ ${localMin.toFixed(2)} above Zone`);
           drawingsPrimitive.requestRedraw();
         }
       }
     }
 
+    // 3. Check if price sweeps into SZ/DZ or Extreme OB M15
     if (setup.side === 'SELL' && curHigh >= setup.szZone.low) {
       if (!setup.sweptSZ) {
         setup.sweptSZ = true;
-        appendBotLog(`Price Swept $$$ into SZ (${setup.szZone.low.toFixed(1)})! Watching M1 MSS & Lower High...`);
+        appendBotLog(`Price Entered Zone (${setup.szZone.low.toFixed(1)})! Scanning Rejection...`);
       }
     } else if (setup.side === 'BUY' && curLow <= setup.szZone.high) {
       if (!setup.sweptSZ) {
         setup.sweptSZ = true;
-        appendBotLog(`Price Swept $$$ into DZ (${setup.szZone.high.toFixed(1)})! Watching M1 MSS & Higher Low...`);
+        appendBotLog(`Price Entered Zone (${setup.szZone.high.toFixed(1)})! Scanning Rejection...`);
       }
     }
 
+    // 4. Sniper M1 Execution Trigger (Requires Killzone if enabled + 4-Mode Rejection)
     if (!setup.sweptSZ) return;
+    if (!isWithinKillzoneTH(curT)) return;
     if (curT <= botState.lastEvaluatedM1) return;
     botState.lastEvaluatedM1 = curT;
 
@@ -1866,18 +1977,12 @@
       m1Window.push({ t: m1Time[k], o: m1Open[k], h: m1High[k], l: m1Low[k], c: m1Close[k] });
     }
     const cNow = m1Window[m1Window.length - 1];
-    const cPrev = m1Window[m1Window.length - 2];
+    const rejectSignal = checkMultiModeRejection(m1Window, setup);
+    if (!rejectSignal) return;
 
     if (setup.side === 'SELL') {
-      let peakH = -Infinity, peakT = 0, peakIdx = 0;
-      m1Window.forEach((b, idx) => {
-        if (b.h > peakH) { peakH = b.h; peakT = b.t; peakIdx = idx; }
-      });
-      const isLowerHighReject = peakIdx <= 7 && cPrev.h < peakH && cNow.h <= cPrev.h && cNow.c < cNow.o && cNow.c < cPrev.l;
-      if (!isLowerHighReject) return;
-
       const entryPrice = cNow.c;
-      const slPrice = +(peakH + 0.6).toFixed(3);
+      const slPrice = +(rejectSignal.peakPrice + 0.6).toFixed(3);
       const riskDist = Math.abs(slPrice - entryPrice);
       if (riskDist < 0.6 || riskDist > 8.0) return;
 
@@ -1891,8 +1996,8 @@
       drawings.push({
         id: drawId + 1, isBotDraw: true, createdAtTime: curT,
         tool: 'trend', arrowEnd: true,
-        t1: peakT, t2: cNow.t, p1: peakH, p2: cPrev.h,
-        color: '#06b6d4', width: 2, label: 'M1 MSS + LH Reject', visibleTFs: [...ALL_TFS]
+        t1: rejectSignal.peakTime, t2: cNow.t, p1: rejectSignal.peakPrice, p2: rejectSignal.trendEndPrice,
+        color: '#06b6d4', width: 2, label: rejectSignal.type, visibleTFs: [...ALL_TFS]
       });
 
       const projX1 = barIndexToTime(timeToBarIndex(cNow.t) + 2);
@@ -1905,7 +2010,7 @@
       drawings.push({
         id: drawId + 3, isBotDraw: true, createdAtTime: curT,
         tool: 'arrow', t1: projX2, t2: projX2, p1: slPrice, p2: tp2,
-        color: '#2962ff', width: 2, label: 'TP2 (HTF Swing)', visibleTFs: [...ALL_TFS]
+        color: '#2962ff', width: 2, label: 'TP2 (100% Swing)', visibleTFs: [...ALL_TFS]
       });
 
       drawings.push({
@@ -1942,21 +2047,14 @@
       setup.executed = true;
       botState.tradesTodayCount++;
       gestureOverlay.classList.add('interactive');
-      appendBotLog(`SNIPER SELL @ ${entryPrice.toFixed(2)} | SL ${slPrice.toFixed(2)} | TP1 ${tp1.toFixed(2)} | TP2 ${tp2.toFixed(2)}`);
+      appendBotLog(`SELL (${rejectSignal.type}) @ ${entryPrice.toFixed(2)} | SL ${slPrice.toFixed(2)} | TP1 ${tp1.toFixed(2)} | TP2 ${tp2.toFixed(2)}`);
       drawingsPrimitive.requestRedraw();
       updateUI();
       saveCurrentProfile();
 
     } else if (setup.side === 'BUY') {
-      let troughL = Infinity, troughT = 0, troughIdx = 0;
-      m1Window.forEach((b, idx) => {
-        if (b.l < troughL) { troughL = b.l; troughT = b.t; troughIdx = idx; }
-      });
-      const isHigherLowReject = troughIdx <= 7 && cPrev.l > troughL && cNow.l >= cPrev.l && cNow.c > cNow.o && cNow.c > cPrev.h;
-      if (!isHigherLowReject) return;
-
       const entryPrice = cNow.c;
-      const slPrice = +(troughL - 0.6).toFixed(3);
+      const slPrice = +(rejectSignal.peakPrice - 0.6).toFixed(3);
       const riskDist = Math.abs(entryPrice - slPrice);
       if (riskDist < 0.6 || riskDist > 8.0) return;
 
@@ -1970,8 +2068,8 @@
       drawings.push({
         id: drawId + 1, isBotDraw: true, createdAtTime: curT,
         tool: 'trend', arrowEnd: true,
-        t1: troughT, t2: cNow.t, p1: troughL, p2: cPrev.l,
-        color: '#06b6d4', width: 2, label: 'M1 MSS + HL Reject', visibleTFs: [...ALL_TFS]
+        t1: rejectSignal.peakTime, t2: cNow.t, p1: rejectSignal.peakPrice, p2: rejectSignal.trendEndPrice,
+        color: '#06b6d4', width: 2, label: rejectSignal.type, visibleTFs: [...ALL_TFS]
       });
 
       const projX1 = barIndexToTime(timeToBarIndex(cNow.t) + 2);
@@ -1984,7 +2082,7 @@
       drawings.push({
         id: drawId + 3, isBotDraw: true, createdAtTime: curT,
         tool: 'arrow', t1: projX2, t2: projX2, p1: slPrice, p2: tp2,
-        color: '#2962ff', width: 2, label: 'TP2 (HTF Swing)', visibleTFs: [...ALL_TFS]
+        color: '#2962ff', width: 2, label: 'TP2 (100% Swing)', visibleTFs: [...ALL_TFS]
       });
 
       drawings.push({
@@ -2021,7 +2119,7 @@
       setup.executed = true;
       botState.tradesTodayCount++;
       gestureOverlay.classList.add('interactive');
-      appendBotLog(`SNIPER BUY @ ${entryPrice.toFixed(2)} | SL ${slPrice.toFixed(2)} | TP1 ${tp1.toFixed(2)} | TP2 ${tp2.toFixed(2)}`);
+      appendBotLog(`BUY (${rejectSignal.type}) @ ${entryPrice.toFixed(2)} | SL ${slPrice.toFixed(2)} | TP1 ${tp1.toFixed(2)} | TP2 ${tp2.toFixed(2)}`);
       drawingsPrimitive.requestRedraw();
       updateUI();
       saveCurrentProfile();
@@ -2034,6 +2132,8 @@
   function evaluateSMCM15M5Bot() {
     if (!botState.armed || m1Count === 0) return;
     const curT = m1Time[current1mIndex];
+    if (!isWithinKillzoneTH(curT)) return;
+
     const m5Sec = 5 * 60;
     const curM5Bucket = Math.floor(curT / m5Sec) * m5Sec;
     if (curM5Bucket <= botState.lastEvaluatedM15) return;
@@ -2146,7 +2246,7 @@
   function runActiveBotStrategy() {
     if (!botState.armed) return;
     try {
-      if (botState.strategy === 'smc_sniper_v2') evaluateSMCSniperBot();
+      if (botState.strategy === 'smc_sniper_v3') evaluateSMCSniperBot();
       else evaluateSMCM15M5Bot();
     } catch (err) {
       console.error('Bot Engine Error:', err);
@@ -2162,7 +2262,7 @@
 
   botStrategySelect.onchange = e => {
     botState.strategy = e.target.value;
-    document.getElementById('botDescSniper').style.display = botState.strategy === 'smc_sniper_v2' ? 'block' : 'none';
+    document.getElementById('botDescSniper').style.display = botState.strategy === 'smc_sniper_v3' ? 'block' : 'none';
     document.getElementById('botDescTrend').style.display = botState.strategy === 'smc_m15_m5' ? 'block' : 'none';
   };
 
@@ -3791,7 +3891,6 @@
     saveCurrentProfile();
   }
 
-  // Self-Scheduling Async Loop (Prevents UI freeze / overlapping timer backlog on mobile)
   function scheduleNextPlayTick() {
     if (!isPlaying) return;
     playTimer = setTimeout(() => {
@@ -3880,7 +3979,6 @@
     topBadge.textContent = orders.length;
     topBadge.classList.toggle('zero', orders.length === 0);
 
-    // Skip heavy DOM updates when portfolio panels are hidden (maximizes playback FPS)
     const isSubbarOpen = portfolioSubbar.classList.contains('visible');
     const isSheetOpen = portfolioBottomSheet.classList.contains('visible');
     if (!isSubbarOpen && !isSheetOpen) return;
