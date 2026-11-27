@@ -292,11 +292,11 @@
       font-weight: 700; color: var(--green); cursor: pointer;
     }
 
-    /* Two-Tier Ergonomic Replay Deck (Strict Fixed Height Matching Reference Screenshot) */
+    /* Two-Tier Ergonomic Replay Deck (Balanced 16px Bottom Clearance above iPhone Home Bar) */
     .replay-deck {
       display: flex; flex-direction: column; gap: 4px;
-      padding: 4px 8px 5px 8px;
-      height: 68px; max-height: 68px;
+      padding: 4px 8px 16px 8px;
+      height: 79px; max-height: 79px;
       background: var(--panel); border-top: 1px solid var(--border);
       flex-shrink: 0; overflow: hidden;
     }
@@ -328,9 +328,10 @@
     .replay-controls-row .unit-select { flex: 0.85; text-align: center; }
     .replay-controls-row .speed-select { flex: 0.85; text-align: center; }
 
-    /* Hidden Portfolio & Performance Bottom Sheet (Strict Fixed Height Matching Reference Screenshot) */
+    /* Hidden Portfolio & Performance Bottom Sheet (Balanced 14px Bottom Clearance) */
     .bottom-sheet {
-      display: none; height: 158px; max-height: 158px;
+      display: none; height: 168px; max-height: 168px;
+      padding-bottom: 12px;
       background: var(--bg); border-top: 1px solid var(--border);
       flex-direction: column;
       flex-shrink: 0; overflow: hidden;
