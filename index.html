@@ -292,11 +292,10 @@
       font-weight: 700; color: var(--green); cursor: pointer;
     }
 
-    /* Two-Tier Ergonomic Replay Deck (Optimized for iPhone 15 Pro Max - Half Bottom Padding) */
+    /* Two-Tier Ergonomic Replay Deck (Zero wasted bottom gap on iPhone 15 Pro Max) */
     .replay-deck {
-      display: flex; flex-direction: column; gap: 4px;
-      padding: 5px 10px;
-      padding-bottom: calc(env(safe-area-inset-bottom) + 4px);
+      display: flex; flex-direction: column; gap: 3px;
+      padding: 4px 8px 6px 8px;
       background: var(--panel); border-top: 1px solid var(--border);
       flex-shrink: 0;
     }
@@ -1068,27 +1067,63 @@
     return 5.0;
   }
 
-  function applyMagnetSnap(x, y) {
-    const rawTime = xToTime(x);
-    const rawPrice = yToPrice(y);
-    if (!magnetEnabled || !visibleCandles.length) return { t: rawTime, p: rawPrice };
-
-    // Use exact coordinateToLogical so magnet locks onto the exact candle under the finger (left-focused, never jumping right)
+  function getExactCandleAtX(x) {
+    if (!visibleCandles.length) return null;
     const logical = mainChart.timeScale().coordinateToLogical(x);
-    let bIdx = logical !== null && isFinite(logical) ? Math.floor(logical + 0.35) : timeToBarIndex(rawTime);
+    let bIdx;
+    if (logical !== null && isFinite(logical)) {
+      bIdx = Math.round(logical);
+    } else {
+      bIdx = timeToBarIndex(xToTime(x));
+    }
     bIdx = Math.max(0, Math.min(visibleCandles.length - 1, bIdx));
+    return { bar: visibleCandles[bIdx], idx: bIdx };
+  }
 
-    const bar = visibleCandles[bIdx];
-    if (!bar) return { t: rawTime, p: rawPrice };
-
-    // Snap to closest OHLC point (High, Low, Open, Close)
-    const candidates = [bar.high, bar.low, bar.open, bar.close];
-    let bestP = bar.high, minDiff = Infinity;
+  function snapPriceToBarOHLC(bar, rawPrice, wickOnly = false) {
+    if (!bar) return rawPrice;
+    const bodyTop = Math.max(bar.open, bar.close);
+    const bodyBot = Math.min(bar.open, bar.close);
+    const candidates = wickOnly ? [bar.high, bar.low] : [bar.high, bar.low, bodyTop, bodyBot];
+    let bestP = candidates[0], minDiff = Infinity;
     for (const cp of candidates) {
       const diff = Math.abs(cp - rawPrice);
       if (diff < minDiff) { minDiff = diff; bestP = cp; }
     }
-    return { t: bar.time, p: bestP };
+    return bestP;
+  }
+
+  function applyMagnetSnap(x, y, options = {}) {
+    const rawTime = xToTime(x);
+    const rawPrice = yToPrice(y);
+    if (!magnetEnabled || !visibleCandles.length) return { t: rawTime, p: rawPrice };
+
+    const hit = getExactCandleAtX(x);
+    if (!hit || !hit.bar) return { t: rawTime, p: rawPrice };
+
+    // For Rectangle Box Point 2 (extending right): keep X at current cursor time,
+    // and lock Y price onto the LEFT anchor candle's opposite Wick/Body (or current candle if dragged far)
+    if (options.isBoxPoint2 && options.leftAnchorBar) {
+      const leftBar = options.leftAnchorBar;
+      const bodyTop = Math.max(leftBar.open, leftBar.close);
+      const bodyBot = Math.min(leftBar.open, leftBar.close);
+      // Compare snapping to left anchor candle's OHLC vs hovered candle's OHLC
+      const leftCandidates = [leftBar.high, leftBar.low, bodyTop, bodyBot];
+      let bestLeftP = leftCandidates[0], minLeftDiff = Infinity;
+      for (const cp of leftCandidates) {
+        const d = Math.abs(cp - rawPrice);
+        if (d < minLeftDiff) { minLeftDiff = d; bestLeftP = cp; }
+      }
+      // If user intentionally dragged far away vertically from left candle's range, allow snapping to hovered candle
+      const leftSpan = Math.max(1.0, leftBar.high - leftBar.low);
+      if (minLeftDiff <= leftSpan * 1.4) {
+        return { t: hit.bar.time, p: bestLeftP };
+      }
+    }
+
+    // Standard Line / Trendline / Fib / Point 1 snap: exact candle under finger (Wick High/Low & Body Open/Close for BOS/ChoCh)
+    const snappedP = snapPriceToBarOHLC(hit.bar, rawPrice, false);
+    return { t: hit.bar.time, p: snappedP };
   }
 
   function drawControlDot(ctx, x, y, fill = '#ffffff', stroke = '#2962ff', radius = 4.8) {
@@ -3668,15 +3703,20 @@
     }
 
     if (!pendingFirstPoint) {
-      pendingFirstPoint = { t: tNow, p: pNow };
+      const anchorHit = getExactCandleAtX(pos.x);
+      pendingFirstPoint = { t: tNow, p: pNow, anchorBar: anchorHit ? anchorHit.bar : null };
       updatePointHint();
       drawingsPrimitive.requestRedraw();
     } else {
+      const snap2 = applyMagnetSnap(pos.x, pos.y, {
+        isBoxPoint2: selectedTool === 'box',
+        leftAnchorBar: pendingFirstPoint.anchorBar
+      });
       const newObj = {
         id: Date.now(),
         tool: selectedTool,
-        t1: pendingFirstPoint.t, t2: tNow,
-        p1: pendingFirstPoint.p, p2: pNow,
+        t1: pendingFirstPoint.t, t2: snap2.t,
+        p1: pendingFirstPoint.p, p2: snap2.p,
         midP: pendingFirstPoint.p,
         channelOffsetPrice: selectedTool === 'channel' ? 4.0 : undefined,
         color: meta ? meta.defaultColor : '#eab308',
@@ -3722,7 +3762,16 @@
     if (editingTarget) {
       const d = drawings[editingTarget.idx];
       const barSpacing = mainChart.timeScale().options().barSpacing || 6;
-      const snapped = applyMagnetSnap(pos.x, pos.y);
+      const isEditingBoxRight = (d.tool === 'box') && ['p2', 'p2x_p1y', 'p1x_p2y'].includes(editingTarget.part);
+      let leftAnchorBar = null;
+      if (isEditingBoxRight && visibleCandles.length) {
+        const leftIdx = Math.max(0, Math.min(visibleCandles.length - 1, timeToBarIndex(Math.min(d.t1, d.t2))));
+        leftAnchorBar = visibleCandles[leftIdx];
+      }
+      const snapped = applyMagnetSnap(pos.x, pos.y, {
+        isBoxPoint2: isEditingBoxRight,
+        leftAnchorBar
+      });
       const pNow = snapped.p, tNow = snapped.t;
 
       const totalBarDelta = Math.round((pos.x - editingTarget.startMouseX) / barSpacing);
@@ -3788,7 +3837,10 @@
 
     if (pendingFirstPoint && Math.hypot(pos.x - pointerDownPos.x, pos.y - pointerDownPos.y) > 10) {
       const meta = ALL_TOOLS.find(x => x.id === selectedTool);
-      const snapped = applyMagnetSnap(pos.x, pos.y);
+      const snapped = applyMagnetSnap(pos.x, pos.y, {
+        isBoxPoint2: selectedTool === 'box',
+        leftAnchorBar: pendingFirstPoint.anchorBar
+      });
       const tNow = snapped.t, pNow = snapped.p;
       activeSnapCrosshair = { x: timeToX(tNow), y: priceToY(pNow), price: pNow, time: tNow };
       activeDragDraw = {
