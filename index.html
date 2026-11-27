@@ -295,8 +295,8 @@
     /* Two-Tier Ergonomic Replay Deck (Exact 7px Bottom Clearance) */
     .replay-deck {
       display: flex; flex-direction: column; gap: 4px;
-      padding: 4px 8px 7px 8px;
-      height: 70px; max-height: 70px;
+      padding: 4px 8px 10px 8px;
+      height: 73px; max-height: 73px;
       background: var(--panel); border-top: 1px solid var(--border);
       flex-shrink: 0; overflow: hidden;
     }
@@ -330,8 +330,8 @@
 
     /* Hidden Portfolio & Performance Bottom Sheet (Exact 7px Bottom Clearance) */
     .bottom-sheet {
-      display: none; height: 163px; max-height: 163px;
-      padding-bottom: 7px;
+      display: none; height: 166px; max-height: 166px;
+      padding-bottom: 10px;
       background: var(--bg); border-top: 1px solid var(--border);
       flex-direction: column;
       flex-shrink: 0; overflow: hidden;
@@ -380,15 +380,19 @@
           <rect x="16" y="4" width="4" height="8" rx="1" fill="#089981"/>
         </svg>
         <span>XAUUSD</span>
+        <span style="font-size:9px; font-weight:700; background:var(--panel2); color:var(--blue); padding:1px 4px; border-radius:4px; border:1px solid var(--border);">v2.4</span>
       </span>
 
-      <div class="group" id="tfGroup">
+      <div class="group" id="tfGroup" style="gap:2px;">
         <button class="btn active" data-min="1">1m</button>
+        <button class="btn" data-min="3">3m</button>
         <button class="btn" data-min="5">5m</button>
         <button class="btn" data-min="15">15m</button>
+        <button class="btn" data-min="30">30m</button>
         <button class="btn" data-min="60">1H</button>
         <button class="btn" data-min="240">4H</button>
         <button class="btn" data-min="1440">1D</button>
+        <button class="btn" data-min="10080">1W</button>
       </div>
     </div>
 
@@ -542,12 +546,16 @@
       </button>
       <div class="group" id="tfVisGroup" style="gap:2px;">
         <span class="tf-vis-chip on" data-vtf="1">1m</span>
+        <span class="tf-vis-chip on" data-vtf="3">3m</span>
         <span class="tf-vis-chip on" data-vtf="5">5m</span>
         <span class="tf-vis-chip on" data-vtf="15">15m</span>
+        <span class="tf-vis-chip on" data-vtf="30">30m</span>
         <span class="tf-vis-chip on" data-vtf="60">1H</span>
         <span class="tf-vis-chip on" data-vtf="240">4H</span>
         <span class="tf-vis-chip on" data-vtf="1440">1D</span>
+        <span class="tf-vis-chip on" data-vtf="10080">1W</span>
       </div>
+      <button class="btn" id="toggleExtendTrendBtn" style="display:none; padding:2px 6px;" title="Extend Trendline Past Point B">Extend &rarr;</button>
       <button class="btn btn-green" id="execRRBtn" style="display:none; padding:2px 7px;">Place Pending</button>
       <button class="btn btn-red" id="deleteSelectedBtn" style="padding:2px 6px;">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
@@ -617,11 +625,14 @@
 
       <select id="stepUnitSelect" class="unit-select" title="Step Interval">
         <option value="1" selected>1m</option>
+        <option value="3">3m</option>
         <option value="5">5m</option>
         <option value="15">15m</option>
+        <option value="30">30m</option>
         <option value="60">1H</option>
         <option value="240">4H</option>
         <option value="1440">1D</option>
+        <option value="10080">1W</option>
       </select>
 
       <button class="btn btn-blue step-tap-btn" id="stepBtn" title="Step Forward">
@@ -727,7 +738,7 @@
   <div class="modal-backdrop" id="cacheModal">
     <div class="modal-card" style="max-width:340px;">
       <div class="modal-header">
-        <b>App Update &amp; Cache Manager</b>
+        <b>App Update &amp; Cache (v2.4)</b>
         <button class="btn" id="closeCacheModalBtn">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
@@ -874,7 +885,7 @@
   const PROFILES_STORAGE_KEY = 'tv_replay_profiles_v11';
   const IDB_NAME = 'TVReplayMasterDB_v1';
   const IDB_STORE = 'csv_cache';
-  const ALL_TFS = [1, 5, 15, 60, 240, 1440];
+  const ALL_TFS = [1, 3, 5, 15, 30, 60, 240, 1440, 10080];
 
   const SVG_ICONS = {
     cursor: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v18M3 12h18"/></svg>',
@@ -904,7 +915,7 @@
     { id: 'long', name: 'Long Position (RR)', defaultFav: true, defaultColor: '#089981', defaultWidth: 1, onePoint: true },
     { id: 'short', name: 'Short Position (RR)', defaultFav: true, defaultColor: '#f23645', defaultWidth: 1, onePoint: true },
     { id: 'channel', name: 'Parallel Channel', defaultFav: false, defaultColor: '#14b8a6', defaultWidth: 1, onePoint: false },
-    { id: 'ray', name: 'Ray', defaultFav: false, defaultColor: '#f97316', defaultWidth: 1, onePoint: false },
+    { id: 'ray', name: 'Ray (Lock A-B & Extend)', defaultFav: true, defaultColor: '#f97316', defaultWidth: 1, onePoint: false },
     { id: 'extline', name: 'Extended Line', defaultFav: false, defaultColor: '#ec4899', defaultWidth: 1, onePoint: false }
   ];
 
@@ -1107,24 +1118,9 @@
     const hit = getExactCandleAtX(x);
     if (!hit || !hit.bar) return { t: rawTime, p: rawPrice };
 
-    // For Rectangle Box Point 2 (extending right): keep X at current cursor time,
-    // and lock Y price onto the LEFT anchor candle's opposite Wick/Body (or current candle if dragged far)
-    if (options.isBoxPoint2 && options.leftAnchorBar) {
-      const leftBar = options.leftAnchorBar;
-      const bodyTop = Math.max(leftBar.open, leftBar.close);
-      const bodyBot = Math.min(leftBar.open, leftBar.close);
-      // Compare snapping to left anchor candle's OHLC vs hovered candle's OHLC
-      const leftCandidates = [leftBar.high, leftBar.low, bodyTop, bodyBot];
-      let bestLeftP = leftCandidates[0], minLeftDiff = Infinity;
-      for (const cp of leftCandidates) {
-        const d = Math.abs(cp - rawPrice);
-        if (d < minLeftDiff) { minLeftDiff = d; bestLeftP = cp; }
-      }
-      // If user intentionally dragged far away vertically from left candle's range, allow snapping to hovered candle
-      const leftSpan = Math.max(1.0, leftBar.high - leftBar.low);
-      if (minLeftDiff <= leftSpan * 1.4) {
-        return { t: hit.bar.time, p: bestLeftP };
-      }
+    // For Rectangle Box Point 2 (extending right): Left side stays locked, Right side moves FREELY in both X and Y (no magnet snap on right edge!)
+    if (options.isBoxPoint2) {
+      return { t: rawTime, p: rawPrice };
     }
 
     // Standard Line / Trendline / Fib / Point 1 snap: exact candle under finger (Wick High/Low & Body Open/Close for BOS/ChoCh)
@@ -1319,7 +1315,15 @@
                     drawControlDot(ctx, x2, H * 0.75);
                   }
                 } else if (d.tool === 'trend') {
-                  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+                  ctx.beginPath(); ctx.moveTo(x1, y1);
+                  if (d.extendRight && Math.abs(x2 - x1) >= 1) {
+                    const slope = (y2 - y1) / (x2 - x1);
+                    const targetX = x2 > x1 ? W : 0;
+                    ctx.lineTo(targetX, y1 + slope * (targetX - x1));
+                  } else {
+                    ctx.lineTo(x2, y2);
+                  }
+                  ctx.stroke();
                   if (d.arrowEnd) drawArrowHead(ctx, x1, y1, x2, y2, col, 7);
                   if (d.label) {
                     ctx.fillStyle = col; ctx.font = 'bold 9px sans-serif';
@@ -2471,14 +2475,23 @@
     return rows;
   }
 
+  function getBucketStartSec(ts, tfMin) {
+    const tfSec = tfMin * 60;
+    if (tfMin === 10080) {
+      // Align 1W bars cleanly to Monday 00:00 UTC (epoch 1970-01-01 was Thursday, offset +3 days)
+      const weekOffset = 3 * 86400;
+      return Math.floor((ts + weekOffset) / tfSec) * tfSec - weekOffset;
+    }
+    return Math.floor(ts / tfSec) * tfSec;
+  }
+
   function buildTimeframeCache() {
     tfAggregatedCache = {};
-    [5, 15, 60, 240, 1440].forEach(tf => {
-      const tfSec = tf * 60;
+    [3, 5, 15, 30, 60, 240, 1440, 10080].forEach(tf => {
       const bars = [];
       let bucket = null, bucketStart = -1;
       for (let i = 0; i < m1Count; i++) {
-        const bStart = Math.floor(m1Time[i] / tfSec) * tfSec;
+        const bStart = getBucketStartSec(m1Time[i], tf);
         if (bStart !== bucketStart) {
           if (bucket) bars.push(bucket);
           bucketStart = bStart;
@@ -2791,8 +2804,7 @@
       visibleCandles = arr;
     } else {
       const cached = tfAggregatedCache[timeframeMin] || [];
-      const tfSec = timeframeMin * 60;
-      const curBucketStart = Math.floor(curT / tfSec) * tfSec;
+      const curBucketStart = getBucketStartSec(curT, timeframeMin);
 
       let lo = 0, hi = cached.length - 1;
       while (lo < hi) {
@@ -2806,7 +2818,7 @@
       if (slice.length > 0) {
         const lastBar = slice[slice.length - 1];
         let firstM1InBucket = current1mIndex;
-        while (firstM1InBucket > 0 && Math.floor(m1Time[firstM1InBucket - 1] / tfSec) * tfSec === curBucketStart) {
+        while (firstM1InBucket > 0 && getBucketStartSec(m1Time[firstM1InBucket - 1], timeframeMin) === curBucketStart) {
           firstM1InBucket--;
         }
         let hiP = m1High[firstM1InBucket], loP = m1Low[firstM1InBucket], volSum = 0;
@@ -2853,7 +2865,7 @@
     const pct = ((chg / bar.open) * 100).toFixed(2);
     const col = chg >= 0 ? '#089981' : '#f23645';
     document.getElementById('ohlcLegend').innerHTML = `
-      <div style="font-weight:700;">XAUUSD • ${timeframeMin >= 60 ? (timeframeMin / 60) + 'H' : timeframeMin + 'm'} [${activeProfileId}]</div>
+      <div style="font-weight:700;">XAUUSD • ${timeframeMin === 10080 ? '1W' : (timeframeMin === 1440 ? '1D' : (timeframeMin >= 60 ? (timeframeMin / 60) + 'H' : timeframeMin + 'm'))} [${activeProfileId}]</div>
       <div style="color:${col}; font-family:monospace; font-weight:600;">
         O:${bar.open.toFixed(2)} H:${bar.high.toFixed(2)} L:${bar.low.toFixed(2)} C:${bar.close.toFixed(2)} (${chg >= 0 ? '+' : ''}${pct}%)
       </div>
@@ -3562,6 +3574,11 @@
       document.getElementById('drawWidthSelect').value = String(d.width || 1);
 
       const isRR = (d.tool === 'long' || d.tool === 'short');
+      const extBtn = document.getElementById('toggleExtendTrendBtn');
+      if (extBtn) {
+        extBtn.style.display = d.tool === 'trend' ? 'inline-block' : 'none';
+        extBtn.classList.toggle('active', !!d.extendRight);
+      }
       tfGroup.style.display = isRR ? 'none' : 'flex';
       execBtn.style.display = isRR ? 'inline-block' : 'none';
 
@@ -3580,6 +3597,14 @@
 
   document.getElementById('toggleBarPosBtn').onclick = () => {
     document.getElementById('selectionBar').classList.toggle('bottom-pos');
+  };
+  document.getElementById('toggleExtendTrendBtn').onclick = () => {
+    if (selectedDrawingIdx >= 0 && drawings[selectedDrawingIdx] && drawings[selectedDrawingIdx].tool === 'trend') {
+      drawings[selectedDrawingIdx].extendRight = !drawings[selectedDrawingIdx].extendRight;
+      updateSelectionBar();
+      drawingsPrimitive.requestRedraw();
+      saveCurrentProfile();
+    }
   };
 
   // =========================================================================
@@ -3975,9 +4000,8 @@
     }
 
     if (stepMinutes <= 15 && visibleCandles.length > 20) {
-      const tfSec = timeframeMin * 60;
       const curT = m1Time[current1mIndex];
-      const bucketStart = Math.floor(curT / tfSec) * tfSec;
+      const bucketStart = getBucketStartSec(curT, timeframeMin);
       const lastBar = visibleCandles[visibleCandles.length - 1];
 
       if (bucketStart === lastBar.time) {
